@@ -1,0 +1,23 @@
+{
+  "name": "rocketlets",
+  "version": "1.0.0",
+  "description": "Testing for rocketlets",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm install && node index"
+  },
+  "author": "Bradley Hilton",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.17.2",
+    "express": "^4.15.3",
+    "reflect-metadata": "^0.1.10",
+    "temporary-rocketlets-ts-definition": "0.1.2",
+    "tslint": "^5.4.3",
+    "typescript": "^2.3.4",
+    "vm2": "^3.4.6"
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.31"
+  }
+}
