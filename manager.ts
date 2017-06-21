@@ -3,18 +3,18 @@ import { IGetRocketletsFilter } from './interfaces/IGetRocketletsFilter';
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { BaseRocketlet } from 'temporary-rocketlets-ts-definition/base';
+import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
 import * as ts from 'typescript';
 import * as vm from 'vm';
 
 export class RocketletManager {
-    private readonly activeRocketlets: Map<number, BaseRocketlet>;
-    private readonly inactiveRocketlets: Map<number, BaseRocketlet>;
+    private readonly activeRocketlets: Map<number, Rocketlet>;
+    private readonly inactiveRocketlets: Map<number, Rocketlet>;
     private readonly compiler: RocketletCompiler;
 
     constructor(public folder: string) {
-        this.activeRocketlets = new Map<number, BaseRocketlet>();
-        this.inactiveRocketlets = new Map<number, BaseRocketlet>();
+        this.activeRocketlets = new Map<number, Rocketlet>();
+        this.inactiveRocketlets = new Map<number, Rocketlet>();
         this.compiler = new RocketletCompiler();
         console.log('Constructed the RocketletLoader and the src folder is:', this.folder);
     }
@@ -23,7 +23,7 @@ export class RocketletManager {
         return this.compiler;
     }
 
-    public load(): Promise<Array<BaseRocketlet>> {
+    public load(): Promise<Array<Rocketlet>> {
         return new Promise((resolve, reject) => {
             if (this.folder === '') {
                 return reject(new Error('Invalid source folder for loading Rocketlets from.'));
@@ -53,11 +53,11 @@ export class RocketletManager {
             }
 
             // TODO: Combine the two maps values
-            return new Array<BaseRocketlet>();
+            return new Array<Rocketlet>();
         });
     }
 
-    public get(filter: IGetRocketletsFilter): Array<BaseRocketlet> {
+    public get(filter: IGetRocketletsFilter): Array<Rocketlet> {
         throw new Error('Not implemented yet.');
     }
 
@@ -70,12 +70,12 @@ export class RocketletManager {
     }
 
     // TODO: Determine what to do with this - add or addRocketlet?
-    public addRocketlet(source: string): BaseRocketlet {
+    public addRocketlet(source: string): Rocketlet {
         throw new Error('Not implemented nor architected.');
     }
 
     // TODO: Determine what to do with this - add or addRocketlet?
-    public removeRocketlet(id: number): BaseRocketlet {
+    public removeRocketlet(id: number): Rocketlet {
         throw new Error('Not implemented nor architected.');
     }
 }

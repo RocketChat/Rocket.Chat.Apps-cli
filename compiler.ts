@@ -1,4 +1,4 @@
-import { BaseRocketlet } from 'temporary-rocketlets-ts-definition/base';
+import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
 import * as ts from 'typescript';
 import * as vm from 'vm';
 
@@ -25,14 +25,17 @@ export class RocketletCompiler {
     }
 
     public toJs(source: string): string {
+        const srcFile = ts.createSourceFile('rocketlet.ts', source, ts.ScriptTarget.ES2016);
+        // ts.createPro
+
         const result = ts.transpileModule(source, { compilerOptions: this.compilerOptions });
 
-        // TODO: try to determine why I'm not getting any `result.diagnostics`
+        // TODO: implement the `ts.createProject` so that we get `result.diagnostics`
 
         return result.outputText;
     }
 
-    public toSandBox(js: string): BaseRocketlet {
+    public toSandBox(js: string): Rocketlet {
         const script = new vm.Script(js);
         const context = vm.createContext({ require, exports });
 
@@ -44,7 +47,7 @@ export class RocketletCompiler {
 
         const rl = new result();
 
-        if (!(rl instanceof BaseRocketlet)) {
+        if (!(rl instanceof Rocketlet)) {
             throw new Error('The script must extend BaseRocketlet.');
         }
 
@@ -64,10 +67,10 @@ export class RocketletCompiler {
             throw new Error ('The Rocketlet doesn\'t have a `getDescription` function, this is required.');
         }
 
-        console.log(rl.getDescription.prototype.constructor);
+        if (typeof rl.getRequiredApiVersion !== 'function') {
+            throw new Error ('The Rocketlet doesn\'t have a `getRequiredApiVersion` function, this is required.');
+        }
 
-        console.log(rl.pre_messageSent.prototype.constructor);
-
-        return rl as BaseRocketlet;
+        return rl as Rocketlet;
     }
 }
