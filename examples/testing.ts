@@ -1,48 +1,39 @@
 import { IConfigurationExtend, IEnvironmentRead } from 'temporary-rocketlets-ts-definition/accessors';
-import {
-    IHttp,
-    IMessageExtend,
-    IPersistence,
-    IPersistenceRead,
-    IRead,
-} from 'temporary-rocketlets-ts-definition/accessors';
+import { IHttp, IMessageExtend,
+    IPersistence, IPersistenceRead, IRead } from 'temporary-rocketlets-ts-definition/accessors';
+import { IRocketletAuthor } from 'temporary-rocketlets-ts-definition/IRocketletAuthor';
 import { IMessage } from 'temporary-rocketlets-ts-definition/messages';
-import { IPreMessageSentExtend } from 'temporary-rocketlets-ts-definition/messages/IPreMessageSentExtend';
+import { IPreMessageSentModify } from 'temporary-rocketlets-ts-definition/messages/IPreMessageSentModify';
 import { IRocketChatAssociation } from 'temporary-rocketlets-ts-definition/metadata/IRocketChatAssociation';
 import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
 
-export class TestingRocketlet extends Rocketlet implements IPreMessageSentExtend {
+export class TestingRocketlet extends Rocketlet implements IPreMessageSentModify {
+    private matcher: RegExp = /([a-zA-Z|_|\-|0-9]+)\/([a-zA-Z|_|\-|.|0-9]+)#(\d+)/g;
+
     constructor() {
-        super('Testing', 1, '0.0.1', 'Testing description.', '0.2.2');
+        super('Testing', 1, '0.0.1', 'Testing description.', '0.2.2',
+              { name: 'Bradley Hilton && Aaron Ogle', support: 'https://github.com/graywolf336' });
     }
 
-    public getRocketChatAssociation(): IRocketChatAssociation {
-        throw new Error('Method not implemented.');
+    public checkPreMessageSentModify(message: IMessage,
+                                     read: IRead, http: IHttp, persistence: IPersistenceRead): boolean {
+        return message.text.match(this.matcher).length !== 0;
     }
 
-    public onEnable(environment: IEnvironmentRead, configurationModify: object): boolean {
-        throw new Error('Method not implemented.');
-    }
+    public executePreMessageSentModify(message: IMessage,
+                                       read: IRead, http: IHttp, persistence: IPersistence): IMessage {
 
-    public onDisable(configurationModify: object): void {
-        throw new Error('Method not implemented.');
-    }
+        const githubLinks = message.text.match(this.matcher);
+        if (githubLinks.length > 0) {
+            for (const link of githubLinks) {
+                const parts = this.matcher.exec(link);
 
-    public checkPreMessageSentExtend(message: IMessage,
-                                     read: IRead,
-                                     http: IHttp,
-                                     persistence: IPersistenceRead): boolean {
-        throw new Error('Method not implemented.');
-    }
-    public executePreMessageSentExtend(message: IMessage,
-                                       read: IRead,
-                                       extend: IMessageExtend,
-                                       http: IHttp,
-                                       persistence: IPersistence): IMessage {
-        throw new Error('Method not implemented.');
-    }
+                const newLink = `[${link}](https://github.com/${parts[1]}${parts[2]}/issues/${parts[3]})`;
 
-    protected extendConfiguration(configuration: IConfigurationExtend): void {
-        throw new Error('Method not implemented.');
+                message.text.replace(link, newLink);
+            }
+        }
+
+        return message;
     }
 }
