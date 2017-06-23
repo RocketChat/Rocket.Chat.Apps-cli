@@ -44,9 +44,10 @@ export class RocketletManager {
                     }
 
                     const src = this.getCompiler().toJs(fs.readFileSync(filePath, 'utf8'));
-                    const rocketlet = this.getCompiler().toSandBox(src);
+                    console.log('toJs result:', src);
+                    // const rocketlet = this.getCompiler().toSandBox(src);
 
-                    console.log(`Successfully loaded ${rocketlet.getName()}!`);
+                    // console.log(`Successfully loaded ${rocketlet.getName()}!`);
                 });
             } catch (e) {
                 return reject(e);

@@ -12,7 +12,7 @@
     "body-parser": "^1.17.2",
     "express": "^4.15.3",
     "reflect-metadata": "^0.1.10",
-    "temporary-rocketlets-ts-definition": "0.2.7",
+    "temporary-rocketlets-ts-definition": "0.2.9",
     "tslint": "^5.4.3",
     "typescript": "^2.3.4",
     "vm2": "^3.4.6"
