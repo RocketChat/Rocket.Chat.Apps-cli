@@ -1,5 +1,5 @@
 import { RocketletCompiler } from './compiler';
-import { IGetRocketletsFilter } from './interfaces/IGetRocketletsFilter';
+import { IGetRocketletsFilter } from './interfaces';
 
 import * as fs from 'fs';
 import * as path from 'path';

@@ -18,6 +18,11 @@
     "vm2": "^3.4.6"
   },
   "devDependencies": {
-    "@types/node": "^8.0.1"
+    "@types/node": "^8.0.1",
+    "del": "^3.0.0",
+    "gulp": "^3.9.1",
+    "gulp-sourcemaps": "^2.6.0",
+    "gulp-tslint": "^8.1.1",
+    "gulp-typescript": "^3.1.7"
   }
 }

@@ -1,4 +1,4 @@
-import { ICompilerFile } from './interfaces/ICompilerFile';
+import { ICompilerFile } from './interfaces';
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -46,7 +46,6 @@ export class RocketletCompiler {
             version: 0,
         };
 
-        console.log('Successfully loaded:', fileName);
         return this.libraryFiles[norm];
     }
 

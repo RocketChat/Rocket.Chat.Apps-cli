@@ -1,8 +1,8 @@
 const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
-const m = require('./manager.js');
-const compiler = require('./compiler.js');
+const m = require('./dist/manager.js');
+const compiler = require('./dist/compiler.js');
 const app = express();
 
 const manager = new m.RocketletManager('./examples');
