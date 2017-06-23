@@ -1,54 +1,48 @@
-import { IMessageExtend } from 'temporary-rocketlets-ts-definition/accessors/IMessageExtend';
-import { IMessageRead } from 'temporary-rocketlets-ts-definition/accessors/IMessageRead';
-import { IRead } from 'temporary-rocketlets-ts-definition/accessors/IRead';
-import { IMessage } from 'temporary-rocketlets-ts-definition/messages/IMessage';
-import { IPostMessageSentHandler } from 'temporary-rocketlets-ts-definition/messages/IPostMessageSentHandler';
-import { IPreMessageSentHandler } from 'temporary-rocketlets-ts-definition/messages/IPreMessageSentHandler';
+import { IConfigurationExtend, IEnvironmentRead } from 'temporary-rocketlets-ts-definition/accessors';
+import {
+    IHttp,
+    IMessageExtend,
+    IPersistence,
+    IPersistenceRead,
+    IRead,
+} from 'temporary-rocketlets-ts-definition/accessors';
+import { IMessage } from 'temporary-rocketlets-ts-definition/messages';
+import { IPreMessageSentExtend } from 'temporary-rocketlets-ts-definition/messages/IPreMessageSentExtend';
+import { IRocketChatAssociation } from 'temporary-rocketlets-ts-definition/metadata/IRocketChatAssociation';
 import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
-import { IPreRoomCreateHandler } from 'temporary-rocketlets-ts-definition/rooms/IPreRoomCreateHandler';
-import { IRoom } from 'temporary-rocketlets-ts-definition/rooms/IRoom';
-import { IUser } from 'temporary-rocketlets-ts-definition/users/IUser';
 
-export class TestingRocketlet extends Rocketlet
-    implements IPreMessageSentHandler, IPostMessageSentHandler, IPreRoomCreateHandler {
-
+export class TestingRocketlet extends Rocketlet implements IPreMessageSentExtend {
     constructor() {
         super('Testing', 1, '0.0.1', 'Testing description.', '0.2.2');
     }
 
-    public initialize(): void {
+    public getRocketChatAssociation(): IRocketChatAssociation {
         throw new Error('Method not implemented.');
     }
 
-    public onEnable(): boolean {
+    public onEnable(environment: IEnvironmentRead, configurationModify: object): boolean {
         throw new Error('Method not implemented.');
     }
 
-    public onDisable(): void {
+    public onDisable(configurationModify: object): void {
         throw new Error('Method not implemented.');
     }
 
-    public isMessageApplicable(message: IMessage, read: IRead): boolean {
+    public checkPreMessageSentExtend(message: IMessage,
+                                     read: IRead,
+                                     http: IHttp,
+                                     persistence: IPersistenceRead): boolean {
+        throw new Error('Method not implemented.');
+    }
+    public executePreMessageSentExtend(message: IMessage,
+                                       read: IRead,
+                                       extend: IMessageExtend,
+                                       http: IHttp,
+                                       persistence: IPersistence): IMessage {
         throw new Error('Method not implemented.');
     }
 
-    public extendMessage(message: IMessage, read: IMessageRead, extend: IMessageExtend): void {
-        throw new Error('Method not implemented.');
-    }
-
-    public manipulateMessage(message: IMessage, read: IMessageRead): IMessage {
-        throw new Error('Method not implemented.');
-    }
-
-    public postMessageSent(user: IUser, room: IRoom, message: IMessage): void {
-        throw new Error('Method not implemented.');
-    }
-
-    public isRoomApplicable(message: IRoom, read: IRead): boolean {
-        throw new Error('Method not implemented.');
-    }
-
-    public preRoomCreate(room: IRoom): IRoom {
+    protected extendConfiguration(configuration: IConfigurationExtend): void {
         throw new Error('Method not implemented.');
     }
 }
