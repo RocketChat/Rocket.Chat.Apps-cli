@@ -1,0 +1,10 @@
+{
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "*rocketlet.json"
+            ],
+            "url": "./rocketlet-schema.json"
+        }
+    ]
+}

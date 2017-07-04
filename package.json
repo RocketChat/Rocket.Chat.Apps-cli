@@ -1,28 +1,38 @@
 {
-  "name": "rocketlets",
+  "name": "rocketlets-dev-environment",
   "version": "1.0.0",
-  "description": "Testing for rocketlets",
+  "description": "The development environment for the Rocketlets.",
   "main": "index.js",
   "scripts": {
-    "start": "npm install && node index"
+    "start": "npm install && node index",
+    "package": "gulp package"
   },
-  "author": "Bradley Hilton",
+  "author": "Bradley Hilton <bradley.hilton@rocket.chat>",
   "license": "MIT",
-  "dependencies": {
-    "body-parser": "^1.17.2",
-    "express": "^4.15.3",
-    "reflect-metadata": "^0.1.10",
-    "temporary-rocketlets-ts-definition": "0.5.2",
-    "tslint": "^5.4.3",
-    "typescript": "^2.3.4",
-    "vm2": "^3.4.6"
-  },
   "devDependencies": {
     "@types/node": "^8.0.1",
+    "async": "^2.5.0",
+    "body-parser": "^1.17.2",
     "del": "^3.0.0",
+    "eslint": "^4.1.1",
+    "express": "^4.15.3",
+    "figures": "^2.0.0",
     "gulp": "^3.9.1",
+    "gulp-file": "^0.3.0",
+    "gulp-json-schema": "^1.0.0",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-tslint": "^8.1.1",
-    "gulp-typescript": "^3.1.7"
+    "gulp-tv4": "^0.1.0",
+    "gulp-typescript": "^3.1.7",
+    "gulp-util": "^3.0.8",
+    "gulp-zip": "^4.0.0",
+    "reflect-metadata": "^0.1.10",
+    "temporary-rocketlets-ts-definition": "^0.5.3",
+    "through2": "^2.0.3",
+    "tslint": "^5.4.3",
+    "typescript": "^2.4.1"
+  },
+  "dependencies": {
+    "temporary-rocketlets-server": "0.0.2"
   }
 }

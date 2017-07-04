@@ -1,33 +1,28 @@
-const fs = require('fs');
-const express = require('express');
+const rlserver = require('temporary-rocketlets-server');
 const bodyParser = require('body-parser');
-const m = require('./dist/manager.js');
-const compiler = require('./dist/compiler.js');
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
+
 const app = express();
 
-const manager = new m.RocketletManager('./examples');
+const manager = new rlserver.RocketletManager();
 
-manager.load().then((items) => console.log(items)).catch((err) => console.warn(err));
+function _loadRocketlets() {
+    fs.readdirSync('dist')
+        .filter((file) => fs.statSync(path.join('dist', file)).isFile() && file.endsWith('.zip'))
+        .map((zip) => fs.readFileSync(path.join('dist', zip), 'base64'))
+        .forEach((content) => manager.add(content));
+}
 
 app.use(bodyParser.json());
 
 app.get('/', function (req, res) {
     res.json({
-        'GET: /compile': {},
         'POST: /event': {
             msg: 'string'
         }
     });
-});
-
-app.get('/compile', (req, res) => {
-    const src = fs.readFileSync('./examples/preMessageSent.ts', 'utf8');
-    const result = compiler.compiler(src);
-
-    const Rocketlet = eval(result);
-    new Rocketlet();
-
-    res.json({ src, result });
 });
 
 app.post('/event', (req, res) => {
@@ -38,4 +33,5 @@ app.post('/event', (req, res) => {
 app.listen(3003, function _appListen() {
   console.log('Example app listening on port 3003!');
   console.log('http://localhost:3003/');
+  _loadRocketlets();
 });

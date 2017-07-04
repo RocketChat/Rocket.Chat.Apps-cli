@@ -1,5 +1,5 @@
 {
-"compileOnSave": false,
+    "compileOnSave": false,
     "compilerOptions": {
         "sourceMap": true,
         "target": "es5",
@@ -13,6 +13,9 @@
         "lib": ["es2017", "dom"],
         "outDir": "dist"
     },
+    "include": [
+        "rocketlets"
+    ],
     "exclude": [
         "node_modules",
         "dist",
