@@ -42,7 +42,7 @@ gulp.task('compile-ts', ['clean-generated', 'lint-ts'], function _compileTypescr
 });
 
 let server;
-gulp.task('run-server', ['compile-ts', 'lint-ts'], function _runTheServer() {
+gulp.task('run-server', ['lint-no-exit-ts', 'package-for-develop'], function _runTheServer() {
     if (server) server.kill();
 
     server = spawn('node', ['index.js'], { stdio: 'inherit' });
@@ -112,7 +112,7 @@ function _packageTheRocketlets(callback) {
                     gutil.log(gutil.colors.green(figures.tick), gutil.colors.cyan(item.info.name + ' ' + item.info.version));
                     return gulp.src(item.toZip)
                         .pipe(file('.packagedby', fs.readFileSync('package.json')))
-                        .pipe(zip(item.info.name.toLowerCase().replace(/ /g, '_') + '-' + item.info.id + '-' + item.info.version + '.zip'))
+                        .pipe(zip(item.info.nameSlug + '_' + item.info.version + '.zip'))
                         .pipe(gulp.dest('dist'))
                         .pipe(through.obj((file, enc, done) => done(null, file), () => resolve()));
                 });

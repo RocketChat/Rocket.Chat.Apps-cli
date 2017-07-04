@@ -5,17 +5,27 @@
     "type": "object",
     "properties": {
         "id": {
-            "description": "The Rocketlet's unique identifier, obtained from Rocket.Chat, the company, or one in the range of private Rocketlets.",
-            "type": "integer"
+            "description": "The Rocketlet's unique identifier. This is optional however if you are going to publish on the Rocketlet store, you will be assigned one.",
+            "type": "string",
+            "pattern": "^[0-9a-fA-f]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+            "minLength": 36,
+            "maxLength": 36
         },
         "name": {
             "description": "The public visible name of this Rocketlet.",
             "type": "string"
         },
+        "nameSlug": {
+            "description": "A url friendly slugged version of your Rocketlet's name.",
+            "type": "string",
+            "pattern": "^([a-z]|\\-)+$",
+            "minLength": 3
+        },
         "version": {
             "description": "The version of this Rocketlet which will be used for display publicly and letting users know there is an update. This uses the semver format.",
             "type": "string",
-            "pattern": "\\bv?(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?(?:\\+[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?\\b"
+            "pattern": "\\bv?(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?(?:\\+[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?\\b",
+            "minLength": 5
         },
         "description": {
             "description": "A description of this Rocketlet, used to explain what this Rocketlet does and provides for the user.",
@@ -24,7 +34,8 @@
         "requiredApiVersion": {
             "description": "The required version of the Rocketlet's API which this Rocketlet depends on. This uses the semver format.",
             "type": "string",
-            "pattern": "\\bv?(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?(?:\\+[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?\\b"
+            "pattern": "\\bv?(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)\\.(?:0|[1-9]\\d*)(?:-[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?(?:\\+[\\da-z\\-]+(?:\\.[\\da-z\\-]+)*)?\\b",
+            "minLength": 5
         },
         "author": {
             "type": "object",
@@ -51,5 +62,5 @@
             "pattern": "^.*\\.(ts)$"
         }
     },
-    "required": ["id", "name", "version", "description", "requiredApiVersion", "author", "classFile"]
+    "required": ["name", "nameSlug", "version", "description", "requiredApiVersion", "author", "classFile"]
 }

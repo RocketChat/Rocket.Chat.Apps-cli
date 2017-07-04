@@ -1,6 +1,6 @@
 {
-    "id": 1,
     "name": "To Do Lists",
+    "nameSlug": "to-do-lists",
     "version": "0.0.1",
     "requiredApiVersion": "1.0.0",
     "description": "Rocketlet which provides to do lists per channels, including associated commands.",
