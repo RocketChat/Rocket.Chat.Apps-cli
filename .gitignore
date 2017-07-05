@@ -46,3 +46,7 @@ jspm_packages
 
 ## Ignore distribution folder
 dist/
+
+## dev env items
+.server-dist/
+.server-data/

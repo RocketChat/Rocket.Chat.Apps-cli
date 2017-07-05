@@ -10,6 +10,9 @@
   "author": "Bradley Hilton <bradley.hilton@rocket.chat>",
   "license": "MIT",
   "devDependencies": {
+    "@types/body-parser": "^1.16.4",
+    "@types/express": "^4.0.36",
+    "@types/nedb": "^1.8.3",
     "@types/node": "^8.0.1",
     "async": "^2.5.0",
     "body-parser": "^1.17.2",
@@ -26,6 +29,7 @@
     "gulp-typescript": "^3.1.7",
     "gulp-util": "^3.0.8",
     "gulp-zip": "^4.0.0",
+    "nedb": "^1.8.0",
     "reflect-metadata": "^0.1.10",
     "temporary-rocketlets-ts-definition": "^0.5.3",
     "through2": "^2.0.3",
@@ -33,6 +37,6 @@
     "typescript": "^2.4.1"
   },
   "dependencies": {
-    "temporary-rocketlets-server": "0.0.2"
+    "temporary-rocketlets-server": "0.0.5"
   }
 }

@@ -5,7 +5,7 @@
     "type": "object",
     "properties": {
         "id": {
-            "description": "The Rocketlet's unique identifier. This is optional however if you are going to publish on the Rocketlet store, you will be assigned one.",
+            "description": "The Rocketlet's unique identifier in uuid v4 format. This is optional, although recommended, however if you are going to publish on the Rocketlet store, you will be assigned one.",
             "type": "string",
             "pattern": "^[0-9a-fA-f]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
             "minLength": 36,
@@ -62,5 +62,5 @@
             "pattern": "^.*\\.(ts)$"
         }
     },
-    "required": ["name", "nameSlug", "version", "description", "requiredApiVersion", "author", "classFile"]
+    "required": ["id", "name", "nameSlug", "version", "description", "requiredApiVersion", "author", "classFile"]
 }

@@ -23,7 +23,7 @@ const rocketletsPath = './rocketlets';
 const tsp = tsc.createProject('tsconfig.json');
 
 gulp.task('clean-generated', function _cleanTypescript() {
-    return del(['./dist/**/*.*']);
+    return del(['./dist/**/*', './.server-dist/**/*']);
 });
 
 gulp.task('lint-ts', function _lintTypescript() {
@@ -41,11 +41,21 @@ gulp.task('compile-ts', ['clean-generated', 'lint-ts'], function _compileTypescr
             .pipe(gulp.dest('dist'));
 });
 
+gulp.task('compile-server-ts', ['clean-generated'], function _compileServerTypescript() {
+    const project = tsc.createProject('.server/tsconfig.json');
+
+    return project.src()
+            .pipe(sourcemaps.init())
+            .pipe(project())
+            .pipe(sourcemaps.write('.'))
+            .pipe(gulp.dest('.server-dist'));
+});
+
 let server;
-gulp.task('run-server', ['lint-no-exit-ts', 'package-for-develop'], function _runTheServer() {
+gulp.task('run-server', ['lint-no-exit-ts', 'compile-server-ts', 'package-for-develop'], function _runTheServer() {
     if (server) server.kill();
 
-    server = spawn('node', ['index.js'], { stdio: 'inherit' });
+    server = spawn('node', ['.server-dist/server.js'], { stdio: 'inherit' });
     server.on('close', (code) => {
         if (code === 8) {
             gulp.log('Error detected, waiting for changes....');
@@ -57,8 +67,8 @@ process.on('exit', () => {
     if (server) server.kill();
 });
 
-gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'package-for-develop', 'run-server'], function _watchCodeAndRun() {
-    gulp.watch('rocketlets/**/*.ts', ['clean-generated', 'lint-no-exit-ts', 'package-for-develop', 'run-server']);
+gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'package-for-develop', 'run-server'], function _watchCodeAndRun() {
+    gulp.watch(['rocketlets/**/*', '.server/**/*.ts'], ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'package-for-develop', 'run-server']);
 });
 
 //Packaging related items
@@ -86,7 +96,7 @@ function _packageTheRocketlets(callback) {
                                 item.valid = file.jsonSchemaResult.valid;
 
                                 if (!item.valid) {
-                                    gutil.log(gutil.colors.red(figures.cross), gutil.colors.cyan(item.folder + path.sep + 'rocketlet.json'));
+                                    gutil.log(gutil.colors.red(figures.cross), gutil.colors.cyan(item.folder + path.sep + 'rocketlet.json'), 'has', gutil.colors.red('failed to validate'));
                                 }
                             }
 
