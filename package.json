@@ -4,7 +4,7 @@
   "description": "The development environment for the Rocketlets.",
   "main": "index.js",
   "scripts": {
-    "start": "npm install && node index",
+    "start": "gulp",
     "package": "gulp package"
   },
   "author": "Bradley Hilton <bradley.hilton@rocket.chat>",

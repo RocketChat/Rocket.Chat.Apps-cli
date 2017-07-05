@@ -9,6 +9,11 @@ const app = express();
 const manager = new rlserver.RocketletManager();
 
 function _loadRocketlets() {
+    if (!fs.existsSync('dist')) {
+        console.warn('The "dist" folder does not exist.');
+        return;
+    }
+
     fs.readdirSync('dist')
         .filter((file) => fs.statSync(path.join('dist', file)).isFile() && file.endsWith('.zip'))
         .map((zip) => fs.readFileSync(path.join('dist', zip), 'base64'))

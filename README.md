@@ -1,2 +1,9 @@
 # temporary-rocketlets-dev-environment
-Please ignore this repository and package, it simply is a temporary package to aid in the development of Rocketlets for Rocket.Chat :heart:
+Development environment for getting started developing Rocketlets.
+
+## getting started
+Example simple.
+
+`npm start`
+
+This will watch the `rocketlets` directory for changes and run everything.
