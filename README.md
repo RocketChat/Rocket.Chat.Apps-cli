@@ -2,7 +2,7 @@
 Development environment for getting started developing Rocketlets.
 
 ## getting started
-Example simple.
+Extremely simple.
 
 `npm start`
 
