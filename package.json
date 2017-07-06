@@ -32,7 +32,6 @@
     "gulp-zip": "^4.0.0",
     "nedb": "^1.8.0",
     "reflect-metadata": "^0.1.10",
-    "request": "^2.81.0",
     "temporary-rocketlets-ts-definition": "^0.5.11",
     "through2": "^2.0.3",
     "tslint": "^5.4.3",

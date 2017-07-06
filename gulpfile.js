@@ -4,7 +4,6 @@ const async = require('async');
 const figures = require('figures');
 const del = require('del');
 const through = require('through2');
-const request = require('request');
 const gulp = require('gulp');
 const file = require('gulp-file');
 const gutil = require('gulp-util');
