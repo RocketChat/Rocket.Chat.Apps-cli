@@ -31,12 +31,12 @@
     "gulp-zip": "^4.0.0",
     "nedb": "^1.8.0",
     "reflect-metadata": "^0.1.10",
-    "temporary-rocketlets-ts-definition": "^0.5.3",
+    "temporary-rocketlets-ts-definition": "^0.5.11",
     "through2": "^2.0.3",
     "tslint": "^5.4.3",
     "typescript": "^2.4.1"
   },
   "dependencies": {
-    "temporary-rocketlets-server": "0.0.5"
+    "temporary-rocketlets-server": "0.0.7"
   }
 }

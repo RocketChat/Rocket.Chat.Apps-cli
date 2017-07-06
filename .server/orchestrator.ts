@@ -15,7 +15,6 @@ export class Orchestrator {
     }
 
     public loadAndUpdate(): Promise<boolean> {
-        // throw new Error('Not implemented.');
         return this.manager.load().then(() => {
             return Promise.all(fs.readdirSync('dist')
                     .filter((file) => file.endsWith('.zip') && fs.statSync(path.join('dist', file)).isFile())
@@ -24,11 +23,12 @@ export class Orchestrator {
                         if (err.message === 'Rocketlet already exists.') {
                             return this.manager.update(zip);
                         } else {
+                            console.log(err);
                             throw err;
                         }
                     })));
         }).then(() => {
-            this.manager.get().forEach((rl) => console.log('Successfully has been loaded:', rl.getName()));
+            this.manager.get().forEach((rl) => console.log('Successfully loaded:', rl.getName()));
             return true;
         });
     }

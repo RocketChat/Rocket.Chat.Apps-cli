@@ -39,8 +39,10 @@ export class ServerRocketletStorage extends RocketletStorage {
             this.db.findOne({ id }, (err: Error, doc: IRocketletStorageItem) => {
                 if (err) {
                     reject(err);
-                } else {
+                } else if (doc) {
                     resolve(doc);
+                } else {
+                    reject(new Error(`Nothing found by the id: ${id}`));
                 }
             });
         });
@@ -59,16 +61,7 @@ export class ServerRocketletStorage extends RocketletStorage {
     }
 
     public update(item: IRocketletStorageItem): Promise<IRocketletStorageItem> {
-        return new Promise((resolve, reject) => {
-            this.db.update({ id: item.id }, { $set: item }, (err: Error) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    console.log('Updated:', item.info.name);
-                    return this.retrieveOne(item.id);
-                }
-            });
-        });
+        return this.remove(item.id).then(() => this.create(item));
     }
 
     public remove(id: string): Promise<{ success: boolean}> {
