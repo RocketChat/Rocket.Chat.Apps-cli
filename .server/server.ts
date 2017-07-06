@@ -2,14 +2,28 @@ import { Orchestrator } from './orchestrator';
 
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
+import * as fs from 'fs';
+import * as path from 'path';
 
-const orch = new Orchestrator();
 const app = express();
+let orch = new Orchestrator();
 
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'site')));
 
-app.get('/', function _indexHandler(req, res) {
-    res.json({ message: 'Coming soon ;)' });
+app.get('/loaded', (req, res) => {
+    res.json({ rocketlets: orch.manager.get().map((rc) => rc.getName()) });
+});
+
+app.post('/load', (req, res) => {
+    if (req.body.rocketletId) {
+        res.status(501).json({ success: false, err: 'Coming soon.' });
+    } else {
+        orch = new Orchestrator();
+        orch.loadAndUpdate()
+            .then(() => res.json({ success: true }))
+            .catch((err) => res.status(500).json({ success: false, err }));
+    }
 });
 
 app.post('/event', (req, res) => {

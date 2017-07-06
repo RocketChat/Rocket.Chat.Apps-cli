@@ -5,12 +5,12 @@
         "target": "es5",
         "module": "commonjs",
         "declaration": true,
-        "noImplicitAny": true,
+        "noImplicitAny": false,
         "removeComments": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "moduleResolution": "node",
-        "lib": ["es2017"],
+        "lib": ["es2017", "dom"],
         "outDir": "dist"
     },
     "atom": {

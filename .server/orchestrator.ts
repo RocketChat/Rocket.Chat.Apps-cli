@@ -6,8 +6,8 @@ import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
 import { ServerRocketletStorage } from './storage';
 
 export class Orchestrator {
-    private storage: ServerRocketletStorage;
-    private manager: RocketletManager;
+    public storage: ServerRocketletStorage;
+    public manager: RocketletManager;
 
     constructor() {
         this.storage = new ServerRocketletStorage();
