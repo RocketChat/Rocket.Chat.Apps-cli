@@ -1,4 +1,9 @@
-import { IConfigurationExtend, IEnvironmentRead, ILogger } from 'temporary-rocketlets-ts-definition/accessors';
+import {
+    IConfigurationExtend,
+    IConfigurationModify,
+    IEnvironmentRead,
+    ILogger,
+} from 'temporary-rocketlets-ts-definition/accessors';
 import { IRocketletInfo } from 'temporary-rocketlets-ts-definition/metadata';
 import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
 
@@ -11,11 +16,11 @@ export class TodoListRocketlet extends Rocketlet {
         this.extendConfiguration(configurationExtend);
     }
 
-    public onEnable(environment: IEnvironmentRead, configurationModify: object): boolean {
+    public onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): boolean {
         return true;
     }
 
-    public onDisable(configurationModify: object): void {
+    public onDisable(configurationModify: IConfigurationModify): void {
         return;
     }
 

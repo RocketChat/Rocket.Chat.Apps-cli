@@ -1,0 +1,14 @@
+{
+    "id": "92f68653-ef9e-44fe-9284-4bd807c8fd78",
+    "name": "ASCII Art Commands",
+    "nameSlug": "asciiart-commands",
+    "description": "Provides neat little asciiart commands for fun usage.",
+    "version": "1.0.0",
+    "requiredApiVersion": "1.0.0",
+    "author": {
+        "name": "Bradley Hilton",
+        "homepage": "https://github.com/graywolf336/temporary-rocketlets-dev-environment",
+        "support": "https://github.com/graywolf336/temporary-rocketlets-dev-environment/issues"
+    },
+    "classFile": "AsciiArtCommandsRocketlet.ts"
+}

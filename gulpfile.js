@@ -65,9 +65,13 @@ gulp.task('run-server', ['lint-no-exit-ts', 'compile-server-ts', 'copy-server-si
     server.stdout.on('data', (msg) => {
         gutil.log(gutil.colors.blue('Server:'), msg.toString().trim());
 
-        if (msg.toString().startsWith('Successfully loaded')) {
+        if (msg.toString().includes('Completed the loading')) {
             cb();
         }
+    });
+
+    server.stderr.on('data', (msg) => {
+        gutil.log(gutil.colors.blue('Server:'), msg.toString().trim());
     });
 
     server.on('close', (code) => {
@@ -95,7 +99,7 @@ gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts',
 //Packaging related items
 function _packageTheRocketlets(callback) {
     const folders = getFolders(rocketletsPath)
-                        .filter((folder) => fs.statSync(path.join(rocketletsPath, folder, 'rocketlet.json')).isFile())
+                        .filter((folder) => fs.existsSync(path.join(rocketletsPath, folder, 'rocketlet.json')) && fs.statSync(path.join(rocketletsPath, folder, 'rocketlet.json')).isFile())
                         .map((folder) => {
                             return {
                                 folder,
@@ -138,7 +142,7 @@ function _packageTheRocketlets(callback) {
                 return;
             }
 
-            const zippers = validItems.map((item) => {
+            const zippers = validItems.filter((item) => fs.existsSync(path.join(item.dir, item.info.classFile))).map((item) => {
                 return new Promise((resolve) => {
                     gutil.log(gutil.colors.green(figures.tick), gutil.colors.cyan(item.info.name + ' ' + item.info.version));
                     return gulp.src(item.toZip)

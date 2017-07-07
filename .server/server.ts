@@ -35,5 +35,7 @@ app.listen(3003, function _appListen() {
   console.log('Example app listening on port 3003!');
   console.log('http://localhost:3003/');
 
-  orch.loadAndUpdate().catch((err) => console.warn('Errored loadAndUpdate:', err));
+  orch.loadAndUpdate()
+    .then(() => console.log('Completed the loading'))
+    .catch((err) => console.warn('Errored loadAndUpdate:', err));
 });

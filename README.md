@@ -18,6 +18,9 @@ First up, unless you're extending the development environment, the only folder y
 The other folders are for making the development environment a pleasure to work with (hopefully).
 The `.server` directory is the "mock" server with storage, this is where the code lives which mocks up the Rocket.Chat server.
 
+## Generating a Rocketlet ID
+We require UUID Version 4 for IDs. To generate one for your Rocketlet we recommend this site: https://www.uuidgenerator.net/version4
+
 ## Logging Inside a Rocketlet
 Due to limitations of NodeJS's `vm` package we have had to implement a custom logger class.
 To make usage of this you can use `this.getLogger()` and then do the normal `console` style logging.
