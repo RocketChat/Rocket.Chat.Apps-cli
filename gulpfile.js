@@ -60,14 +60,21 @@ let server;
 gulp.task('run-server', ['lint-no-exit-ts', 'compile-server-ts', 'copy-server-site', 'package-for-develop'], function _runTheServer(cb) {
     if (server) server.kill();
 
-    server = spawn('node', ['.server-dist/server.js'], { stdio: 'inherit' });
+    server = spawn('node', ['.server-dist/server.js']);
+
+    server.stdout.on('data', (msg) => {
+        gutil.log(gutil.colors.blue('Server:'), msg.toString().trim());
+
+        if (msg.toString().startsWith('Successfully loaded')) {
+            cb();
+        }
+    });
+
     server.on('close', (code) => {
         if (code === 8) {
             gulp.log('Error detected, waiting for changes....');
         }
     });
-
-    cb();
 });
 
 process.on('exit', () => {
