@@ -7,11 +7,11 @@ export class LennyCommand implements ISlashCommand {
     public i18nDescription: string = 'something_will_go_here';
 
     public executor(context: ISlashCommandContext, builder: IBuilder): void {
-        builder.buildMessage({
+        builder.finishMessage(builder.buildMessage({
             id: 'this-will-be-removed(whoops)',
             room: context.getRoom(),
             sender: context.getSender(),
-            text: context.getArguments().join(' ') + ' ( ͡° ͜ʖ ͡°)',
-        }).finish();
+            text: context.getArguments().join(' ') + (context.getArguments().length === 0 ? '' : ' ') + ' ( ͡° ͜ʖ ͡°)',
+        }));
     }
 }

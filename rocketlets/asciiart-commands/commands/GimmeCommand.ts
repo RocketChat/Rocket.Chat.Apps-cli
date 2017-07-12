@@ -7,8 +7,10 @@ export class GimmeCommand implements ISlashCommand {
     public i18nDescription: string = 'something_will_go_here';
 
     public executor(context: ISlashCommandContext, builder: IBuilder): void {
-        builder.buildMessage()
+        const msgBuilder = builder.buildMessage()
             .setSender(context.getSender()).setRoom(context.getRoom())
-            .setText('༼ つ ◕_◕ ༽つ ' + context.getArguments().join(' ')).finish();
+            .setText('༼ つ ◕_◕ ༽つ ' + context.getArguments().join(' '));
+
+        builder.finishMessage(msgBuilder);
     }
 }

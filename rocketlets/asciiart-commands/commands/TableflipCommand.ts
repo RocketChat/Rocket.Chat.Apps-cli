@@ -7,8 +7,12 @@ export class TableflipCommand implements ISlashCommand {
     public i18nDescription: string = 'something_will_go_here';
 
     public executor(context: ISlashCommandContext, builder: IBuilder): void {
-        builder.buildMessage()
+        const msgBuilder = builder.buildMessage()
             .setSender(context.getSender()).setRoom(context.getRoom())
-            .setText(context.getArguments().join(' ') + ' (╯°□°）╯︵ ┻━┻').finish();
+            .setText(context.getArguments().join(' ') +
+                (context.getArguments().length === 0 ? '' : ' ') +
+                '(╯°□°）╯︵ ┻━┻');
+
+        builder.finishMessage(msgBuilder);
     }
 }
