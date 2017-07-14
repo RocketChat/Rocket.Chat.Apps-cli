@@ -1,5 +1,5 @@
 import * as Datastore from 'nedb';
-import { IRocketletStorageItem, RocketletStorage } from 'temporary-rocketlets-server/storage';
+import { IRocketletStorageItem, RocketletStorage } from 'temporary-rocketlets-server/server/storage';
 
 export class ServerRocketletStorage extends RocketletStorage {
     private db: Datastore;
@@ -48,13 +48,17 @@ export class ServerRocketletStorage extends RocketletStorage {
         });
     }
 
-    public retrieveAll(): Promise<Array<IRocketletStorageItem>> {
+    public retrieveAll(): Promise<Map<string, IRocketletStorageItem>> {
         return new Promise((resolve, reject) => {
             this.db.find({}, (err: Error, docs: Array<IRocketletStorageItem>) => {
                 if (err) {
                     reject(err);
                 } else {
-                    resolve(docs);
+                    const items = new Map<string, IRocketletStorageItem>();
+
+                    docs.forEach((i) => items.set(i.id, i));
+
+                    resolve(items);
                 }
             });
         });

@@ -1,17 +1,20 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { RocketletManager } from 'temporary-rocketlets-server/manager';
+import { RocketletManager } from 'temporary-rocketlets-server/server/RocketletManager';
 import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
 
+import { ServerRocketletBridges } from './bridges/bridges';
 import { ServerRocketletStorage } from './storage';
 
 export class Orchestrator {
+    public bridges: ServerRocketletBridges;
     public storage: ServerRocketletStorage;
     public manager: RocketletManager;
 
     constructor() {
+        this.bridges = new ServerRocketletBridges();
         this.storage = new ServerRocketletStorage();
-        this.manager = new RocketletManager(this.storage);
+        this.manager = new RocketletManager(this.storage, this.bridges);
     }
 
     public loadAndUpdate(): Promise<boolean> {
