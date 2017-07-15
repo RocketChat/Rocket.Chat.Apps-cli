@@ -3,7 +3,7 @@
     "name": "To Do Lists",
     "nameSlug": "to-do-lists",
     "version": "0.0.1",
-    "requiredApiVersion": "1.0.0",
+    "requiredApiVersion": ">=0.6.1",
     "description": "Rocketlet which provides to do lists per channels, including associated commands.",
     "author": {
         "name": "Bradley Hilton <bradley.hilton@rocket.chat>",
