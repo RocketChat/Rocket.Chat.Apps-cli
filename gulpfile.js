@@ -6,6 +6,9 @@ const del = require('del');
 const through = require('through2');
 const gulp = require('gulp');
 const file = require('gulp-file');
+const fontello = require('gulp-fontello');
+const download = require('gulp-download');
+const merge = require('gulp-merge');
 const gutil = require('gulp-util');
 const zip = require('gulp-zip');
 const jsonSchema = require('gulp-json-schema');
@@ -24,7 +27,11 @@ const rocketletsPath = './rocketlets';
 const tsp = tsc.createProject('tsconfig.json');
 
 gulp.task('clean-generated', function _cleanTypescript() {
-    return del(['./dist/**/*', './.server-dist/**/*']);
+    return del(['./dist/**', './.server-dist/**']);
+});
+
+gulp.task('clean-fontello', function _cleanFontello() {
+    return del(['./.site/fontello/**']);
 });
 
 gulp.task('lint-ts', function _lintTypescript() {
@@ -62,8 +69,17 @@ gulp.task('compile-server-site-ts', ['clean-generated', 'compile-server-ts'], fu
             .pipe(gulp.dest('.server-dist/site'));
 });
 
+gulp.task('compile-server-site-fontello', ['clean-fontello'], function _fontello() {
+    return download('https://raw.githubusercontent.com/RocketChat/Rocket.Chat/develop/packages/rocketchat-theme/client/vendor/fontello/config.json')
+            .pipe(fontello({ assetsOnly: false }))
+            .pipe(gulp.dest('.site/fontello'));
+});
+
 gulp.task('copy-server-site', ['clean-generated', 'compile-server-ts', 'compile-server-site-ts'], function _copyServerSiteContent() {
-    return gulp.src(['.site/**/*.html', '.site/**/*.css']).pipe(gulp.dest('.server-dist/site'));
+    const siteSrcs = gulp.src(['.site/**/*.html', '.site/**/*.css', '.site/font/**.*']).pipe(gulp.dest('.server-dist/site'));
+    const fontelloSrcs = gulp.src('.site/fontello/**/*').pipe(gulp.dest('.server-dist/site/fontello'));
+
+    return merge(siteSrcs, fontelloSrcs);
 });
 
 let server;

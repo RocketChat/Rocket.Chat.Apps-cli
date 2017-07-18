@@ -1,0 +1,143 @@
+button {
+    background: none;
+    border-width: 0;
+    padding: 0;
+    text-align: left;
+    cursor: pointer;
+    text-transform: inherit;
+    color: inherit;
+    font-style: inherit;
+}
+
+#fake-rocket-chat {
+    display: block;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    height: auto;
+}
+
+.main-content {
+    background-color: whitesmoke;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 260px;
+}
+
+.messages-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    flex-grow: 1;
+}
+
+.fixed-title {
+    background-color: white;
+    display: flex;
+    align-items: center;
+    flex-flow: row nowrap;
+    padding: 0 10px 0 20px;
+    border-color: #eaeaea;
+    border-width: 0 0 1px;
+    z-index: 100;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 61px;
+}
+
+.fixed-title h2 {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 22px;
+    font-weight: 500;
+    line-height: 29px;
+}
+
+.fixed-title h2 .toggle-favorite {
+    color: #eaeaea;
+}
+
+.fixed-title h2 .icon-star {
+    color: #fcb316;
+    margin-right: -4px;
+}
+
+.fixed-title h2 .icon-hash {
+    color: rgba(0,0,0,0.15);
+    margin-right: -7px;
+}
+
+.fixed-title .room-topic {
+    font-size: 14px;
+    opacity: 0.4;
+    margin-left: 10px;
+}
+
+.messages-container-wrapper {
+    height: 100%;
+    display: flex;
+}
+
+.messages-container-main {
+    flex: 1 1 auto;
+    width: 50%;
+    position: relative;
+}
+
+.flex-tab-container {
+    display: flex;
+    flex: 0 0 41px;
+    z-index: 2;
+    border-color: #eaeaea;
+    border-width: 0 0 0 1px;
+}
+
+.flex-tab-container .flex-tab {
+    position: relative;
+    display: none;
+    width: 400px;
+    overflow-x: visible;
+}
+
+.flex-tab-container .flex-tab-bar {
+    background-color: white;
+    min-width: 40px;
+    z-index: 1;
+}
+
+.flex-tab-container .flex-tab-bar .tab-button:hover {
+    background-color: #f4f4f4;
+}
+
+.flex-tab-container .flex-tab-bar .tab-button {
+    position: relative;
+    cursor: pointer;
+    text-align: center;
+}
+
+.flex-tab-container .flex-tab-bar .tab-button button {
+    height: 38px;
+}
+
+.side-nav {
+    background-color: #04436a;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 260px;
+    height: auto;
+    z-index: 100;
+    padding: 12px 0 0;
+}

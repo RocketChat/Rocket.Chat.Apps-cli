@@ -5,7 +5,6 @@ export class DevClient {
     private readonly socket: SocketIO.Socket;
 
     constructor(private readonly server: string, io: any) {
-        document.getElementById('hello').style.color = 'blue';
         this.socket = io.connect(server);
 
         this.socket.on('status', (data) => {

@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "gulp",
-    "package": "gulp package"
+    "package": "gulp package",
+    "fontello": "gulp compile-server-site-fontello"
   },
   "author": "Bradley Hilton <bradley.hilton@rocket.chat>",
   "license": "MIT",
@@ -22,8 +23,11 @@
     "express": "^4.15.3",
     "figures": "^2.0.0",
     "gulp": "^3.9.1",
+    "gulp-download": "0.0.1",
     "gulp-file": "^0.3.0",
+    "gulp-fontello": "^0.4.6",
     "gulp-json-schema": "^1.0.0",
+    "gulp-merge": "^0.1.1",
     "gulp-refresh": "^1.1.0",
     "gulp-sourcemaps": "^2.6.0",
     "gulp-tslint": "^8.1.1",

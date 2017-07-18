@@ -22,9 +22,9 @@ export class GithubRocketlet extends Rocketlet implements IPreMessageSentModify 
             for (const link of githubLinks) {
                 const parts = this.matcher.exec(link);
 
-                const newLink = `[${link}](https://github.com/${parts[1]}${parts[2]}/issues/${parts[3]})`;
+                const newLink = `[${link}](https://github.com/${parts[1]}/${parts[2]}/issues/${parts[3]})`;
 
-                message.text.replace(link, newLink);
+                message.text = message.text.replace(link, newLink);
             }
         }
 
