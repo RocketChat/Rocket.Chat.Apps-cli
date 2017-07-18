@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Hello, Earth</title>
+    </head>
+    <body>
+        <h1 id="hello">Hello Earthlings</h1>
+        <script src="http://localhost:35729/livereload.js"></script>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/0.20.15/system.src.js"></script>
+        <script>
+            System.import('index.js').then(function _loaded(item) {
+                new item.DevClient('http://localhost:3003', window.io)
+            });
+        </script>
+    </body>
+</html>

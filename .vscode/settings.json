@@ -6,5 +6,6 @@
             ],
             "url": "./rocketlet-schema.json"
         }
-    ]
+    ],
+    "tslint.exclude": ["**node_modules**"]
 }

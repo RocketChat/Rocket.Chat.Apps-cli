@@ -52,12 +52,22 @@ gulp.task('compile-server-ts', ['clean-generated'], function _compileServerTypes
             .pipe(gulp.dest('.server-dist'));
 });
 
-gulp.task('copy-server-site', ['clean-generated', 'compile-server-ts'], function _copyServerSiteContent() {
-    return gulp.src(['.server-dist/**/*.js', '.server/site/**/*.html', '.server/site/**/*.css']).pipe(gulp.dest('.server-dist/site'));
+gulp.task('compile-server-site-ts', ['clean-generated', 'compile-server-ts'], function _compileServerTypescript() {
+    const project = tsc.createProject('.site/tsconfig.json');
+
+    return project.src()
+            .pipe(sourcemaps.init())
+            .pipe(project())
+            .pipe(sourcemaps.write('.'))
+            .pipe(gulp.dest('.server-dist/site'));
+});
+
+gulp.task('copy-server-site', ['clean-generated', 'compile-server-ts', 'compile-server-site-ts'], function _copyServerSiteContent() {
+    return gulp.src(['.site/**/*.html', '.site/**/*.css']).pipe(gulp.dest('.server-dist/site'));
 });
 
 let server;
-gulp.task('run-server', ['lint-no-exit-ts', 'compile-server-ts', 'copy-server-site', 'package-for-develop'], function _runTheServer(cb) {
+gulp.task('run-server', ['lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop'], function _runTheServer(cb) {
     if (server) server.kill();
 
     server = spawn('node', ['.server-dist/server.js']);
@@ -85,15 +95,15 @@ process.on('exit', () => {
     if (server) server.kill();
 });
 
-gulp.task('refresh-lr', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'copy-server-site', 'package-for-develop', 'run-server'], function _refreshLr() {
-    return gulp.src(['.server/site/**/*.html', '.server/site/**/*.css']).pipe(refresh());
+gulp.task('refresh-lr', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'run-server'], function _refreshLr() {
+    return gulp.src(['.site/**/*.ts', '.site/**/*.html', '.site/**/*.css']).pipe(refresh());
 });
 
-gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'copy-server-site', 'package-for-develop', 'run-server'], function _watchCodeAndRun() {
+gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'run-server'], function _watchCodeAndRun() {
     refresh.listen();
 
-    gulp.watch(['rocketlets/**/*', '.server/**/*.ts', '.server/**/*.html', '.server/**/*.css'],
-        ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'copy-server-site', 'package-for-develop', 'refresh-lr', 'run-server']);
+    gulp.watch(['rocketlets/**/*', '.server/**/*.ts', '.site/**/*.ts', '.site/**/*.html', '.site/**/*.css'],
+        ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'refresh-lr', 'run-server']);
 });
 
 //Packaging related items
