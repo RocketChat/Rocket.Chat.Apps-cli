@@ -54,6 +54,16 @@ export class Orchestrator {
             socket.on('get/enabled', (fn) => {
                 fn(this.manager.get({ enabled: true }).map((rl) => rl.getInfo()));
             });
+
+            socket.on('get/disabled', (fn) => {
+                fn(this.manager.get({ disabled: true }).map((rl) => rl.getInfo()));
+            });
+
+            // TODO: language additions
+
+            socket.on('get/commands', (fn) => {
+                fn(this.bridges.getCommandBridge().getCommands());
+            });
         });
     }
 

@@ -21,7 +21,7 @@ export class ServerRocketletBridges extends RocketletBridges {
         this.envBridge = new ServerEnvironmentalVariableBridge();
     }
 
-    public getCommandBridge(): IRocketletCommandBridge {
+    public getCommandBridge(): ServerCommandBridge {
         return this.cmdBridge;
     }
 

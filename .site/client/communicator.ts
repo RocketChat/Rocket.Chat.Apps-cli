@@ -8,14 +8,18 @@ export class DevCommunicator extends RocketletServerCommunicator {
 
     public getEnabledRocketlets(): Promise<Array<IRocketletInfo>> {
         return new Promise((resolve) => {
-            this.socket.emit('get/enabled', (result) => {
-                resolve(result);
+            this.socket.emit('get/enabled', (enableds) => {
+                resolve(enableds);
             });
         });
     }
 
     public getDisabledRocketlets(): Promise<Array<IRocketletInfo>> {
-        throw new Error('Method not implemented.');
+        return new Promise((resolve) => {
+            this.socket.emit('get/disabled', (disableds) => {
+                resolve(disableds);
+            });
+        });
     }
 
     public getLanguageAdditions(): Promise<Map<string, Map<string, object>>> {
@@ -23,7 +27,11 @@ export class DevCommunicator extends RocketletServerCommunicator {
     }
 
     public getSlashCommands(): Promise<Map<string, Array<string>>> {
-        throw new Error('Method not implemented.');
+        return new Promise((resolve) => {
+            this.socket.emit('get/commands', (commands) => {
+                resolve(commands);
+            });
+        });
     }
 
     public getContextualBarButtons(): Promise<Map<string, Array<object>>> {

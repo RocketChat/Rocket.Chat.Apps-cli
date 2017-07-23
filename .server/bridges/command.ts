@@ -8,6 +8,10 @@ export class ServerCommandBridge implements IRocketletCommandBridge {
         this.commands = new Map<string, (command: string, context: ISlashCommandContext) => {}>();
     }
 
+    public getCommands(): Array<string> {
+        return Array.from(this.commands.keys());
+    }
+
     public doesCommandExist(command: string, rocketletId: string): boolean {
         return this.commands.has(command);
     }
