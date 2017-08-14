@@ -1,11 +1,11 @@
 import { IRocketletCommandBridge } from 'temporary-rocketlets-server/server/bridges';
-import { ISlashCommand, ISlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
+import { ISlashCommand, SlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
 
 export class ServerCommandBridge implements IRocketletCommandBridge {
-    private commands: Map<string, (command: string, context: ISlashCommandContext) => {}>;
+    private commands: Map<string, (command: string, context: SlashCommandContext) => {}>;
 
     constructor() {
-        this.commands = new Map<string, (command: string, context: ISlashCommandContext) => {}>();
+        this.commands = new Map<string, (command: string, context: SlashCommandContext) => {}>();
     }
 
     public getCommands(): Array<string> {
@@ -25,7 +25,7 @@ export class ServerCommandBridge implements IRocketletCommandBridge {
     }
 
     // tslint:disable-next-line:max-line-length
-    public registerCommand(command: string, rocketletId: string, executor: (command: string, context: ISlashCommandContext) => {}): void {
+    public registerCommand(command: string, rocketletId: string, executor: (command: string, context: SlashCommandContext) => {}): void {
         if (this.commands.has(command)) {
             throw new Error(`Command "${command}" has already been registered.`);
         }
