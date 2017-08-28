@@ -10,11 +10,11 @@ export class ServerSettingBridge implements IServerSettingBridge {
         throw new Error('Method not implemented.');
     }
 
-    public hideGroup(name: string): void {
+    public hideGroup(name: string, rocketletId: string): void {
         throw new Error('Method not implemented.');
     }
 
-    public hideSetting(id: string): void {
+    public hideSetting(id: string, rocketletId: string): void {
         throw new Error('Method not implemented.');
     }
 

@@ -1,18 +1,18 @@
-import { IBuilder, IHttp, IRead, ISettingRead } from 'temporary-rocketlets-ts-definition/accessors';
+import { IHttp, IModify, IRead, ISettingRead } from 'temporary-rocketlets-ts-definition/accessors';
 import { ISlashCommand, SlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
 
 export class TableflipCommand implements ISlashCommand {
     public command: string = 'tableflip';
-    public paramsExample: string = 'your message (optional)';
-    public i18nDescription: string = 'something_will_go_here';
+    public paramsExample: string = 'your_message_optional';
+    public i18nDescription: string = 'Slash_Tableflip_Description';
 
-    public executor(context: SlashCommandContext, builder: IBuilder): void {
-        const msgBuilder = builder.buildMessage()
+    public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): void {
+        const msgBuilder = modify.getCreater().startMessage()
             .setSender(context.getSender()).setRoom(context.getRoom())
             .setText(context.getArguments().join(' ') +
                 (context.getArguments().length === 0 ? '' : ' ') +
                 '(╯°□°）╯︵ ┻━┻');
 
-        builder.finishMessage(msgBuilder);
+        modify.getCreater().finish(msgBuilder);
     }
 }
