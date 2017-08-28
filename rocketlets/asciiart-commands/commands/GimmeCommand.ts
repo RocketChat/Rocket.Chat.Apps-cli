@@ -7,10 +7,10 @@ export class GimmeCommand implements ISlashCommand {
     public i18nDescription: string = 'Slash_Gimme_Description';
 
     public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): void {
-        const builder = modify.getCreater().startMessage()
+        const builder = modify.getCreator().startMessage()
             .setSender(context.getSender()).setRoom(context.getRoom())
             .setText('༼ つ ◕_◕ ༽つ ' + context.getArguments().join(' '));
 
-        modify.getCreater().finish(builder);
+        modify.getCreator().finish(builder);
     }
 }

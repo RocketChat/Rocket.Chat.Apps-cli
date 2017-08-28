@@ -7,12 +7,12 @@ export class UnflipCommand implements ISlashCommand {
     public i18nDescription: string = 'Slash_TableUnflip_Description';
 
     public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): void {
-        const msgBuilder = modify.getCreater().startMessage()
+        const msgBuilder = modify.getCreator().startMessage()
             .setSender(context.getSender()).setRoom(context.getRoom())
             .setText(context.getArguments().join(' ') +
                 (context.getArguments().length === 0 ? '' : ' ') +
                 '┬─┬ ノ( ゜-゜ノ)');
 
-        modify.getCreater().finish(msgBuilder);
+        modify.getCreator().finish(msgBuilder);
     }
 }

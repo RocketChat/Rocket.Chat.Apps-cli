@@ -7,7 +7,7 @@ export class LennyCommand implements ISlashCommand {
     public i18nDescription: string = 'Slash_LennyFace_Description';
 
     public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): void {
-        modify.getCreater().finish(modify.getCreater().startMessage({
+        modify.getCreator().finish(modify.getCreator().startMessage({
             id: 'this-will-be-removed(whoops)',
             room: context.getRoom(),
             sender: context.getSender(),
