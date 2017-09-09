@@ -4,8 +4,13 @@ import { ServerSettingBridge } from './settings';
 
 import {
     IEnvironmentalVariableBridge,
+    IHttpBridge,
+    IMessageBridge,
+    IPersistenceBridge,
     IRocketletCommandBridge,
+    IRoomBridge,
     IServerSettingBridge,
+    IUserBridge,
     RocketletBridges,
 } from 'temporary-rocketlets-server/server/bridges';
 
@@ -31,5 +36,25 @@ export class ServerRocketletBridges extends RocketletBridges {
 
     public getEnvironmentalVariableBridge(): IEnvironmentalVariableBridge {
         return this.envBridge;
+    }
+
+    public getHttpBridge(): IHttpBridge {
+        throw new Error('Method not implemented.');
+    }
+
+    public getMessageBridge(): IMessageBridge {
+        throw new Error('Method not implemented.');
+    }
+
+    public getPersistenceBridge(): IPersistenceBridge {
+        throw new Error('Method not implemented.');
+    }
+
+    public getRoomBridge(): IRoomBridge {
+        throw new Error('Method not implemented.');
+    }
+
+    public getUserBridge(): IUserBridge {
+        throw new Error('Method not implemented.');
     }
 }
