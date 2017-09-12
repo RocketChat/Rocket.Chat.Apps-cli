@@ -171,6 +171,7 @@ function _packageTheRocketlets(callback) {
             const zippers = validItems.filter((item) => fs.existsSync(path.join(item.dir, item.info.classFile))).map((item) => {
                 return new Promise((resolve) => {
                     gutil.log(gutil.colors.green(figures.tick), gutil.colors.cyan(item.info.name + ' ' + item.info.version));
+
                     return gulp.src(item.toZip)
                         .pipe(file('.packagedby', fs.readFileSync('package.json')))
                         .pipe(zip(item.info.nameSlug + '_' + item.info.version + '.zip'))
