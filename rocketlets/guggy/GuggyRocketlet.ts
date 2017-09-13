@@ -22,6 +22,7 @@ export class GuggyRocketlet extends Rocketlet {
             required: true,
             public: false,
             i18nLabel: 'Guggy_Api_Key',
+            i18nDescription: 'Guggy_Api_Key_Description',
         });
 
         configuration.http.provideDefaultHeader('Content-Type', 'application/json');
