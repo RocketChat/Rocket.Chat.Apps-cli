@@ -13,7 +13,12 @@ export class ServerCommandBridge implements IRocketletCommandBridge {
     }
 
     public doesCommandExist(command: string, rocketletId: string): boolean {
+        console.log('Checking if the command exists:', command);
         return this.commands.has(command);
+    }
+
+    public enableCommand(command: string, rocketletId: string): void {
+        console.log(`Enabling the command "${command}" per request of the rocketlet: ${rocketletId}`);
     }
 
     public disableCommand(command: string, rocketletId: string): void {

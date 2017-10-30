@@ -14,13 +14,11 @@ export class SettingToHttpHeader implements IHttpPreRequestHandler {
 
     // tslint:disable-next-line:max-line-length
     public executePreHttpRequest(url: string, request: IHttpRequest, read: IRead, persistence: IPersistence): IHttpRequest {
-        // const apiKey = read.getEnvironmentReader().getSettings().getValueById(this.apiKeyId);
+        const apiKey = read.getEnvironmentReader().getSettings().getValueById(this.apiKeyId);
 
-        // if (typeof apiKey !== 'string' || apiKey.length === 0) {
-        //     throw new Error('Invalid Guggy Api Key!');
-        // }
-
-        const apiKey = '8MPFcbGNTEFXanv';
+        if (typeof apiKey !== 'string' || apiKey.length === 0) {
+            throw new Error('Invalid Guggy Api Key!');
+        }
 
         if (typeof request.headers === 'undefined') {
             request.headers = { };
