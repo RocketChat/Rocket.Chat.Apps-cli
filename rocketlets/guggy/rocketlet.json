@@ -3,8 +3,8 @@
     "name": "Guggy Command",
     "nameSlug": "guggy-command",
     "description": "Provides a command for generating gifs based upon text provided.",
-    "version": "1.0.3",
-    "requiredApiVersion": ">=0.6.20",
+    "version": "1.0.8",
+    "requiredApiVersion": ">=0.6.29",
     "author": {
         "name": "Bradley Hilton",
         "homepage": "https://github.com/graywolf336/temporary-rocketlets-dev-environment",
