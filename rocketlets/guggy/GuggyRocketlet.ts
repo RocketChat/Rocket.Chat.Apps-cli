@@ -62,13 +62,16 @@ export class GuggyRocketlet extends Rocketlet {
         if (setting.value) {
             try {
                 this.guggyGetter.getTheGif(http, 'testing');
+                this.getLogger().log('Enabling the slash command.');
                 configModify.slashCommands.enableSlashCommand('guggy');
             } catch (e) {
                 // Not valid api key
+                this.getLogger().log('Disabling the slash command because the api eky isnt valid.');
                 configModify.slashCommands.disableSlashCommand('guggy');
             }
         } else {
             // There is no value, so remove the command
+            this.getLogger().log('Disabling the slash command because there is no setting value defined.');
             configModify.slashCommands.disableSlashCommand('guggy');
         }
     }
