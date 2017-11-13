@@ -43,7 +43,7 @@
     "typescript": "^2.4.1"
   },
   "dependencies": {
-    "temporary-rocketlets-server": "^0.1.31",
-    "temporary-rocketlets-ts-definition": "^0.6.30"
+    "temporary-rocketlets-server": "^0.1.32",
+    "temporary-rocketlets-ts-definition": "^0.6.31"
   }
 }

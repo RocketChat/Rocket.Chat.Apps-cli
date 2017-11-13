@@ -10,5 +10,6 @@
         "homepage": "https://github.com/graywolf336/temporary-rocketlets-dev-environment",
         "support": "https://github.com/graywolf336/temporary-rocketlets-dev-environment/issues"
     },
-    "classFile": "GuggyRocketlet.ts"
+    "classFile": "GuggyRocketlet.ts",
+    "iconFile": "icon.png"
 }

@@ -71,5 +71,5 @@
             "description": "The name of the folder which contains all of your resources, it should not start with a period."
         }
     },
-    "required": ["id", "name", "nameSlug", "version", "description", "requiredApiVersion", "author", "classFile"]
+    "required": ["id", "name", "nameSlug", "version", "description", "requiredApiVersion", "author", "classFile", "iconFile"]
 }
