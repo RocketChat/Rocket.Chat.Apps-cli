@@ -2,7 +2,9 @@ import { IHttp, IModify, IRead, ISettingRead } from 'temporary-rocketlets-ts-def
 import { ISlashCommand, SlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
 
 export class LennyCommand implements ISlashCommand {
-    public command: string = 'lennyface';
+    public static CommandName = 'lennyface';
+
+    public command: string = LennyCommand.CommandName;
     public paramsExample: string = 'your_message_optional';
     public i18nDescription: string = 'Slash_LennyFace_Description';
 

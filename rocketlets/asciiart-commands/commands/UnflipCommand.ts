@@ -2,7 +2,9 @@ import { IHttp, IModify, IRead, ISettingRead } from 'temporary-rocketlets-ts-def
 import { ISlashCommand, SlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
 
 export class UnflipCommand implements ISlashCommand {
-    public command: string = 'unflip';
+    public static CommandName = 'unflip';
+
+    public command: string = UnflipCommand.CommandName;
     public paramsExample: string = 'your_message_optional';
     public i18nDescription: string = 'Slash_TableUnflip_Description';
 

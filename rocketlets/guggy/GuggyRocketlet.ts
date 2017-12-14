@@ -66,7 +66,7 @@ export class GuggyRocketlet extends Rocketlet {
                 configModify.slashCommands.enableSlashCommand('guggy');
             } catch (e) {
                 // Not valid api key
-                this.getLogger().log('Disabling the slash command because the api eky isnt valid.');
+                this.getLogger().log('Disabling the slash command because the api key isnt valid.');
                 configModify.slashCommands.disableSlashCommand('guggy');
             }
         } else {

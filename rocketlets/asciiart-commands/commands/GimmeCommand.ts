@@ -2,7 +2,9 @@ import { IHttp, IModify, IRead } from 'temporary-rocketlets-ts-definition/access
 import { ISlashCommand, SlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
 
 export class GimmeCommand implements ISlashCommand {
-    public command: string = 'gimme';
+    public static CommandName = 'gimme';
+
+    public command: string = GimmeCommand.CommandName;
     public paramsExample: string = 'your_message_optional';
     public i18nDescription: string = 'Slash_Gimme_Description';
 

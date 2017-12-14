@@ -2,7 +2,9 @@ import { IHttp, IModify, IRead, ISettingRead } from 'temporary-rocketlets-ts-def
 import { ISlashCommand, SlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
 
 export class ShrugCommand implements ISlashCommand {
-    public command: string = 'shrug';
+    public static CommandName = 'shrug';
+
+    public command: string = ShrugCommand.CommandName;
     public paramsExample: string = 'your_message_optional';
     public i18nDescription: string = 'Slash_Shrug_Description';
 
