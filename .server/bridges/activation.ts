@@ -1,24 +1,24 @@
-import { IRocketletActivationBridge } from 'temporary-rocketlets-server/server/bridges';
-import { ProxiedRocketlet } from 'temporary-rocketlets-server/server/ProxiedRocketlet';
+import { IAppActivationBridge } from '@rocket.chat/apps-engine/server/bridges';
+import { ProxiedApp } from '@rocket.chat/apps-engine/server/ProxiedApp';
 
-export class ServerRocketletActivationBridge implements IRocketletActivationBridge {
-    public rocketletEnabled(rocketlet: ProxiedRocketlet): void {
-        console.log(`The Rocketlet ${ rocketlet.getName() } (${ rocketlet.getID() }) has been enabled.`);
+export class ServerAppActivationBridge implements IAppActivationBridge {
+    public appEnabled(app: ProxiedApp): void {
+        console.log(`The App ${ app.getName() } (${ app.getID() }) has been enabled.`);
     }
 
-    public rocketletDisabled(rocketlet: ProxiedRocketlet): void {
-        console.log(`The Rocketlet ${ rocketlet.getName() } (${ rocketlet.getID() }) has been disabled.`);
+    public appDisabled(app: ProxiedApp): void {
+        console.log(`The App ${ app.getName() } (${ app.getID() }) has been disabled.`);
     }
 
-    public rocketletLoaded(rocketlet: ProxiedRocketlet, enabled: boolean): void {
-        console.log(`The Rocketlet ${ rocketlet.getName() } (${ rocketlet.getID() }) has been loaded.`);
+    public appLoaded(app: ProxiedApp, enabled: boolean): void {
+        console.log(`The App ${ app.getName() } (${ app.getID() }) has been loaded.`);
     }
 
-    public rocketletUpdated(rocketlet: ProxiedRocketlet, enabled: boolean): void {
-        console.log(`The Rocketlet ${ rocketlet.getName() } (${ rocketlet.getID() }) has been updated.`);
+    public appUpdated(app: ProxiedApp, enabled: boolean): void {
+        console.log(`The App ${ app.getName() } (${ app.getID() }) has been updated.`);
     }
 
-    public rocketletRemoved(rocketlet: ProxiedRocketlet): void {
-        console.log(`The Rocketlet ${ rocketlet.getName() } (${ rocketlet.getID() }) has been removed.`);
+    public appRemoved(app: ProxiedApp): void {
+        console.log(`The App ${ app.getName() } (${ app.getID() }) has been removed.`);
     }
 }

@@ -1,23 +1,23 @@
+import { AppManager } from '@rocket.chat/apps-engine/server/AppManager';
+import { App } from '@rocket.chat/apps-ts-definition/App';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as socketIO from 'socket.io';
-import { RocketletManager } from 'temporary-rocketlets-server/server/RocketletManager';
-import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
 
-import { ServerRocketletBridges } from './bridges/bridges';
-import { ServerRocketletStorage } from './storage';
+import { ServerAppBridges } from './bridges/bridges';
+import { ServerAppStorage } from './storage';
 
 export class Orchestrator {
-    public bridges: ServerRocketletBridges;
-    public storage: ServerRocketletStorage;
-    public manager: RocketletManager;
+    public bridges: ServerAppBridges;
+    public storage: ServerAppStorage;
+    public manager: AppManager;
 
     private io: SocketIO.Server;
 
     constructor() {
-        this.bridges = new ServerRocketletBridges();
-        this.storage = new ServerRocketletStorage();
-        this.manager = new RocketletManager(this.storage, this.bridges);
+        this.bridges = new ServerAppBridges();
+        this.storage = new ServerAppStorage();
+        this.manager = new AppManager(this.storage, this.bridges);
     }
 
     public loadAndUpdate(): Promise<boolean> {
@@ -26,7 +26,7 @@ export class Orchestrator {
                     .filter((file) => file.endsWith('.zip') && fs.statSync(path.join('dist', file)).isFile())
                     .map((file) => fs.readFileSync(path.join('dist', file), 'base64'))
                     .map((zip) => this.manager.add(zip).catch((err: Error) => {
-                        if (err.message === 'Rocketlet already exists.') {
+                        if (err.message === 'App already exists.') {
                             return this.manager.update(zip);
                         } else {
                             console.log(err);
@@ -35,8 +35,8 @@ export class Orchestrator {
                     })));
         }).then(() => {
             if (typeof this.io !== 'undefined') {
-                this.io.emit('status', { loaded: this.manager.areRocketletsLoaded() });
-                this.sendRocketletsInfo();
+                this.io.emit('status', { loaded: this.manager.areAppsLoaded() });
+                this.sendAppsInfo();
             }
 
             this.manager.get().forEach((rl) => console.log('Successfully loaded:', rl.getName()));
@@ -48,8 +48,8 @@ export class Orchestrator {
         this.io = server;
 
         this.io.on('connection', (socket) => {
-            socket.emit('status', { loaded: this.manager.areRocketletsLoaded() });
-            this.sendRocketletsInfo(socket);
+            socket.emit('status', { loaded: this.manager.areAppsLoaded() });
+            this.sendAppsInfo(socket);
 
             socket.on('get/enabled', (fn) => {
                 fn(this.manager.get({ enabled: true }).map((rl) => rl.getInfo()));
@@ -67,14 +67,14 @@ export class Orchestrator {
         });
     }
 
-    private sendRocketletsInfo(socket?: SocketIO.Socket): void {
+    private sendAppsInfo(socket?: SocketIO.Socket): void {
         const enabled = this.manager.get({ enabled: true }).map((rl) => rl.getInfo());
         const disabled = this.manager.get({ disabled: true }).map((rl) => rl.getInfo());
 
         if (socket) {
-            socket.emit('rocketlets', { enabled, disabled });
+            socket.emit('apps', { enabled, disabled });
         } else {
-            this.io.emit('rocketlets', { enabled, disabled });
+            this.io.emit('apps', { enabled, disabled });
         }
     }
 }

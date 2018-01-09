@@ -1,33 +1,33 @@
-import { ServerRocketletActivationBridge } from './activation';
+import { ServerAppActivationBridge } from './activation';
 import { ServerCommandBridge } from './command';
 import { ServerEnvironmentalVariableBridge } from './environmental';
 import { ServerSettingBridge } from './settings';
 
 import {
+    AppBridges,
+    IAppActivationBridge,
+    IAppCommandBridge,
     IEnvironmentalVariableBridge,
     IHttpBridge,
     IMessageBridge,
     IPersistenceBridge,
-    IRocketletActivationBridge,
-    IRocketletCommandBridge,
     IRoomBridge,
     IServerSettingBridge,
     IUserBridge,
-    RocketletBridges,
-} from 'temporary-rocketlets-server/server/bridges';
+} from '@rocket.chat/apps-engine/server/bridges';
 
-export class ServerRocketletBridges extends RocketletBridges {
+export class ServerAppBridges extends AppBridges {
     private readonly cmdBridge: ServerCommandBridge;
     private readonly setsBridge: ServerSettingBridge;
     private readonly envBridge: ServerEnvironmentalVariableBridge;
-    private readonly actsBridge: ServerRocketletActivationBridge;
+    private readonly actsBridge: ServerAppActivationBridge;
 
     constructor() {
         super();
         this.cmdBridge = new ServerCommandBridge();
         this.setsBridge = new ServerSettingBridge();
         this.envBridge = new ServerEnvironmentalVariableBridge();
-        this.actsBridge = new ServerRocketletActivationBridge();
+        this.actsBridge = new ServerAppActivationBridge();
     }
 
     public getCommandBridge(): ServerCommandBridge {
@@ -54,7 +54,7 @@ export class ServerRocketletBridges extends RocketletBridges {
         throw new Error('Method not implemented.');
     }
 
-    public getRocketletActivationBridge(): IRocketletActivationBridge {
+    public getAppActivationBridge(): IAppActivationBridge {
         return this.actsBridge;
     }
 

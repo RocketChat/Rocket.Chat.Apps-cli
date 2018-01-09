@@ -5,20 +5,20 @@ import {
     IHttp,
     ILogger,
     IRead,
-} from 'temporary-rocketlets-ts-definition/accessors';
-import { IRocketletInfo } from 'temporary-rocketlets-ts-definition/metadata';
-import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
-import { ISetting, SettingType } from 'temporary-rocketlets-ts-definition/settings';
+} from '@rocket.chat/apps-ts-definition/accessors';
+import { App } from '@rocket.chat/apps-ts-definition/App';
+import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
+import { ISetting, SettingType } from '@rocket.chat/apps-ts-definition/settings';
 
 import { GuggyCommand } from './commands/GuggyCommand';
 import { GuggyGetter } from './getters/GuggyGetter';
 import { SettingToHttpHeader } from './handlers/SettingToHttpHeader';
 
-export class GuggyRocketlet extends Rocketlet {
+export class GuggyApp extends App {
     private readonly apiKeySettingid: string;
     private readonly guggyGetter: GuggyGetter;
 
-    constructor(info: IRocketletInfo, logger: ILogger) {
+    constructor(info: IAppInfo, logger: ILogger) {
         super(info, logger);
         this.apiKeySettingid = 'api-key';
         this.guggyGetter = new GuggyGetter();

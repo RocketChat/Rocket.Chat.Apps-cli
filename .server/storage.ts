@@ -1,28 +1,28 @@
+import { AppStorage, IAppStorageItem } from '@rocket.chat/apps-engine/server/storage';
 import * as Datastore from 'nedb';
-import { IRocketletStorageItem, RocketletStorage } from 'temporary-rocketlets-server/server/storage';
 
-export class ServerRocketletStorage extends RocketletStorage {
+export class ServerAppStorage extends AppStorage {
     private db: Datastore;
 
     constructor() {
         super('nedb');
-        this.db = new Datastore({ filename: '.server-data/rocketlets.nedb', autoload: true });
+        this.db = new Datastore({ filename: '.server-data/apps.nedb', autoload: true });
         this.db.ensureIndex({ fieldName: 'id', unique: true });
     }
 
-    public create(item: IRocketletStorageItem): Promise<IRocketletStorageItem> {
+    public create(item: IAppStorageItem): Promise<IAppStorageItem> {
         return new Promise((resolve, reject) => {
             item.createdAt = new Date();
             item.updatedAt = new Date();
 
             // tslint:disable-next-line
-            this.db.findOne({ $or: [{ id: item.id }, { 'info.nameSlug': item.info.nameSlug }] }, (err: Error, doc: IRocketletStorageItem) => {
+            this.db.findOne({ $or: [{ id: item.id }, { 'info.nameSlug': item.info.nameSlug }] }, (err: Error, doc: IAppStorageItem) => {
                 if (err) {
                     reject(err);
                 } else if (doc) {
-                    reject(new Error('Rocketlet already exists.'));
+                    reject(new Error('App already exists.'));
                 } else {
-                    this.db.insert(item, (err2: Error, doc2: IRocketletStorageItem) => {
+                    this.db.insert(item, (err2: Error, doc2: IAppStorageItem) => {
                         if (err2) {
                             reject(err2);
                         } else {
@@ -34,9 +34,9 @@ export class ServerRocketletStorage extends RocketletStorage {
         });
     }
 
-    public retrieveOne(id: string): Promise<IRocketletStorageItem> {
+    public retrieveOne(id: string): Promise<IAppStorageItem> {
         return new Promise((resolve, reject) => {
-            this.db.findOne({ id }, (err: Error, doc: IRocketletStorageItem) => {
+            this.db.findOne({ id }, (err: Error, doc: IAppStorageItem) => {
                 if (err) {
                     reject(err);
                 } else if (doc) {
@@ -48,13 +48,13 @@ export class ServerRocketletStorage extends RocketletStorage {
         });
     }
 
-    public retrieveAll(): Promise<Map<string, IRocketletStorageItem>> {
+    public retrieveAll(): Promise<Map<string, IAppStorageItem>> {
         return new Promise((resolve, reject) => {
-            this.db.find({}, (err: Error, docs: Array<IRocketletStorageItem>) => {
+            this.db.find({}, (err: Error, docs: Array<IAppStorageItem>) => {
                 if (err) {
                     reject(err);
                 } else {
-                    const items = new Map<string, IRocketletStorageItem>();
+                    const items = new Map<string, IAppStorageItem>();
 
                     docs.forEach((i) => items.set(i.id, i));
 
@@ -64,13 +64,13 @@ export class ServerRocketletStorage extends RocketletStorage {
         });
     }
 
-    public update(item: IRocketletStorageItem): Promise<IRocketletStorageItem> {
+    public update(item: IAppStorageItem): Promise<IAppStorageItem> {
         return new Promise((resolve, reject) => {
             this.db.update({ id: item.id }, item, (err: Error, numOfUpdated: number) => {
                 if (err) {
                     reject(err);
                 } else {
-                    this.retrieveOne(item.id).then((updated: IRocketletStorageItem) => resolve(updated))
+                    this.retrieveOne(item.id).then((updated: IAppStorageItem) => resolve(updated))
                         .catch((err2: Error) => reject(err2));
                 }
             });

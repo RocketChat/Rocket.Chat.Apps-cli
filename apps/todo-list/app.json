@@ -4,10 +4,10 @@
     "nameSlug": "to-do-lists",
     "version": "0.0.1",
     "requiredApiVersion": ">=0.6.1",
-    "description": "Rocketlet which provides to do lists per channels, including associated commands.",
+    "description": "App which provides to do lists per channels, including associated commands.",
     "author": {
         "name": "Bradley Hilton <bradley.hilton@rocket.chat>",
         "support": "https://github.com/graywolf336"
     },
-    "classFile": "Rocketlet.ts"
+    "classFile": "ToDoApp.ts"
 }

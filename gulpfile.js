@@ -17,13 +17,13 @@ const tsc = require('gulp-typescript');
 const tslint = require('gulp-tslint');
 const refresh = require('gulp-refresh');
 const spawn = require('child_process').spawn;
-const rocketletSchema = require('./rocketlet-schema.json');
+const appSchema = require('./app-schema.json');
 
 function getFolders(dir) {
     return fs.readdirSync(dir).filter((file) => fs.statSync(path.join(dir, file)).isDirectory());
 }
 
-const rocketletsPath = './rocketlets';
+const appsPath = './apps';
 const tsp = tsc.createProject('tsconfig.json');
 
 gulp.task('clean-generated', function _cleanTypescript() {
@@ -118,36 +118,36 @@ gulp.task('refresh-lr', ['clean-generated', 'lint-no-exit-ts', 'compile-server-t
 gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'run-server'], function _watchCodeAndRun() {
     refresh.listen();
 
-    gulp.watch(['rocketlets/**/*', '.server/**/*.ts', '.site/**/*.ts', '.site/**/*.html', '.site/**/*.css'],
+    gulp.watch(['apps/**/*', '.server/**/*.ts', '.site/**/*.ts', '.site/**/*.html', '.site/**/*.css'],
         ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'refresh-lr', 'run-server']);
 });
 
 //Packaging related items
-function _packageTheRocketlets(callback) {
-    const folders = getFolders(rocketletsPath)
-                        .filter((folder) => fs.existsSync(path.join(rocketletsPath, folder, 'rocketlet.json')) && fs.statSync(path.join(rocketletsPath, folder, 'rocketlet.json')).isFile())
+function _packageTheApps(callback) {
+    const folders = getFolders(appsPath)
+                        .filter((folder) => fs.existsSync(path.join(appsPath, folder, 'app.json')) && fs.statSync(path.join(appsPath, folder, 'app.json')).isFile())
                         .map((folder) => {
                             return {
                                 folder,
-                                dir: path.join(rocketletsPath, folder),
-                                toZip: path.join(rocketletsPath, folder, '**'),
-                                infoFile: path.join(rocketletsPath, folder, 'rocketlet.json'),
-                                info: require('./' + path.join(rocketletsPath, folder, 'rocketlet.json'))
+                                dir: path.join(appsPath, folder),
+                                toZip: path.join(appsPath, folder, '**'),
+                                infoFile: path.join(appsPath, folder, 'app.json'),
+                                info: require('./' + path.join(appsPath, folder, 'app.json'))
                             };
                         });
 
     async.series([
-        function _readTheRocketletJsonFiles(next) {
+        function _readTheAppJsonFiles(next) {
             const promises = folders.map((item) => {
                 return new Promise((resolve) => {
                     gulp.src(item.infoFile)
-                        .pipe(jsonSchema({ schema: rocketletSchema, emitError: false }))
+                        .pipe(jsonSchema({ schema: appSchema, emitError: false }))
                         .pipe(through.obj(function transform(file, enc, done) {
                             if (file && !file.isNull() && file.jsonSchemaResult) {
                                 item.valid = file.jsonSchemaResult.valid;
 
                                 if (!item.valid) {
-                                    gutil.log(gutil.colors.red(figures.cross), gutil.colors.cyan(item.folder + path.sep + 'rocketlet.json'), 'has', gutil.colors.red('failed to validate'));
+                                    gutil.log(gutil.colors.red(figures.cross), gutil.colors.cyan(item.folder + path.sep + 'app.json'), 'has', gutil.colors.red('failed to validate'));
                                 }
                             }
 
@@ -160,11 +160,11 @@ function _packageTheRocketlets(callback) {
 
             Promise.all(promises).then(() => next());
         },
-        function _onlyZipGoodRocketlets(next) {
+        function _onlyZipGoodApps(next) {
             const validItems = folders.filter((item) => item.valid);
 
             if (validItems.length === 0) {
-                next(new Error('No valid Rocketlets.'));
+                next(new Error('No valid Apps.'));
                 return;
             }
 
@@ -185,6 +185,6 @@ function _packageTheRocketlets(callback) {
     ], callback);
 }
 
-gulp.task('package-for-develop', ['clean-generated', 'lint-no-exit-ts'], _packageTheRocketlets);
+gulp.task('package-for-develop', ['clean-generated', 'lint-no-exit-ts'], _packageTheApps);
 
-gulp.task('package', ['clean-generated', 'lint-ts'], _packageTheRocketlets);
+gulp.task('package', ['clean-generated', 'lint-ts'], _packageTheApps);

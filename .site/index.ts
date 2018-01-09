@@ -1,4 +1,4 @@
-import { RocketletClientManager } from 'temporary-rocketlets-server/client/RocketletClientManager';
+import { AppClientManager } from '@rocket.chat/apps-engine/client/AppClientManager';
 import { DevCommunicator } from './client/communicator';
 
 export class DevClient {
@@ -9,7 +9,7 @@ export class DevClient {
 
         this.socket.on('status', (data) => {
             if (data.loaded) {
-                const manager = new RocketletClientManager(new DevCommunicator(this.socket));
+                const manager = new AppClientManager(new DevCommunicator(this.socket));
                 manager.load();
             }
         });

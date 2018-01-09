@@ -1,5 +1,5 @@
-import { IHttp, IModify, IRead } from 'temporary-rocketlets-ts-definition/accessors';
-import { ISlashCommand, SlashCommandContext } from 'temporary-rocketlets-ts-definition/slashcommands';
+import { IHttp, IModify, IRead } from '@rocket.chat/apps-ts-definition/accessors';
+import { ISlashCommand, SlashCommandContext } from '@rocket.chat/apps-ts-definition/slashcommands';
 import { GuggyGetter } from '../getters/GuggyGetter';
 
 export class GuggyCommand implements ISlashCommand {
