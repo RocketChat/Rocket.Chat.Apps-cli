@@ -10,11 +10,11 @@ import {
     IEnvironmentRead,
     IHttp,
     IRead,
-} from 'temporary-rocketlets-ts-definition/accessors';
-import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
-import { ISetting, SettingType } from 'temporary-rocketlets-ts-definition/settings';
+} from '@rocket.chat/apps-ts-definition/accessors';
+import { App } from '@rocket.chat/apps-ts-definition/App';
+import { ISetting, SettingType } from '@rocket.chat/apps-ts-definition/settings';
 
-export class AsciiArtCommandsRocketlet extends Rocketlet {
+export class AsciiArtCommandsApp extends App {
     private gimmeId = 'gimmie_cmd';
     private lennyId = 'lenny_cmd';
     private shrugId = 'shrug_cmd';

@@ -2,9 +2,9 @@
     "json.schemas": [
         {
             "fileMatch": [
-                "*rocketlet.json"
+                "*app.json"
             ],
-            "url": "./rocketlet-schema.json"
+            "url": "./app-schema.json"
         }
     ],
     "tslint.exclude": ["**node_modules**"]

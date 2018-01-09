@@ -1,12 +1,12 @@
-import { RocketletServerCommunicator } from 'temporary-rocketlets-server/client/RocketletServerCommunicator';
-import { IRocketletInfo } from 'temporary-rocketlets-ts-definition/metadata/IRocketletInfo';
+import { AppServerCommunicator } from '@rocket.chat/apps-engine/client/AppServerCommunicator';
+import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata/IAppInfo';
 
-export class DevCommunicator extends RocketletServerCommunicator {
+export class DevCommunicator extends AppServerCommunicator {
     constructor(private readonly socket: SocketIO.Socket) {
         super();
     }
 
-    public getEnabledRocketlets(): Promise<Array<IRocketletInfo>> {
+    public getEnabledApps(): Promise<Array<IAppInfo>> {
         return new Promise((resolve) => {
             this.socket.emit('get/enabled', (enableds) => {
                 resolve(enableds);
@@ -14,7 +14,7 @@ export class DevCommunicator extends RocketletServerCommunicator {
         });
     }
 
-    public getDisabledRocketlets(): Promise<Array<IRocketletInfo>> {
+    public getDisabledApps(): Promise<Array<IAppInfo>> {
         return new Promise((resolve) => {
             this.socket.emit('get/disabled', (disableds) => {
                 resolve(disableds);

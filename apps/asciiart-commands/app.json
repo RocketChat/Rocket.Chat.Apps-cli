@@ -7,9 +7,9 @@
     "requiredApiVersion": ">=0.6.1",
     "author": {
         "name": "Bradley Hilton",
-        "homepage": "https://github.com/graywolf336/temporary-rocketlets-dev-environment",
-        "support": "https://github.com/graywolf336/temporary-rocketlets-dev-environment/issues"
+        "homepage": "https://github.com/graywolf336/temporary-apps-dev-environment",
+        "support": "https://github.com/graywolf336/temporary-apps-dev-environment/issues"
     },
-    "classFile": "AsciiArtCommandsRocketlet.ts",
+    "classFile": "AsciiArtCommandsApp.ts",
     "iconFile": "icon.png"
 }

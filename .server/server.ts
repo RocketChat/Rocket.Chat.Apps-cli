@@ -14,11 +14,11 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'site')));
 
 app.get('/loaded', (req, res) => {
-    res.json({ rocketlets: orch.manager.get().map((rc) => rc.getName()) });
+    res.json({ apps: orch.manager.get().map((rc) => rc.getName()) });
 });
 
 app.post('/load', (req, res) => {
-    if (req.body.rocketletId) {
+    if (req.body.appId) {
         res.status(501).json({ success: false, err: 'Coming soon.' });
     } else {
         orch = new Orchestrator();

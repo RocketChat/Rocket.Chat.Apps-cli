@@ -3,12 +3,12 @@ import {
     IConfigurationModify,
     IEnvironmentRead,
     ILogger,
-} from 'temporary-rocketlets-ts-definition/accessors';
-import { IRocketletInfo } from 'temporary-rocketlets-ts-definition/metadata';
-import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
+} from '@rocket.chat/apps-ts-definition/accessors';
+import { App } from '@rocket.chat/apps-ts-definition/App';
+import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
 
-export class TodoListRocketlet extends Rocketlet {
-    constructor(info: IRocketletInfo, logger: ILogger) {
+export class TodoListApp extends App {
+    constructor(info: IAppInfo, logger: ILogger) {
         super(info, logger);
     }
 

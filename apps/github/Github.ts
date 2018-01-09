@@ -1,12 +1,12 @@
-import { IHttp, ILogger, IPersistence, IPersistenceRead, IRead } from 'temporary-rocketlets-ts-definition/accessors';
-import { IMessage, IPreMessageSentModify } from 'temporary-rocketlets-ts-definition/messages';
-import { IRocketletInfo } from 'temporary-rocketlets-ts-definition/metadata/IRocketletInfo';
-import { Rocketlet } from 'temporary-rocketlets-ts-definition/Rocketlet';
+import { IHttp, ILogger, IPersistence, IPersistenceRead, IRead } from '@rocket.chat/apps-ts-definition/accessors';
+import { App } from '@rocket.chat/apps-ts-definition/App';
+import { IMessage, IPreMessageSentModify } from '@rocket.chat/apps-ts-definition/messages';
+import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata/IAppInfo';
 
-export class GithubRocketlet extends Rocketlet implements IPreMessageSentModify {
+export class GithubApp extends App implements IPreMessageSentModify {
     private matcher: RegExp = /([a-zA-Z|_|\-|0-9]+)\/([a-zA-Z|_|\-|.|0-9]+)#(\d+)/g;
 
-    constructor(info: IRocketletInfo, logger: ILogger) {
+    constructor(info: IAppInfo, logger: ILogger) {
         super(info, logger);
     }
 

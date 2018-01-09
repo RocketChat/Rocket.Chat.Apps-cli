@@ -1,4 +1,4 @@
-import { HttpStatusCode, IHttp } from 'temporary-rocketlets-ts-definition/accessors';
+import { HttpStatusCode, IHttp } from '@rocket.chat/apps-ts-definition/accessors';
 
 export class GuggyGetter {
     private readonly url: string = 'http://text2gif.guggy.com/guggify';
