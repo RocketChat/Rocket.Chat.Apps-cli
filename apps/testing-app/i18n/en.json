@@ -1,0 +1,7 @@
+{
+    "TestingApp_NoParams": "No params are required.",
+    "TestingApp_CmdWithPerm": "Command restricted by a permission.",
+    "TestingApp_CmdNoPerm": "Command is restrictionless.",
+    "TestingApp_TestingPrefix": "Prefix for Tests",
+    "TestingApp_TestingPrefix_Description": "Several tests require a prefix, on messages, in order to touch them. What prefix should that be?"
+}
