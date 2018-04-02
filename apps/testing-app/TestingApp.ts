@@ -30,7 +30,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
 
     // Test out IPreMessageSentPrevent
     public executePreMessageSentPrevent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence): boolean {
-        return message.text === '@testing: Prevent this';
+        return message.text === `${ this.testingPrefix } Prevent this`;
     }
 
     // Test out IPreMessageSentExtend
@@ -41,7 +41,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
     // Test out IPreMessageSentExtend
     public executePreMessageSentExtend(message: IMessage, extend: IMessageExtender, read: IRead, http: IHttp, persistence: IPersistence): IMessage {
         const attach: IMessageAttachment = {
-            text: '@testing: Attachment',
+            text: `${ this.testingPrefix } Attachment`,
             color: '#00ff33',
             timestamp: new Date(1985, 6, 28, 12, 48, 30, 85),
         };
