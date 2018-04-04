@@ -5,11 +5,13 @@ import * as path from 'path';
 import * as socketIO from 'socket.io';
 
 import { ServerAppBridges } from './bridges/bridges';
+import { ServerAppLogStorage } from './logStorage';
 import { ServerAppStorage } from './storage';
 
 export class Orchestrator {
     public bridges: ServerAppBridges;
     public storage: ServerAppStorage;
+    public logStorage: ServerAppLogStorage;
     public manager: AppManager;
 
     private io: SocketIO.Server;
@@ -17,7 +19,8 @@ export class Orchestrator {
     constructor() {
         this.bridges = new ServerAppBridges();
         this.storage = new ServerAppStorage();
-        this.manager = new AppManager(this.storage, this.bridges);
+        this.logStorage = new ServerAppLogStorage();
+        this.manager = new AppManager(this.storage, this.logStorage, this.bridges);
     }
 
     public loadAndUpdate(): Promise<boolean> {
