@@ -15,6 +15,7 @@ export class TestingNoPermission implements ISlashCommand {
     // tslint:disable-next-line:max-line-length
     public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp, persis: IPersistence): void {
         const msg = modify.getNotifer().getMessageBuilder()
+            .setRoom(context.getRoom())
             .setUsernameAlias('Testing').setEmojiAvatar(':ghost:')
             .setText('You have successfully tested the command, good job.').getMessage();
 

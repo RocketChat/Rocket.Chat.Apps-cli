@@ -6,7 +6,15 @@
     "no-duplicate-variable": true,
     "object-literal-sort-keys": false,
     "quotemark": [true, "single"],
-    "max-line-length": 120
+    "max-line-length": [true, {
+        "limit": 160,
+        "ignore-pattern": "^import | *export .*? {"
+    }]
+  },
+  "linterOptions": {
+      "exclude": [
+          "apps/**/node_modules"
+      ]
   },
   "jsRules": {
     "quotemark": [true, "single"]
