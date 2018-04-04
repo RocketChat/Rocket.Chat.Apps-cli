@@ -1,0 +1,23 @@
+{
+    "TestingApp_NoParams": "No params are required.",
+    "TestingApp_CmdWithPerm": "Command restricted by a permission.",
+    "TestingApp_CmdNoPerm": "Command is restrictionless.",
+    "TestingApp_TestingPrefix": "Prefix for Tests",
+    "TestingApp_TestingPrefix_Description": "Several tests require a prefix, on messages, in order to touch them. What prefix should that be?",
+    "TestingApp_TestingBoolean": "Boolean Testing",
+    "TestingApp_TestingBoolean_Description": "Just a setting that tests the `boolean` setting type. It's mostly ignored except during testing. ;)",
+    "TestingApp_TestingColor": "Color Testing",
+    "TestingApp_TestingColor_Description": "Another setting but this one tests the `color` setting type. :D",
+    "TestingApp_TestingNumber": "Number Testing",
+    "TestingApp_TestingNumber_Description": "Which even another setting. However, this one tests the `number` setting type. :)",
+    "TestingApp_TestingSelect": "Select Testing",
+    "TestingApp_TestingSelect_Description": "Here is a setting. A setting which tests the `select` setting type. :p",
+    "TestingApp_FirstSelectOption": "First Option",
+    "TestingApp_SecondSelectOption": "Second Option",
+    "TestingApp_ThirdSelectOption": "Third Option",
+    "TestingApp_LastSelectOption": "Last Option",
+    "TestingApp_TestingMultiString": "Multi Line String Test",
+    "TestingApp_TestingMultiString_Description": "Why am I writing descriptions? These are tests for crying out loud, like this one tests a setting which is multuple lines of the `string` setting type. (..)",
+    "TestingApp_TestingCode": "Code Test",
+    "TestingApp_TestingCode_Description": "I'm bored. Please test the `code` setting type. :x"
+}

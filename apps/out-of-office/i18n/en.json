@@ -1,0 +1,4 @@
+{
+    "outOfOfficeParamExample": "out|in|status <Your away message goes here (optional)>",
+    "outOfOfficeDescription": "Allows you to set yourself as Out of Office w/ a message"
+}
