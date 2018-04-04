@@ -43,7 +43,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
     public executePreMessageSentExtend(message: IMessage, extend: IMessageExtender, read: IRead, http: IHttp, persistence: IPersistence): IMessage {
         const attach: IMessageAttachment = {
             text: `${ this.testingPrefix } Attachment`,
-            color: '#00ff33',
+            color: read.getEnvironmentReader().getSettings().getValueById(TestingSettingsEnum.TESTING_A_COLOR),
             timestamp: new Date(1985, 6, 28, 12, 48, 30, 85),
         };
 
