@@ -57,6 +57,6 @@
   },
   "dependencies": {
     "@rocket.chat/apps-engine": "^0.4.8",
-    "@rocket.chat/apps-ts-definition": "^0.7.16"
+    "@rocket.chat/apps-ts-definition": "^0.8.0"
   }
 }
