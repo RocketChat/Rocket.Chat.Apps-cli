@@ -8,6 +8,7 @@
         "noImplicitAny": false,
         "removeComments": true,
         "strictNullChecks": true,
+        "noImplicitReturns": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "moduleResolution": "node",

@@ -50,3 +50,4 @@ dist/
 ## dev env items
 .server-dist/
 .server-data/
+.tmp/

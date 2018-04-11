@@ -122,6 +122,20 @@ gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts',
         ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'refresh-lr', 'run-server']);
 });
 
+const appsTsCompileOptions = {
+    target: 'es5',
+    module: 'commonjs',
+    moduleResolution: 'node',
+    declaration: false,
+    noImplicitAny: false,
+    removeComments: true,
+    strictNullChecks: true,
+    noImplicitReturns: true,
+    emitDecoratorMetadata: true,
+    experimentalDecorators: true,
+    lib: [ 'es2017' ]
+};
+
 //Packaging related items
 function _packageTheApps(callback) {
     const folders = getFolders(appsPath)
@@ -137,8 +151,41 @@ function _packageTheApps(callback) {
                         });
 
     async.series([
+        function _testCompileTheTypeScript(next) {
+            const promises = folders.map((item) => {
+                return new Promise((resolve) => {
+                    fs.writeFileSync(`.tmp/${ item.info.id }.json`, JSON.stringify({
+                        compilerOptions: appsTsCompileOptions,
+                        include: [ __dirname + '/' + item.dir ],
+                        exclude: ['node_modules', 'bower_components', 'jspm_packages']
+                    }), 'utf8');
+
+                    gutil.log(gutil.colors.yellow(figures.ellipsis), gutil.colors.cyan(`Attempting to compile ${item.info.name} v${item.info.version}`));
+                    const project = tsc.createProject(`.tmp/${ item.info.id }.json`);
+
+                    project.src().pipe(project().on('error', () => {
+                        item.valid = false;
+                    })).pipe(through.obj((file, enc, done) => done(null, file), () => {
+                        if (typeof item.valid === 'boolean' && !item.valid) {
+                            gutil.log(gutil.colors.red(figures.cross), gutil.colors.cyan(`${item.info.name} v${item.info.version}`), 'has', gutil.colors.red('FAILED to compile.'));
+                        } else {
+                            gutil.log(gutil.colors.green(figures.tick), gutil.colors.cyan(`${item.info.name} v${item.info.version}`), 'has', gutil.colors.green('successfully compiled.'));
+                        }
+
+                        resolve();
+                    }));
+                });
+            });
+
+            Promise.all(promises).then(() => next()).catch((e) => {
+                console.error(e);
+                throw e;
+            });
+        },
         function _readTheAppJsonFiles(next) {
             const promises = folders.map((item) => {
+                if (typeof item.valid === 'boolean' && !item.valid) return Promise.resolve();
+
                 return new Promise((resolve) => {
                     gulp.src(item.infoFile)
                         .pipe(jsonSchema({ schema: appSchema, emitError: false }))
@@ -168,15 +215,27 @@ function _packageTheApps(callback) {
                 return;
             }
 
+            const amount = Array.from(Array(10), () => figures.line);
+            gutil.log(gutil.colors.white(...amount));
+            gutil.log(gutil.colors.white(...amount));
+            gutil.log(gutil.colors.red('Errors are listed above'));
+            gutil.log(gutil.colors.white(...amount));
+            gutil.log(gutil.colors.white(...amount));
+
             const zippers = validItems.filter((item) => fs.existsSync(path.join(item.dir, item.info.classFile))).map((item) => {
                 return new Promise((resolve) => {
-                    gutil.log(gutil.colors.green(figures.tick), gutil.colors.cyan(item.info.name + ' ' + item.info.version));
-
+                    const zipName = item.info.nameSlug + '_' + item.info.version + '.zip';
                     return gulp.src(item.toZip)
                         .pipe(file('.packagedby', fs.readFileSync('package.json')))
-                        .pipe(zip(item.info.nameSlug + '_' + item.info.version + '.zip'))
+                        .pipe(zip(zipName))
                         .pipe(gulp.dest('dist'))
-                        .pipe(through.obj((file, enc, done) => done(null, file), () => resolve()));
+                        .pipe(through.obj((file, enc, done) => done(null, file), () => {
+                            gutil.log(gutil.colors.green(figures.tick),
+                                gutil.colors.cyan(item.info.name + ' v' + item.info.version),
+                                gutil.colors.blue('has been packaged at:'),
+                                gutil.colors.black('dist/' + zipName));
+                            resolve();
+                        }));
                 });
             });
 
