@@ -9,16 +9,16 @@ export class GuggyCommand implements ISlashCommand {
 
     constructor(private readonly getter: GuggyGetter) { }
 
-    public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): void {
+    public async executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): Promise<void> {
         const builder = modify.getCreator().startMessage().setSender(context.getSender()).setRoom(context.getRoom());
 
         try {
-            const gifUrl = this.getter.getTheGif(http, context.getArguments().join(' '));
+            const gifUrl = await this.getter.getTheGif(http, context.getArguments().join(' '));
             builder.addAttachment({ imageUrl: gifUrl });
         } catch (e) {
             builder.setText('Sorry I don\'t have a photo for you :disappointed_relieved:');
         }
 
-        modify.getCreator().finish(builder);
+        await modify.getCreator().finish(builder);
     }
 }

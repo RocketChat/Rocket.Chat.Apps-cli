@@ -11,24 +11,24 @@ export class OutOfOfficeCommand implements ISlashCommand {
     public i18nDescription = 'outOfOfficeDescription';
 
     // tslint:disable-next-line:max-line-length
-    public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp, persis: IPersistence): void {
+    public async executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp, persis: IPersistence): Promise<void> {
         switch (context.getArguments().length) {
             case 0:
-                return this.invalidUsageHandler(context, modify);
+                return await this.invalidUsageHandler(context, modify);
             case 1:
-                return this.handleStatusArgOnly(context, read, modify, persis);
+                return await this.handleStatusArgOnly(context, read, modify, persis);
             default:
-                return this.handleWithCustomMessage(context, read, modify, persis);
+                return await this.handleWithCustomMessage(context, read, modify, persis);
         }
     }
 
-    private invalidUsageHandler(context: SlashCommandContext, modify: IModify): void {
-        this.sendNotifyMessage(context, modify, 'Invalid usage of the Out of Office command. ' +
+    private async invalidUsageHandler(context: SlashCommandContext, modify: IModify): Promise<void> {
+        await this.sendNotifyMessage(context, modify, 'Invalid usage of the Out of Office command. ' +
             'Please provide whether you are `out` or `in`, with the message optional if you are away.');
     }
 
     // tslint:disable-next-line:max-line-length
-    private handleStatusArgOnly(context: SlashCommandContext, read: IRead, modify: IModify, persis: IPersistence): void {
+    private async handleStatusArgOnly(context: SlashCommandContext, read: IRead, modify: IModify, persis: IPersistence): Promise<void> {
         const assoc = new RocketChatAssociationRecord(RocketChatAssociationModel.USER, context.getSender().id);
         const data: IOutOfOfficeStorage = {
             out: true,
@@ -38,34 +38,35 @@ export class OutOfOfficeCommand implements ISlashCommand {
 
         switch (context.getArguments()[0].toLowerCase()) {
             case 'in':
-                persis.removeByAssociation(assoc);
+                await persis.removeByAssociation(assoc);
                 // TODO: Maybe say something different if they weren't away to come back lol
-                return this.sendNotifyMessage(context, modify, `Welcome back, ${ context.getSender().username }!`);
+                return await this.sendNotifyMessage(context, modify, `Welcome back, ${ context.getSender().username }!`);
             case 'out':
-                persis.createWithAssociation(data, assoc);
-                return this.sendNotifyMessage(context, modify,
+                await persis.createWithAssociation(data, assoc);
+                return await this.sendNotifyMessage(context, modify,
                     'You are marked as *Out of Office*, we will see you when you get back.');
             case 'status':
-                    if (read.getPersistenceReader().readByAssociation(assoc).length > 0) {
-                        return this.sendNotifyMessage(context, modify, 'You are currently *out of office*.');
+                    const existing = await read.getPersistenceReader().readByAssociation(assoc);
+                    if (existing.length > 0) {
+                        return await this.sendNotifyMessage(context, modify, 'You are currently *out of office*.');
                     } else {
-                        return this.sendNotifyMessage(context, modify, 'You are currently *in office*.');
+                        return await this.sendNotifyMessage(context, modify, 'You are currently *in office*.');
                     }
             default:
-                return this.sendNotifyMessage(context, modify,
+                return await this.sendNotifyMessage(context, modify,
                     'No idea what you are talking about. ' +
                     'Only `out`, `in` and `status` are accepted options for the first argument.');
         }
     }
 
     // tslint:disable-next-line:max-line-length
-    private handleWithCustomMessage(context: SlashCommandContext, read: IRead, modify: IModify, persis: IPersistence): void {
+    private async handleWithCustomMessage(context: SlashCommandContext, read: IRead, modify: IModify, persis: IPersistence): Promise<void> {
         const action = context.getArguments()[0].toLowerCase();
 
         if (action === 'in' || action === 'status') {
-            return this.handleStatusArgOnly(context, read, modify, persis);
+            return await this.handleStatusArgOnly(context, read, modify, persis);
         } else if (action !== 'out') {
-            return this.sendNotifyMessage(context, modify,
+            return await this.sendNotifyMessage(context, modify,
                 'No idea what you are talking about. ' +
                 'Only `out`, `in` and `status` are accepted options for the first argument.');
         }
@@ -79,22 +80,24 @@ export class OutOfOfficeCommand implements ISlashCommand {
         };
 
         // Allow setting their status again if they're currently marked as away
-        if (read.getPersistenceReader().readByAssociation(assoc).length > 0) {
-            persis.removeByAssociation(assoc);
+        const existing = await read.getPersistenceReader().readByAssociation(assoc);
+        if (existing.length > 0) {
+            await persis.removeByAssociation(assoc);
         }
 
-        persis.createWithAssociation(data, assoc);
-        return this.sendNotifyMessage(context, modify,
+        await persis.createWithAssociation(data, assoc);
+
+        return await this.sendNotifyMessage(context, modify,
             'You are marked as *Out of Office*, we will see you when you get back. ' +
             'The message being sent to others when they contact you is: "' +
             data.message + '"');
     }
 
-    private sendNotifyMessage(context: SlashCommandContext, modify: IModify, text: string): void {
+    private async sendNotifyMessage(context: SlashCommandContext, modify: IModify, text: string): Promise<void> {
         const msg = modify.getCreator().startMessage().setText(text)
             .setUsernameAlias('Out of Office').setEmojiAvatar(':calendar:')
             .setRoom(context.getRoom()).setSender(context.getSender()).getMessage();
 
-        return modify.getNotifer().notifyUser(context.getSender(), msg);
+        return await modify.getNotifer().notifyUser(context.getSender(), msg);
     }
 }

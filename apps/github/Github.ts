@@ -1,4 +1,4 @@
-import { IHttp, ILogger, IPersistence, IPersistenceRead, IRead } from '@rocket.chat/apps-ts-definition/accessors';
+import { IHttp, ILogger, IMessageBuilder, IPersistence, IRead } from '@rocket.chat/apps-ts-definition/accessors';
 import { App } from '@rocket.chat/apps-ts-definition/App';
 import { IMessage, IPreMessageSentModify } from '@rocket.chat/apps-ts-definition/messages';
 import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata/IAppInfo';
@@ -11,16 +11,31 @@ export class GithubApp extends App implements IPreMessageSentModify {
     }
 
     // tslint:disable-next-line:max-line-length
-    public checkPreMessageSentModify(message: IMessage, read: IRead, http: IHttp, persistence: IPersistenceRead): boolean {
-        return message.text.match(this.matcher).length !== 0;
+    public async checkPreMessageSentModify(message: IMessage, read: IRead, http: IHttp): Promise<boolean> {
+        if (typeof message.text !== 'string') {
+            return false;
+        }
+
+        const result = message.text.match(this.matcher);
+
+        return result ? result.length !== 0 : false;
     }
 
     // tslint:disable-next-line:max-line-length
-    public executePreMessageSentModify(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence): IMessage {
+    public async executePreMessageSentModify(message: IMessage, builder: IMessageBuilder, read: IRead, http: IHttp, persistence: IPersistence): Promise<IMessage> {
+        if (typeof message.text !== 'string') {
+            return message;
+        }
+
         const githubLinks = message.text.match(this.matcher);
-        if (githubLinks.length > 0) {
+
+        if (githubLinks && githubLinks.length > 0) {
             for (const link of githubLinks) {
                 const parts = this.matcher.exec(link);
+
+                if (!parts || parts.length < 4) {
+                    continue;
+                }
 
                 const newLink = `[${link}](https://github.com/${parts[1]}/${parts[2]}/issues/${parts[3]})`;
 

@@ -3,8 +3,8 @@
     "name": "Out of Office Responder",
     "nameSlug": "out-of-office",
     "description": "Provides a command and auto responder for being out of office",
-    "version": "1.0.0",
-    "requiredApiVersion": ">=0.7.12",
+    "version": "1.0.1",
+    "requiredApiVersion": ">=0.9.6",
     "author": {
         "name": "Bradley Hilton",
         "homepage": "https://github.com/RocketChat/Rocket.Chat.Apps-dev-environment",

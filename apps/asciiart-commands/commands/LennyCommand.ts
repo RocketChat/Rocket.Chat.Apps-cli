@@ -8,8 +8,8 @@ export class LennyCommand implements ISlashCommand {
     public paramsExample: string = 'your_message_optional';
     public i18nDescription: string = 'Slash_LennyFace_Description';
 
-    public executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): void {
-        modify.getCreator().finish(modify.getCreator().startMessage({
+    public async executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): Promise<void> {
+        await modify.getCreator().finish(modify.getCreator().startMessage({
             id: 'this-will-be-removed(whoops)',
             room: context.getRoom(),
             sender: context.getSender(),
