@@ -21,6 +21,6 @@ The `.server` directory is the "mock" server with storage, this is where the cod
 ## Generating an App ID
 We require UUID Version 4 for IDs. To generate one for your App we recommend this site: https://www.uuidgenerator.net/version4
 
-## Logging Inside a App
+## Logging Inside an App
 Due to limitations of NodeJS's `vm` package we have had to implement a custom logger class.
 To make usage of this you can use `this.getLogger()` and then do the normal `console` style logging.
