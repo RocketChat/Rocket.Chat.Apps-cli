@@ -13,6 +13,7 @@
     "files.exclude": {
         ".server/": true,
         ".server-data/": true,
+        ".server-dist/": true,
         ".site/": true,
         ".tmp/": true
     }

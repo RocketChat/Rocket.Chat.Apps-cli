@@ -7,8 +7,10 @@ import {
     AppBridges,
     IAppActivationBridge,
     IAppCommandBridge,
+    IAppDetailChangesBridge,
     IEnvironmentalVariableBridge,
     IHttpBridge,
+    IListenerBridge,
     IMessageBridge,
     IPersistenceBridge,
     IRoomBridge,
@@ -63,6 +65,14 @@ export class ServerAppBridges extends AppBridges {
     }
 
     public getUserBridge(): IUserBridge {
+        throw new Error('Method not implemented.');
+    }
+
+    public getAppDetailChangesBridge(): IAppDetailChangesBridge {
+        throw new Error('Method not implemented.');
+    }
+
+    public getListenerBridge(): IListenerBridge {
         throw new Error('Method not implemented.');
     }
 }

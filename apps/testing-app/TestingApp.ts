@@ -103,9 +103,9 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
 
     // Test out IPreRoomCreateModify
     public async executePreRoomCreateModify(room: IRoom, builder: IRoomBuilder, read: IRead, http: IHttp, persistence: IPersistence): Promise<IRoom> {
-        room.displaySystemMessages = false;
+        builder.setDisplayingOfSystemMessages(false);
 
-        return room;
+        return builder.getRoom();
     }
 
     // Test out IPostRoomCreate
