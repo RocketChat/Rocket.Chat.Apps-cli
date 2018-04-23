@@ -18,32 +18,33 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
         this.getLogger().debug('TestingApp\'s constructor is called and I logged debug.');
     }
 
-    public onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): boolean {
-        this.testingPrefix = environment.getSettings().getValueById(TestingSettingsEnum.TESTING_PREFIX) as string;
+    public async onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): Promise<boolean> {
+        this.testingPrefix = await environment.getSettings().getValueById(TestingSettingsEnum.TESTING_PREFIX) as string;
 
         return this.testingPrefix.length > 0;
     }
 
     // Test out IPreMessageSentPrevent
-    public checkPreMessageSentPrevent(message: IMessage): boolean {
+    public async checkPreMessageSentPrevent(message: IMessage): Promise<boolean> {
         return typeof message.text === 'string' ? message.text.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPreMessageSentPrevent
-    public executePreMessageSentPrevent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence): boolean {
+    public async executePreMessageSentPrevent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence): Promise<boolean> {
         return message.text === `${ this.testingPrefix } Prevent this`;
     }
 
     // Test out IPreMessageSentExtend
-    public checkPreMessageSentExtend(message: IMessage): boolean {
+    public async checkPreMessageSentExtend(message: IMessage): Promise<boolean> {
         return typeof message.text === 'string' ? message.text.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPreMessageSentExtend
-    public executePreMessageSentExtend(message: IMessage, extend: IMessageExtender, read: IRead, http: IHttp, persistence: IPersistence): IMessage {
+    public async executePreMessageSentExtend(message: IMessage,
+                                             extend: IMessageExtender, read: IRead, http: IHttp, persistence: IPersistence): Promise<IMessage> {
         const attach: IMessageAttachment = {
             text: `${ this.testingPrefix } Attachment`,
-            color: read.getEnvironmentReader().getSettings().getValueById(TestingSettingsEnum.TESTING_A_COLOR),
+            color: await read.getEnvironmentReader().getSettings().getValueById(TestingSettingsEnum.TESTING_A_COLOR),
             timestamp: new Date(1985, 6, 28, 12, 48, 30, 85),
         };
 
@@ -51,77 +52,78 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
     }
 
     // Test out IPreMessageSentModify
-    public checkPreMessageSentModify(message: IMessage): boolean {
+    public async checkPreMessageSentModify(message: IMessage): Promise<boolean> {
         return typeof message.text === 'string' ? message.text.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPreMessageSentModify
-    public executePreMessageSentModify(message: IMessage, builder: IMessageBuilder, read: IRead, http: IHttp, persistence: IPersistence): IMessage {
+    public async executePreMessageSentModify(message: IMessage,
+                                             builder: IMessageBuilder, read: IRead, http: IHttp, persistence: IPersistence): Promise<IMessage> {
         const text = message.text;
 
         return builder.setText(text + '\n\n> ' + text).getMessage();
     }
 
     // Test out IPostMessageSent
-    public checkPostMessageSent(message: IMessage): boolean {
+    public async checkPostMessageSent(message: IMessage): Promise<boolean> {
         return typeof message.text === 'string' ? message.text.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPostMessageSent
-    public executePostMessageSent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence): void {
+    public async executePostMessageSent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence): Promise<void> {
         read.getNotifier().notifyUser(message.sender, message);
     }
 
     // Test out IPreRoomCreatePrevent
-    public checkPreRoomCreatePrevent(room: IRoom): boolean {
+    public async checkPreRoomCreatePrevent(room: IRoom): Promise<boolean> {
         return room.type === RoomType.PRIVATE_GROUP ? room.slugifiedName.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPreRoomCreatePrevent
-    public executePreRoomCreatePrevent(room: IRoom, read: IRead, http: IHttp, persistence: IPersistence): boolean {
+    public async executePreRoomCreatePrevent(room: IRoom, read: IRead, http: IHttp, persistence: IPersistence): Promise<boolean> {
         return room.slugifiedName === `${ this.testingPrefix }-prevent`;
     }
 
     // Test out IPreRoomCreateExtend
-    public checkPreRoomCreateExtend(room: IRoom): boolean {
+    public async checkPreRoomCreateExtend(room: IRoom): Promise<boolean> {
         return room.type === RoomType.PRIVATE_GROUP ? room.slugifiedName.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPreRoomCreateExtend
-    public executePreRoomCreateExtend(room: IRoom, extend: IRoomExtender, read: IRead, http: IHttp, persistence: IPersistence): IRoom {
-        const bot = read.getUserReader().getById('rocket.cat');
+    public async executePreRoomCreateExtend(room: IRoom, extend: IRoomExtender, read: IRead, http: IHttp, persistence: IPersistence): Promise<IRoom> {
+        const bot = await read.getUserReader().getById('rocket.cat');
 
         return extend.addMember(bot).getRoom();
     }
 
     // Test out IPreRoomCreateModify
-    public checkPreRoomCreateModify(room: IRoom): boolean {
+    public async checkPreRoomCreateModify(room: IRoom): Promise<boolean> {
         return room.type === RoomType.PRIVATE_GROUP ? room.slugifiedName.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPreRoomCreateModify
-    public executePreRoomCreateModify(room: IRoom, builder: IRoomBuilder, read: IRead, http: IHttp, persistence: IPersistence): IRoom {
+    public async executePreRoomCreateModify(room: IRoom, builder: IRoomBuilder, read: IRead, http: IHttp, persistence: IPersistence): Promise<IRoom> {
         room.displaySystemMessages = false;
 
         return room;
     }
 
     // Test out IPostRoomCreate
-    public checkPostRoomCreate(room: IRoom): boolean {
+    public async checkPostRoomCreate(room: IRoom): Promise<boolean> {
         return room.type === RoomType.PRIVATE_GROUP ? room.slugifiedName.indexOf(this.testingPrefix) === 0 : false;
     }
 
     // Test out IPostRoomCreate
-    public executePostRoomCreate(room: IRoom, read: IRead, http: IHttp, persistence: IPersistence): void {
+    public async executePostRoomCreate(room: IRoom, read: IRead, http: IHttp, persistence: IPersistence): Promise<void> {
         const msg = read.getNotifier().getMessageBuilder()
             .setRoom(room).setText(`Welcome to #${ room.slugifiedName }! _testing:_ :heavy_check_mark:`)
             .setEmojiAvatar(':ghost:').getMessage();
 
-        read.getNotifier().notifyRoom(room, msg);
+        await read.getNotifier().notifyRoom(room, msg);
     }
 
     // Test out various configuration extentions
-    protected extendConfiguration(configuration: IConfigurationExtend, environmentRead: IEnvironmentRead) {
+    protected async extendConfiguration(configuration: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
         configuration.slashCommands.provideSlashCommand(new TestingNoPermission());
         configuration.slashCommands.provideSlashCommand(new TestingWithPermission());
 

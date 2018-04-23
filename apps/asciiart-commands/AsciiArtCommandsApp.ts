@@ -21,24 +21,24 @@ export class AsciiArtCommandsApp extends App {
     private flipId = 'flip_cmd';
     private unflipId = 'unflip_cmd';
 
-    public onEnable(environmentRead: IEnvironmentRead, configModify: IConfigurationModify): boolean {
+    public async onEnable(environmentRead: IEnvironmentRead, configModify: IConfigurationModify): Promise<boolean> {
         const sets = environmentRead.getSettings();
 
-        this.enableOrDisableCommand(this.gimmeId, sets.getValueById(this.gimmeId), configModify);
-        this.enableOrDisableCommand(this.lennyId, sets.getValueById(this.lennyId), configModify);
-        this.enableOrDisableCommand(this.shrugId, sets.getValueById(this.shrugId), configModify);
-        this.enableOrDisableCommand(this.flipId, sets.getValueById(this.flipId), configModify);
-        this.enableOrDisableCommand(this.unflipId, sets.getValueById(this.unflipId), configModify);
+        await this.enableOrDisableCommand(this.gimmeId, await sets.getValueById(this.gimmeId), configModify);
+        await this.enableOrDisableCommand(this.lennyId, await sets.getValueById(this.lennyId), configModify);
+        await this.enableOrDisableCommand(this.shrugId, await sets.getValueById(this.shrugId), configModify);
+        await this.enableOrDisableCommand(this.flipId, await sets.getValueById(this.flipId), configModify);
+        await this.enableOrDisableCommand(this.unflipId, await sets.getValueById(this.unflipId), configModify);
 
         return true;
     }
 
-    public onSettingUpdated(setting: ISetting, configModify: IConfigurationModify, read: IRead, http: IHttp): void {
-        this.enableOrDisableCommand(setting.id, setting.value as boolean, configModify);
+    public async onSettingUpdated(setting: ISetting, configModify: IConfigurationModify, read: IRead, http: IHttp): Promise<void> {
+        await this.enableOrDisableCommand(setting.id, setting.value as boolean, configModify);
     }
 
-    protected extendConfiguration(configuration: IConfigurationExtend): void {
-        configuration.settings.provideSetting({
+    protected async extendConfiguration(configuration: IConfigurationExtend): Promise<void> {
+        await configuration.settings.provideSetting({
             id: this.gimmeId,
             type: SettingType.BOOLEAN,
             packageValue: true,
@@ -48,7 +48,7 @@ export class AsciiArtCommandsApp extends App {
             i18nDescription: 'Enable_Gimme_Command_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: this.lennyId,
             type: SettingType.BOOLEAN,
             packageValue: true,
@@ -58,7 +58,7 @@ export class AsciiArtCommandsApp extends App {
             i18nDescription: 'Enable_Lenny_Command_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: this.shrugId,
             type: SettingType.BOOLEAN,
             packageValue: true,
@@ -68,7 +68,7 @@ export class AsciiArtCommandsApp extends App {
             i18nDescription: 'Enable_Shrug_Command_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: this.flipId,
             type: SettingType.BOOLEAN,
             packageValue: true,
@@ -78,7 +78,7 @@ export class AsciiArtCommandsApp extends App {
             i18nDescription: 'Enable_Tableflip_Command_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: this.unflipId,
             type: SettingType.BOOLEAN,
             packageValue: true,
@@ -88,48 +88,48 @@ export class AsciiArtCommandsApp extends App {
             i18nDescription: 'Enable_Unflip_Table_Command_Description',
         });
 
-        configuration.slashCommands.provideSlashCommand(new GimmeCommand());
-        configuration.slashCommands.provideSlashCommand(new LennyCommand());
-        configuration.slashCommands.provideSlashCommand(new ShrugCommand());
-        configuration.slashCommands.provideSlashCommand(new TableflipCommand());
-        configuration.slashCommands.provideSlashCommand(new UnflipCommand());
+        await configuration.slashCommands.provideSlashCommand(new GimmeCommand());
+        await configuration.slashCommands.provideSlashCommand(new LennyCommand());
+        await configuration.slashCommands.provideSlashCommand(new ShrugCommand());
+        await configuration.slashCommands.provideSlashCommand(new TableflipCommand());
+        await configuration.slashCommands.provideSlashCommand(new UnflipCommand());
     }
 
-    private enableOrDisableCommand(id: string, doEnable: boolean, configModify: IConfigurationModify): void {
+    private async enableOrDisableCommand(id: string, doEnable: boolean, configModify: IConfigurationModify): Promise<void> {
         switch (id) {
             case this.gimmeId:
                 if (doEnable) {
-                    configModify.slashCommands.enableSlashCommand(GimmeCommand.CommandName);
+                    await configModify.slashCommands.enableSlashCommand(GimmeCommand.CommandName);
                 } else {
-                    configModify.slashCommands.disableSlashCommand(GimmeCommand.CommandName);
+                    await configModify.slashCommands.disableSlashCommand(GimmeCommand.CommandName);
                 }
                 return;
             case this.lennyId:
                 if (doEnable) {
-                    configModify.slashCommands.enableSlashCommand(LennyCommand.CommandName);
+                    await configModify.slashCommands.enableSlashCommand(LennyCommand.CommandName);
                 } else {
-                    configModify.slashCommands.disableSlashCommand(LennyCommand.CommandName);
+                    await configModify.slashCommands.disableSlashCommand(LennyCommand.CommandName);
                 }
                 return;
             case this.shrugId:
                 if (doEnable) {
-                    configModify.slashCommands.enableSlashCommand(ShrugCommand.CommandName);
+                    await configModify.slashCommands.enableSlashCommand(ShrugCommand.CommandName);
                 } else {
-                    configModify.slashCommands.disableSlashCommand(ShrugCommand.CommandName);
+                    await configModify.slashCommands.disableSlashCommand(ShrugCommand.CommandName);
                 }
                 return;
             case this.flipId:
                 if (doEnable) {
-                    configModify.slashCommands.enableSlashCommand(TableflipCommand.CommandName);
+                    await configModify.slashCommands.enableSlashCommand(TableflipCommand.CommandName);
                 } else {
-                    configModify.slashCommands.disableSlashCommand(TableflipCommand.CommandName);
+                    await configModify.slashCommands.disableSlashCommand(TableflipCommand.CommandName);
                 }
                 return;
             case this.unflipId:
                 if (doEnable) {
-                    configModify.slashCommands.enableSlashCommand(UnflipCommand.CommandName);
+                    await configModify.slashCommands.enableSlashCommand(UnflipCommand.CommandName);
                 } else {
-                    configModify.slashCommands.disableSlashCommand(UnflipCommand.CommandName);
+                    await configModify.slashCommands.disableSlashCommand(UnflipCommand.CommandName);
                 }
                 return;
         }

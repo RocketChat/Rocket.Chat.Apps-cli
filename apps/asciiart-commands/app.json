@@ -3,8 +3,8 @@
     "name": "ASCII Art Commands",
     "nameSlug": "asciiart-commands",
     "description": "Provides neat little asciiart commands for fun usage.",
-    "version": "1.0.1",
-    "requiredApiVersion": ">=0.6.1",
+    "version": "1.0.2",
+    "requiredApiVersion": ">=0.9.6",
     "author": {
         "name": "Bradley Hilton",
         "homepage": "https://github.com/graywolf336/temporary-apps-dev-environment",

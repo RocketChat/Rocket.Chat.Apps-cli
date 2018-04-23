@@ -3,8 +3,8 @@ import { HttpStatusCode, IHttp } from '@rocket.chat/apps-ts-definition/accessors
 export class GuggyGetter {
     private readonly url: string = 'http://text2gif.guggy.com/guggify';
 
-    public getTheGif(http: IHttp, sentence: string): string {
-        const result = http.post(this.url, {
+    public async getTheGif(http: IHttp, sentence: string): Promise<string> {
+        const result = await http.post(this.url, {
             data: {
                 format: 'gif',
                 sentence,

@@ -24,24 +24,25 @@ export class GuggyApp extends App {
         this.guggyGetter = new GuggyGetter();
     }
 
-    public onEnable(environmentRead: IEnvironmentRead, configModify: IConfigurationModify): boolean {
-        if (!environmentRead.getSettings().getValueById(this.apiKeySettingid)) {
-            configModify.slashCommands.disableSlashCommand('guggy');
+    public async onEnable(environmentRead: IEnvironmentRead, configModify: IConfigurationModify): Promise<boolean> {
+        const setting = await environmentRead.getSettings().getValueById(this.apiKeySettingid);
+        if (!setting) {
+            await configModify.slashCommands.disableSlashCommand('guggy');
         }
 
         return true;
     }
 
     // tslint:disable-next-line:max-line-length
-    public onSettingUpdated(setting: ISetting, configModify: IConfigurationModify, read: IRead, http: IHttp): void {
+    public async onSettingUpdated(setting: ISetting, configModify: IConfigurationModify, read: IRead, http: IHttp): Promise<void> {
         switch (setting.id) {
             case this.apiKeySettingid:
-                this.handleApiKeySettingHandle(setting, configModify, http);
+                await this.handleApiKeySettingHandle(setting, configModify, http);
                 break;
         }
     }
 
-    protected extendConfiguration(configuration: IConfigurationExtend, environmentRead: IEnvironmentRead): void {
+    protected async extendConfiguration(configuration: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
         configuration.settings.provideSetting({
             id: this.apiKeySettingid,
             type: SettingType.STRING,
@@ -58,21 +59,21 @@ export class GuggyApp extends App {
         configuration.slashCommands.provideSlashCommand(new GuggyCommand(this.guggyGetter));
     }
 
-    private handleApiKeySettingHandle(setting: ISetting, configModify: IConfigurationModify, http: IHttp): void {
+    private async handleApiKeySettingHandle(setting: ISetting, configModify: IConfigurationModify, http: IHttp): Promise<void> {
         if (setting.value) {
             try {
                 this.guggyGetter.getTheGif(http, 'testing');
                 this.getLogger().log('Enabling the slash command.');
-                configModify.slashCommands.enableSlashCommand('guggy');
+                await configModify.slashCommands.enableSlashCommand('guggy');
             } catch (e) {
-                // Not valid api key
+                // The api key is not valid
                 this.getLogger().log('Disabling the slash command because the api key isnt valid.');
-                configModify.slashCommands.disableSlashCommand('guggy');
+                await configModify.slashCommands.disableSlashCommand('guggy');
             }
         } else {
             // There is no value, so remove the command
             this.getLogger().log('Disabling the slash command because there is no setting value defined.');
-            configModify.slashCommands.disableSlashCommand('guggy');
+            await configModify.slashCommands.disableSlashCommand('guggy');
         }
     }
 }
