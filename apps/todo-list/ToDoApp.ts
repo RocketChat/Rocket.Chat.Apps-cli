@@ -12,7 +12,7 @@ export class TodoListApp extends App {
         super(info, logger);
     }
 
-    public initialize(configurationExtend: IConfigurationExtend): void {
+    public initialize(configurationExtend: IConfigurationExtend, environmentRead: IEnvironmentRead): void {
         this.extendConfiguration(configurationExtend);
     }
 

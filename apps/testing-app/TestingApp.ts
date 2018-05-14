@@ -31,7 +31,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
 
     // Test out IPreMessageSentPrevent
     public async executePreMessageSentPrevent(message: IMessage, read: IRead, http: IHttp, persistence: IPersistence): Promise<boolean> {
-        return message.text === `${ this.testingPrefix } Prevent this`;
+        return message.text === `${ this.testingPrefix } prevent this`;
     }
 
     // Test out IPreMessageSentExtend
