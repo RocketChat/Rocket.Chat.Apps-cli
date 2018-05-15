@@ -12,19 +12,8 @@ export class TodoListApp extends App {
         super(info, logger);
     }
 
-    public initialize(configurationExtend: IConfigurationExtend, environmentRead: IEnvironmentRead): void {
-        this.extendConfiguration(configurationExtend);
-    }
-
-    public onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): boolean {
-        return true;
-    }
-
-    public onDisable(configurationModify: IConfigurationModify): void {
-        return;
-    }
-
-    protected extendConfiguration(configuration: IConfigurationExtend): void {
-        return;
+    public async initialize(configurationExtend: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
+        await this.extendConfiguration(configurationExtend, environmentRead);
+        this.getLogger().log('Hello world from To Do App');
     }
 }

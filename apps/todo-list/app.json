@@ -9,5 +9,6 @@
         "name": "Bradley Hilton <bradley.hilton@rocket.chat>",
         "support": "https://github.com/graywolf336"
     },
-    "classFile": "ToDoApp.ts"
+    "classFile": "ToDoApp.ts",
+    "iconFile": "testing.jpg"
 }
