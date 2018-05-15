@@ -6,7 +6,8 @@
   "scripts": {
     "start": "gulp",
     "package": "gulp package",
-    "fontello": "gulp compile-server-site-fontello"
+    "fontello": "gulp compile-server-site-fontello",
+    "create-app": "gulp create-app --name"
   },
   "repository": {
     "type": "git",
@@ -59,6 +60,7 @@
   },
   "dependencies": {
     "@rocket.chat/apps-engine": "^0.5.11",
-    "@rocket.chat/apps-ts-definition": "^0.9.6"
+    "@rocket.chat/apps-ts-definition": "^0.9.6",
+    "yargs": "^11.0.0"
   }
 }

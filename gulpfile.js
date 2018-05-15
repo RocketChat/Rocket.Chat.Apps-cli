@@ -14,9 +14,19 @@ const tsc = require('gulp-typescript');
 const tslint = require('gulp-tslint');
 const refresh = require('gulp-refresh');
 const appSchema = require('./app-schema.json');
+const argv = require('yargs').argv;
 
 function getFolders(dir) {
     return fs.readdirSync(dir).filter((file) => fs.statSync(path.join(dir, file)).isDirectory());
+}
+
+function slugify(text) {
+  return text.toString().toLowerCase()
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w-]+/g, '')       // Remove all non-word chars
+    .replace(/--+/g, '-')         // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start of text
+    .replace(/-+$/, '');            // Trim - from end of textte
 }
 
 const appsPath = './apps';
@@ -24,6 +34,60 @@ const tsp = tsc.createProject('tsconfig.json');
 
 gulp.task('clean-generated', function _cleanTypescript() {
     return del(['./dist/**']);
+});
+
+gulp.task('create-app', function _createNewApp() {
+    if(typeof argv.name != 'string' || argv.name === undefined) {
+      gutil.log(gutil.colors.red(figures.cross),  `Please use ${ gutil.colors.cyan('npm run create-app <name>') } to create a new Rocket.Chat App`);
+      throw new Error('Incorrect usage of create-app command');
+    }
+    if(fs.existsSync(`./apps/${ argv.name }`)) {
+      gutil.log(gutil.colors.red(figures.cross),  `${ gutil.colors.cyan(argv.name) } already exists in the apps folder`);
+    } else {
+      try {
+        fs.mkdirSync(`./apps/${ argv.name }`);
+      } catch (e) {
+        gutil.log(gutil.colors.red(figures.cross),  `Couldn't create a folder for ${ gutil.colors.cyan(argv.name) }`);
+        return;
+      }
+      try {
+        fs.writeFileSync(`./apps/${ argv.name }/app.json`,
+`{
+    "id": "eeb43d7c-fe45-42cb-89cd-cf37123bbbae",
+    "name": "${ argv.name }",
+    "nameSlug": "${ slugify(argv.name) }",
+    "version": "0.0.1",
+    "requiredApiVersion": ">=0.9.6",
+    "description": "",
+    "author": {
+        "name": "",
+        "support": ""
+    },
+    "classFile": "index.ts",
+    "iconFile": "icon.jpg"
+}
+`, 'utf8');
+        fs.writeFileSync(`./apps/${ argv.name }/icon.jpg`, '', 'binary');
+        fs.writeFileSync(`./apps/${ argv.name }/index.ts`,
+`import {
+    ILogger,
+} from '@rocket.chat/apps-ts-definition/accessors';
+import { App } from '@rocket.chat/apps-ts-definition/App';
+import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
+
+export class ${ argv.name[0].toUpperCase() + argv.name.substr(1).toLowerCase() }App extends App {
+    constructor(info: IAppInfo, logger: ILogger) {
+        super(info, logger);
+    }
+}
+`, 'utf8');
+
+      } catch (e) {
+        gutil.log(gutil.colors.red(figures.cross),  `Couldn't create a files for ${ gutil.colors.cyan(argv.name) } app`);
+
+      }
+
+    }
 });
 
 gulp.task('lint-ts', function _lintTypescript() {
