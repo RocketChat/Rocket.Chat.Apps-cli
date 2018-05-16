@@ -15,31 +15,18 @@ const tslint = require('gulp-tslint');
 const refresh = require('gulp-refresh');
 const appSchema = require('./app-schema.json');
 const argv = require('yargs').argv;
+const generateId = require('uuid4');
+const pascalCase = require('pascalcase');
 
-function getFolders(dir) {
-    return fs.readdirSync(dir).filter((file) => fs.statSync(path.join(dir, file)).isDirectory());
-}
+const getFolders = (dir) => fs.readdirSync(dir).filter((file) => fs.statSync(path.join(dir, file)).isDirectory());
 
-function slugify(text) {
-  return text.toString().toLowerCase()
+const slugify = (text) => text.toString().toLowerCase()
     .replace(/^\s+|\s+$/g, '')
     .replace(/\s+/g, '-')           // Replace spaces with -
     .replace(/[^\w-]+/g, '')       // Remove all non-word chars
     .replace(/--+/g, '-')         // Replace multiple - with single -
     .replace(/^-+/, '')             // Trim - from start of text
     .replace(/-+$/, '');            // Trim - from end of textte
-}
-function sanitize(text) {
-    const safeString = text.toString()
-    .replace(/^\s+|\s+$/g, '')
-    .replace(/\s+/g, '')
-    .replace(/[^\w-]+/g, '')       // Remove all non-word chars
-    .replace(/-+/g, '')         // Replace multiple - with single -
-    .replace(/^-+/, '')             // Trim - from start of text
-    .replace(/-+$/, '');            // Trim - from end of textte
-
-    return `${ safeString[0].toUpperCase() }${ safeString.substr(1).toLowerCase() }`;
-}
 
 const appsPath = './apps';
 const tsp = tsc.createProject('tsconfig.json');
@@ -49,11 +36,11 @@ gulp.task('clean-generated', function _cleanTypescript() {
 });
 
 gulp.task('create-app', function _createNewApp() {
-    const slugifiedName = slugify(argv.name);
     if(typeof argv.name != 'string' || argv.name === undefined) {
       gutil.log(gutil.colors.red(figures.cross),  `Please use ${ gutil.colors.cyan('npm run create-app <name>') } to create a new Rocket.Chat App`);
       throw new Error('Incorrect usage of create-app command');
     }
+    const slugifiedName = slugify(argv.name);
     if(fs.existsSync(`./apps/${ slugifiedName }`)) {
       gutil.log(gutil.colors.red(figures.cross),  `${ gutil.colors.cyan(argv.name) } already exists in the apps folder`);
     } else {
@@ -66,7 +53,7 @@ gulp.task('create-app', function _createNewApp() {
       try {
         fs.writeFileSync(`./apps/${ slugifiedName }/app.json`,
 `{
-    "id": "eeb43d7c-fe45-42cb-89cd-cf37123bbbae",
+    "id": "${ generateId() }",
     "name": "${ argv.name }",
     "nameSlug": "${ slugifiedName }",
     "version": "0.0.1",
@@ -88,7 +75,7 @@ gulp.task('create-app', function _createNewApp() {
 import { App } from '@rocket.chat/apps-ts-definition/App';
 import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
 
-export class ${ sanitize(argv.name) }App extends App {
+export class ${ pascalCase(argv.name) }App extends App {
     constructor(info: IAppInfo, logger: ILogger) {
         super(info, logger);
     }
