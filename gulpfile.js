@@ -37,20 +37,26 @@ gulp.task('clean-generated', function _cleanTypescript() {
 
 gulp.task('create-app', function _createNewApp() {
     if(typeof argv.name != 'string' || argv.name === undefined) {
-      gutil.log(gutil.colors.red(figures.cross),  `Please use ${ gutil.colors.cyan('npm run create-app <name>') } to create a new Rocket.Chat App`);
-      throw new Error('Incorrect usage of create-app command');
+        gutil.log(gutil.colors.red(figures.cross),  `Please use ${ gutil.colors.cyan('npm run create-app <name>') } to create a new Rocket.Chat App`);
+        throw new Error('Incorrect usage of create-app command');
+    }
+    if(argv.name.match(/[1-9]/) != null) {
+        gutil.log(gutil.colors.red(figures.cross),  `App name can't contain letters`);
+        return;
     }
     const slugifiedName = slugify(argv.name);
     if(fs.existsSync(`./apps/${ slugifiedName }`)) {
-      gutil.log(gutil.colors.red(figures.cross),  `${ gutil.colors.cyan(argv.name) } already exists in the apps folder`);
-    } else {
-      try {
+        gutil.log(gutil.colors.red(figures.cross),  `${ gutil.colors.cyan(argv.name) } already exists in the apps folder`);
+        return;
+    }
+
+    try {
         fs.mkdirSync(`./apps/${ slugifiedName }`);
-      } catch (e) {
+    } catch (e) {
         gutil.log(gutil.colors.red(figures.cross),  `Couldn't create a folder for ${ gutil.colors.cyan(argv.name) }`);
         return;
-      }
-      try {
+    }
+    try {
         fs.writeFileSync(`./apps/${ slugifiedName }/app.json`,
 `{
     "id": "${ generateId() }",
@@ -67,8 +73,10 @@ gulp.task('create-app', function _createNewApp() {
     "iconFile": "icon.jpg"
 }
 `, 'utf8');
-        fs.writeFileSync(`./apps/${ slugifiedName }/icon.jpg`, '', 'binary');
-        fs.writeFileSync(`./apps/${ slugifiedName }/index.ts`,
+
+      fs.writeFileSync(`./apps/${ slugifiedName }/icon.jpg`, '', 'binary');
+
+      fs.writeFileSync(`./apps/${ slugifiedName }/index.ts`,
 `import {
     ILogger,
 } from '@rocket.chat/apps-ts-definition/accessors';
@@ -82,10 +90,8 @@ export class ${ pascalCase(argv.name) }App extends App {
 }
 `, 'utf8');
 
-      } catch (e) {
+    } catch (e) {
         gutil.log(gutil.colors.red(figures.cross),  `Couldn't create a files for ${ gutil.colors.cyan(argv.name) } app`);
-
-      }
     }
 });
 
@@ -128,16 +134,16 @@ const appsTsCompileOptions = {
 //Packaging related items
 function _packageTheApps(callback) {
     const folders = getFolders(appsPath)
-                        .filter((folder) => fs.existsSync(path.join(appsPath, folder, 'app.json')) && fs.statSync(path.join(appsPath, folder, 'app.json')).isFile())
-                        .map((folder) => {
-                            return {
-                                folder,
-                                dir: path.join(appsPath, folder),
-                                toZip: path.join(appsPath, folder, '**'),
-                                infoFile: path.join(appsPath, folder, 'app.json'),
-                                info: require('./' + path.join(appsPath, folder, 'app.json'))
-                            };
-                        });
+                    .filter((folder) => fs.existsSync(path.join(appsPath, folder, 'app.json')) && fs.statSync(path.join(appsPath, folder, 'app.json')).isFile())
+                    .map((folder) => {
+                        return {
+                            folder,
+                            dir: path.join(appsPath, folder),
+                            toZip: path.join(appsPath, folder, '**'),
+                            infoFile: path.join(appsPath, folder, 'app.json'),
+                            info: require('./' + path.join(appsPath, folder, 'app.json'))
+                        };
+                    });
 
     async.series([
         function _testCompileTheTypeScript(next) {
