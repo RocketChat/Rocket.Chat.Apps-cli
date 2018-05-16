@@ -27,6 +27,10 @@ To make usage of this you can use `this.getLogger()` and then do the normal `con
 
 The minimum necessary to create a Rocket.Chat App is having an `app.json` file and a `.ts` class which extends the `App` class and an icon.
 
+### npm run create-app
+
+The development tools provide a command to quickly scaffold a new Rocket.Chat App, simply run `npm run create-app "<App Name>"` and a new folder will be created inside the `apps` folder with an `app.json` file containing the basic information of your app (please remember to update the UUID), a dummy `icon.jpg` image and the initial implementation of the App on `index.ts`.
+
 ### App description
 
 The app description file, named `app.json`, contains basic information about the app. You can check the `app-schema.json` file for all the detailed information and fields allowed in the app description file, the basic structure is similar to this:
@@ -50,7 +54,7 @@ The app description file, named `app.json`, contains basic information about the
 
 ### Extending the App class
 
-The basic creation of an App is based on extending the `App` class from the Rocket.Chat Apps _ts-definition_ library. Your class also has to implement the constructor and optionally the `initialize` function, for more details on those check the (ts-definition documentation)[https://rocketchat.github.io/Rocket.Chat.Apps-ts-definition/index.html]
+The basic creation of an App is based on extending the `App` class from the Rocket.Chat Apps _ts-definition_ library. Your class also has to implement the constructor and optionally the `initialize` function, for more details on those check the (App definition documentation)[https://rocketchat.github.io/Rocket.Chat.Apps-ts-definition/classes/app.html]
 
 ```
 import {
