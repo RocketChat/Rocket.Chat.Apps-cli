@@ -17,6 +17,8 @@ const appSchema = require('./app-schema.json');
 const argv = require('yargs').argv;
 const generateId = require('uuid4');
 const pascalCase = require('pascalcase');
+const formData = require('form-data');
+const tap = require('gulp-tap');
 
 const getFolders = (dir) => fs.readdirSync(dir).filter((file) => fs.statSync(path.join(dir, file)).isDirectory());
 
@@ -245,3 +247,31 @@ function _packageTheApps(callback) {
 gulp.task('package-for-develop', ['clean-generated', 'lint-no-exit-ts'], _packageTheApps);
 
 gulp.task('package', ['clean-generated', 'lint-ts'], _packageTheApps);
+
+gulp.task('deploy', [], function() {
+  let source;
+  if(typeof argv.filename != 'string' || argv.filename === undefined) {
+    console.log('Deploying all apps');
+    source = gulp.src('./dist/*.zip');
+  } else if(fs.existsSync(`./dist/${ argv.filename }`)) {
+    source = gulp.src(`./dist/${argv.filename}`);
+  }
+  if (!source) throw Error("Package for deployment was not found.");
+
+  source.pipe(tap((item) => {
+        // console.log(fs.readFileSync(`${item.path}`));
+        const data = new formData();
+        data.append('app', fs.createReadStream(item.path));
+        data.submit({
+            host: 'localhost',
+            port: '3000',
+            path: '/api/apps',
+            headers: {}
+        }, (err) => {
+          if(err) throw err;
+          console.log('deployed', item.path);
+        });
+
+      })
+    );
+});
