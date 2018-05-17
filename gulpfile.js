@@ -41,7 +41,7 @@ gulp.task('create-app', function _createNewApp() {
         throw new Error('Incorrect usage of create-app command');
     }
     if(argv.name.match(/[1-9]/) != null) {
-        gutil.log(gutil.colors.red(figures.cross),  `App name can't contain letters`);
+        gutil.log(gutil.colors.red(figures.cross),  `App name can't contain numbers`);
         return;
     }
     const slugifiedName = slugify(argv.name);
