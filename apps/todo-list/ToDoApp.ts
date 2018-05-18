@@ -12,19 +12,19 @@ export class TodoListApp extends App {
         super(info, logger);
     }
 
-    public initialize(configurationExtend: IConfigurationExtend): void {
-        this.extendConfiguration(configurationExtend);
+    public initialize(configurationExtend: IConfigurationExtend): Promise<void> {
+        return this.extendConfiguration(configurationExtend);
     }
 
-    public onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): boolean {
-        return true;
+    public onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): Promise<boolean> {
+        return Promise.resolve(true);
     }
 
-    public onDisable(configurationModify: IConfigurationModify): void {
-        return;
+    public onDisable(configurationModify: IConfigurationModify): Promise<void> {
+        return Promise.resolve();
     }
 
-    protected extendConfiguration(configuration: IConfigurationExtend): void {
-        return;
+    protected extendConfiguration(configuration: IConfigurationExtend): Promise<void> {
+        return Promise.resolve();
     }
 }

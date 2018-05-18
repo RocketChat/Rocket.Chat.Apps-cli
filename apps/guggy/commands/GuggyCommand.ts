@@ -4,8 +4,9 @@ import { GuggyGetter } from '../getters/GuggyGetter';
 
 export class GuggyCommand implements ISlashCommand {
     public command = 'guggy';
-    public paramsExample = 'Guggy_Text_On_Image';
+    public i18nParamsExample = 'Guggy_Text_On_Image';
     public i18nDescription = 'Guggy_Command_Description';
+    public providesPreview = false; // TODO: Convert this to true! :D
 
     constructor(private readonly getter: GuggyGetter) { }
 

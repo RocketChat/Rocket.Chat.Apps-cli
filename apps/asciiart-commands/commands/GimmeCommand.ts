@@ -5,8 +5,9 @@ export class GimmeCommand implements ISlashCommand {
     public static CommandName = 'gimme';
 
     public command: string = GimmeCommand.CommandName;
-    public paramsExample: string = 'your_message_optional';
+    public i18nParamsExample: string = 'your_message_optional';
     public i18nDescription: string = 'Slash_Gimme_Description';
+    public providesPreview: boolean = false;
 
     public async executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): Promise<void> {
         const builder = modify.getCreator().startMessage()

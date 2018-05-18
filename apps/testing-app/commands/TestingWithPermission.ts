@@ -3,15 +3,17 @@ import { ISlashCommand, SlashCommandContext } from '@rocket.chat/apps-ts-definit
 
 export class TestingWithPermission implements ISlashCommand {
     public command: string;
-    public paramsExample: string;
+    public i18nParamsExample: string;
     public i18nDescription: string;
     public permission: string;
+    public providesPreview: boolean;
 
     constructor() {
         this.command = 'testing-with-permission';
-        this.paramsExample = 'TestingApp_NoParams';
+        this.i18nParamsExample = 'TestingApp_NoParams';
         this.i18nDescription = 'TestingApp_CmdWithPerm';
         this.permission = 'access-permissions';
+        this.providesPreview = false;
     }
 
     // tslint:disable-next-line:max-line-length

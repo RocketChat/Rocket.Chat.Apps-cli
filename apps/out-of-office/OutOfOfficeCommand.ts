@@ -7,8 +7,9 @@ import { IOutOfOfficeStorage } from './IOutOfOfficeStorage';
 
 export class OutOfOfficeCommand implements ISlashCommand {
     public command = 'out-of-office';
-    public paramsExample = 'outOfOfficeParamExample';
+    public i18nParamsExample = 'outOfOfficeParamExample';
     public i18nDescription = 'outOfOfficeDescription';
+    public providesPreview = false;
 
     // tslint:disable-next-line:max-line-length
     public async executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp, persis: IPersistence): Promise<void> {

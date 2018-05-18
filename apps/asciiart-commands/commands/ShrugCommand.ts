@@ -5,8 +5,9 @@ export class ShrugCommand implements ISlashCommand {
     public static CommandName = 'shrug';
 
     public command: string = ShrugCommand.CommandName;
-    public paramsExample: string = 'your_message_optional';
+    public i18nParamsExample: string = 'your_message_optional';
     public i18nDescription: string = 'Slash_Shrug_Description';
+    public providesPreview: boolean = false;
 
     public async executor(context: SlashCommandContext, read: IRead, modify: IModify, http: IHttp): Promise<void> {
         const msgBuilder = modify.getCreator().startMessage()
