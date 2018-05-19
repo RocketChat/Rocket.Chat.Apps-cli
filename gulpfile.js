@@ -32,6 +32,8 @@ const slugify = (text) => text.toString().toLowerCase()
 
 const appsPath = './apps';
 const tsp = tsc.createProject('tsconfig.json');
+const devPackageJson = require('./package.json');
+const apiVersion = devPackageJson.dependencies['@rocket.chat/apps-ts-definition'].replace('^', '');
 
 gulp.task('clean-generated', function _cleanTypescript() {
     return del(['./dist/**']);
@@ -65,11 +67,11 @@ gulp.task('create-app', function _createNewApp() {
     "name": "${ argv.name }",
     "nameSlug": "${ slugifiedName }",
     "version": "0.0.1",
-    "requiredApiVersion": ">=0.9.6",
-    "description": "",
+    "requiredApiVersion": ">=${ apiVersion }",
+    "description": "${ argv.name } Rocket.Chat App",
     "author": {
-        "name": "",
-        "support": ""
+        "name": "<replace me>",
+        "support": "<replace me>"
     },
     "classFile": "index.ts",
     "iconFile": "icon.jpg"
