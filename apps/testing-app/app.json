@@ -4,7 +4,7 @@
     "nameSlug": "testing-app",
     "description": "A Rocket.Chat Application used to test out the various features.",
     "version": "0.0.8",
-    "requiredApiVersion": ">=0.9.6",
+    "requiredApiVersion": "^0.9.6",
     "author": {
         "name": "Bradley Hilton",
         "homepage": "https://github.com/RocketChat/Rocket.Chat.Apps-ts-definitions",

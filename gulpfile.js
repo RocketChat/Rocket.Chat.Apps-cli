@@ -67,7 +67,7 @@ gulp.task('create-app', function _createNewApp() {
     "name": "${ argv.name }",
     "nameSlug": "${ slugifiedName }",
     "version": "0.0.1",
-    "requiredApiVersion": ">=${ apiVersion }",
+    "requiredApiVersion": "^${ apiVersion }",
     "description": "${ argv.name } Rocket.Chat App",
     "author": {
         "name": "<replace me>",

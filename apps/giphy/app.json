@@ -3,7 +3,7 @@
     "name": "Giphy",
     "nameSlug": "giphy",
     "version": "0.1.0",
-    "requiredApiVersion": ">=0.9.13",
+    "requiredApiVersion": "^0.9.13",
     "description": "Giphy Rocket.Chat App",
     "author": {
         "name": "Bradley Hilton",

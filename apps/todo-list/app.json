@@ -3,7 +3,7 @@
     "name": "To Do Lists",
     "nameSlug": "to-do-lists",
     "version": "0.0.1",
-    "requiredApiVersion": ">=0.9.6",
+    "requiredApiVersion": "^0.9.6",
     "description": "App which provides to do lists per channels, including associated commands.",
     "author": {
         "name": "Bradley Hilton <bradley.hilton@rocket.chat>",
