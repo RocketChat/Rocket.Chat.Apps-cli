@@ -3,7 +3,7 @@
     "name": "Testing App",
     "nameSlug": "testing-app",
     "description": "A Rocket.Chat Application used to test out the various features.",
-    "version": "0.0.9",
+    "version": "0.0.10",
     "requiredApiVersion": ">=0.9.13",
     "author": {
         "name": "Bradley Hilton",
