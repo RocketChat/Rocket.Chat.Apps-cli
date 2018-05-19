@@ -2,7 +2,7 @@
     "id": "497f2898-7f55-424c-88af-f42c08a1b25d",
     "name": "Giphy",
     "nameSlug": "giphy",
-    "version": "0.1.0",
+    "version": "0.1.2",
     "requiredApiVersion": "^0.9.13",
     "description": "Giphy Rocket.Chat App",
     "author": {

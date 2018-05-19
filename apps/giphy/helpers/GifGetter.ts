@@ -29,7 +29,7 @@ export class GifGetter {
     }
 
     public async getOne(logger: ILogger, http: IHttp, gifId: string): Promise<GiphyResult> {
-        const response = await http.get(`${ this.url }search?api_key=${ this.key }`);
+        const response = await http.get(`${ this.url }${ gifId }?api_key=${ this.key }`);
 
         if (response.statusCode !== HttpStatusCode.OK || !response.data || !response.data.data) {
             logger.debug('Did not get a valid response', response);

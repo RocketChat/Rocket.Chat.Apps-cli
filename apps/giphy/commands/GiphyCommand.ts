@@ -59,10 +59,13 @@ export class GiphyCommand implements ISlashCommand {
                 },
                 imageUrl: gif.originalUrl,
             });
-        } catch (e) {
-            builder.setText('I tried to send y\'all a gif, but it failed :disappointed_relieved:');
-        }
 
-        await modify.getCreator().finish(builder);
+            await modify.getCreator().finish(builder);
+        } catch (e) {
+            this.app.getLogger().error('Failed getting a gif', e);
+            builder.setText('An error occured when trying to send the gif :disappointed_relieved:');
+
+            modify.getNotifer().notifyUser(context.getSender(), builder.getMessage());
+        }
     }
 }
