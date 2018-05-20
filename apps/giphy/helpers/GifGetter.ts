@@ -9,7 +9,7 @@ export class GifGetter {
     public async search(logger: ILogger, http: IHttp, phase: string): Promise<Array<GiphyResult>> {
         // TODO: Maybe error out when they don't provide us with something?
         let search = phase.trim();
-        if (!phase) {
+        if (!search) {
             search = 'random';
         }
 
