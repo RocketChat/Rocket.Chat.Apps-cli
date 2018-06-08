@@ -124,10 +124,10 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
 
     // Test out various configuration extentions
     protected async extendConfiguration(configuration: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
-        configuration.slashCommands.provideSlashCommand(new TestingNoPermission());
-        configuration.slashCommands.provideSlashCommand(new TestingWithPermission());
+        await configuration.slashCommands.provideSlashCommand(new TestingNoPermission());
+        await configuration.slashCommands.provideSlashCommand(new TestingWithPermission());
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: TestingSettingsEnum.TESTING_PREFIX,
             type: SettingType.STRING,
             packageValue: 'testing-apps',
@@ -137,7 +137,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
             i18nDescription: 'TestingApp_TestingPrefix_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: TestingSettingsEnum.TESTING_A_BOOLEAN,
             type: SettingType.BOOLEAN,
             packageValue: true,
@@ -147,7 +147,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
             i18nDescription: 'TestingApp_TestingBoolean_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: TestingSettingsEnum.TESTING_A_COLOR,
             type: SettingType.COLOR,
             packageValue: '#00ff33',
@@ -157,7 +157,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
             i18nDescription: 'TestingApp_TestingColor_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: TestingSettingsEnum.TESTING_A_NUMBER,
             type: SettingType.NUMBER,
             packageValue: 1337,
@@ -167,7 +167,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
             i18nDescription: 'TestingApp_TestingNumber_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: TestingSettingsEnum.TESTING_A_SELECT,
             type: SettingType.SELECT,
             packageValue: 'second',
@@ -195,7 +195,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
             ],
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: TestingSettingsEnum.TESTING_A_MULTI_LINE_STRING,
             type: SettingType.STRING,
             multiline: true,
@@ -207,7 +207,7 @@ export class TestingApp extends App implements IPreMessageSentPrevent, IPreMessa
             i18nDescription: 'TestingApp_TestingMultiString_Description',
         });
 
-        configuration.settings.provideSetting({
+        await configuration.settings.provideSetting({
             id: TestingSettingsEnum.TESTING_A_CODE,
             type: SettingType.CODE,
             packageValue: 'export class TestingSetting implements ISetting {\n  public id: \'something-cool\'\n}',
