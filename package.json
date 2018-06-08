@@ -6,7 +6,9 @@
   "scripts": {
     "start": "gulp",
     "package": "gulp package",
-    "fontello": "gulp compile-server-site-fontello"
+    "fontello": "gulp compile-server-site-fontello",
+    "create-app": "gulp create-app --name",
+    "deploy": "gulp deploy"
   },
   "repository": {
     "type": "git",
@@ -58,7 +60,13 @@
     "typescript": "^2.4.1"
   },
   "dependencies": {
-    "@rocket.chat/apps-engine": "^0.5.11",
-    "@rocket.chat/apps-ts-definition": "^0.9.13"
+    "@rocket.chat/apps-engine": "^0.6.10",
+    "@rocket.chat/apps-ts-definition": "^0.9.13",
+    "form-data": "^2.3.2",
+    "gulp-file-post": "^1.2.2",
+    "gulp-tap": "^1.0.1",
+    "pascalcase": "^0.1.1",
+    "uuid4": "^1.0.0",
+    "yargs": "^11.0.0"
   }
 }

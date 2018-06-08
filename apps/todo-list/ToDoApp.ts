@@ -12,8 +12,10 @@ export class TodoListApp extends App {
         super(info, logger);
     }
 
-    public initialize(configurationExtend: IConfigurationExtend): Promise<void> {
-        return this.extendConfiguration(configurationExtend);
+    public async initialize(configurationExtend: IConfigurationExtend): Promise<void> {
+        await this.extendConfiguration(configurationExtend);
+
+        this.getLogger().log('Hello world from To Do App');
     }
 
     public onEnable(environment: IEnvironmentRead, configurationModify: IConfigurationModify): Promise<boolean> {

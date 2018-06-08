@@ -6,9 +6,6 @@ const del = require('del');
 const through = require('through2');
 const gulp = require('gulp');
 const file = require('gulp-file');
-const fontello = require('gulp-fontello');
-const download = require('gulp-download');
-const merge = require('gulp-merge');
 const gutil = require('gulp-util');
 const zip = require('gulp-zip');
 const jsonSchema = require('gulp-json-schema');
@@ -16,22 +13,90 @@ const sourcemaps = require('gulp-sourcemaps');
 const tsc = require('gulp-typescript');
 const tslint = require('gulp-tslint');
 const refresh = require('gulp-refresh');
-const spawn = require('child_process').spawn;
 const appSchema = require('./app-schema.json');
+const argv = require('yargs').argv;
+const generateId = require('uuid4');
+const pascalCase = require('pascalcase');
+const formData = require('form-data');
+const tap = require('gulp-tap');
 
-function getFolders(dir) {
-    return fs.readdirSync(dir).filter((file) => fs.statSync(path.join(dir, file)).isDirectory());
-}
+const getFolders = (dir) => fs.readdirSync(dir).filter((file) => fs.statSync(path.join(dir, file)).isDirectory());
+
+const slugify = (text) => text.toString().toLowerCase()
+    .replace(/^\s+|\s+$/g, '')
+    .replace(/\s+/g, '-')           // Replace spaces with -
+    .replace(/[^\w-]+/g, '')       // Remove all non-word chars
+    .replace(/--+/g, '-')         // Replace multiple - with single -
+    .replace(/^-+/, '')             // Trim - from start of text
+    .replace(/-+$/, '');            // Trim - from end of textte
 
 const appsPath = './apps';
 const tsp = tsc.createProject('tsconfig.json');
+const devPackageJson = require('./package.json');
+const apiVersion = devPackageJson.dependencies['@rocket.chat/apps-ts-definition'].replace('^', '');
 
 gulp.task('clean-generated', function _cleanTypescript() {
-    return del(['./dist/**', './.server-dist/**']);
+    return del(['./dist/**']);
 });
 
-gulp.task('clean-fontello', function _cleanFontello() {
-    return del(['./.site/fontello/**']);
+gulp.task('create-app', function _createNewApp() {
+    if(typeof argv.name != 'string' || argv.name === undefined) {
+        gutil.log(gutil.colors.red(figures.cross),  `Please use ${ gutil.colors.cyan('npm run create-app <name>') } to create a new Rocket.Chat App`);
+        throw new Error('Incorrect usage of create-app command');
+    }
+    if(argv.name.match(/[1-9]/) != null) {
+        gutil.log(gutil.colors.red(figures.cross),  `App name can't contain numbers`);
+        return;
+    }
+    const slugifiedName = slugify(argv.name);
+    if(fs.existsSync(`./apps/${ slugifiedName }`)) {
+        gutil.log(gutil.colors.red(figures.cross),  `${ gutil.colors.cyan(argv.name) } already exists in the apps folder`);
+        return;
+    }
+
+    try {
+        fs.mkdirSync(`./apps/${ slugifiedName }`);
+    } catch (e) {
+        gutil.log(gutil.colors.red(figures.cross),  `Couldn't create a folder for ${ gutil.colors.cyan(argv.name) }`);
+        return;
+    }
+    try {
+        fs.writeFileSync(`./apps/${ slugifiedName }/app.json`,
+`{
+    "id": "${ generateId() }",
+    "name": "${ argv.name }",
+    "nameSlug": "${ slugifiedName }",
+    "version": "0.0.1",
+    "requiredApiVersion": "^${ apiVersion }",
+    "description": "${ argv.name } Rocket.Chat App",
+    "author": {
+        "name": "<replace me>",
+        "support": "<replace me>"
+    },
+    "classFile": "index.ts",
+    "iconFile": "icon.jpg"
+}
+`, 'utf8');
+
+      fs.writeFileSync(`./apps/${ slugifiedName }/icon.jpg`, '', 'binary');
+
+      fs.writeFileSync(`./apps/${ slugifiedName }/index.ts`,
+`import {
+    ILogger,
+} from '@rocket.chat/apps-ts-definition/accessors';
+import { App } from '@rocket.chat/apps-ts-definition/App';
+import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
+
+export class ${ pascalCase(argv.name) }App extends App {
+    constructor(info: IAppInfo, logger: ILogger) {
+        super(info, logger);
+    }
+}
+`, 'utf8');
+
+    } catch (e) {
+        gutil.log(gutil.colors.red(figures.cross),  `Couldn't create a files for ${ gutil.colors.cyan(argv.name) } app`);
+    }
 });
 
 gulp.task('lint-ts', function _lintTypescript() {
@@ -49,77 +114,11 @@ gulp.task('compile-ts', ['clean-generated', 'lint-ts'], function _compileTypescr
             .pipe(gulp.dest('dist'));
 });
 
-gulp.task('compile-server-ts', ['clean-generated'], function _compileServerTypescript() {
-    const project = tsc.createProject('.server/tsconfig.json');
-
-    return project.src()
-            .pipe(sourcemaps.init())
-            .pipe(project())
-            .pipe(sourcemaps.write('.'))
-            .pipe(gulp.dest('.server-dist'));
-});
-
-gulp.task('compile-server-site-ts', ['clean-generated', 'compile-server-ts'], function _compileServerTypescript() {
-    const project = tsc.createProject('.site/tsconfig.json');
-
-    return project.src()
-            .pipe(sourcemaps.init())
-            .pipe(project())
-            .pipe(sourcemaps.write('.'))
-            .pipe(gulp.dest('.server-dist/site'));
-});
-
-gulp.task('compile-server-site-fontello', ['clean-fontello'], function _fontello() {
-    return download('https://raw.githubusercontent.com/RocketChat/Rocket.Chat/develop/packages/rocketchat-theme/client/vendor/fontello/config.json')
-            .pipe(fontello({ assetsOnly: false }))
-            .pipe(gulp.dest('.site/fontello'));
-});
-
-gulp.task('copy-server-site', ['clean-generated', 'compile-server-ts', 'compile-server-site-ts'], function _copyServerSiteContent() {
-    const siteSrcs = gulp.src(['.site/**/*.html', '.site/**/*.css', '.site/font/**.*']).pipe(gulp.dest('.server-dist/site'));
-    const fontelloSrcs = gulp.src('.site/fontello/**/*').pipe(gulp.dest('.server-dist/site/fontello'));
-
-    return merge(siteSrcs, fontelloSrcs);
-});
-
-let server;
-gulp.task('run-server', ['lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop'], function _runTheServer(cb) {
-    if (server) server.kill();
-
-    server = spawn('node', ['.server-dist/server.js']);
-
-    server.stdout.on('data', (msg) => {
-        gutil.log(gutil.colors.blue('Server:'), msg.toString().trim());
-
-        if (msg.toString().includes('Completed the loading')) {
-            cb();
-        }
-    });
-
-    server.stderr.on('data', (msg) => {
-        gutil.log(gutil.colors.blue('Server:'), msg.toString().trim());
-    });
-
-    server.on('close', (code) => {
-        if (code === 8) {
-            gulp.log('Error detected, waiting for changes....');
-        }
-    });
-});
-
-process.on('exit', () => {
-    if (server) server.kill();
-});
-
-gulp.task('refresh-lr', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'run-server'], function _refreshLr() {
-    return gulp.src(['.site/**/*.ts', '.site/**/*.html', '.site/**/*.css']).pipe(refresh());
-});
-
-gulp.task('default', ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'run-server'], function _watchCodeAndRun() {
+gulp.task('default', ['clean-generated', 'lint-no-exit-ts','package-for-develop'], function _watchCodeAndRun() {
     refresh.listen();
 
-    gulp.watch(['apps/**/*', '.server/**/*.ts', '.site/**/*.ts', '.site/**/*.html', '.site/**/*.css'],
-        ['clean-generated', 'lint-no-exit-ts', 'compile-server-ts', 'compile-server-site-ts', 'copy-server-site', 'package-for-develop', 'refresh-lr', 'run-server']);
+    gulp.watch(['apps/**/*'],
+        ['clean-generated', 'lint-no-exit-ts', 'package-for-develop']);
 });
 
 const appsTsCompileOptions = {
@@ -139,21 +138,24 @@ const appsTsCompileOptions = {
 //Packaging related items
 function _packageTheApps(callback) {
     const folders = getFolders(appsPath)
-                        .filter((folder) => fs.existsSync(path.join(appsPath, folder, 'app.json')) && fs.statSync(path.join(appsPath, folder, 'app.json')).isFile())
-                        .map((folder) => {
-                            return {
-                                folder,
-                                dir: path.join(appsPath, folder),
-                                toZip: path.join(appsPath, folder, '**'),
-                                infoFile: path.join(appsPath, folder, 'app.json'),
-                                info: require('./' + path.join(appsPath, folder, 'app.json'))
-                            };
-                        });
+                    .filter((folder) => fs.existsSync(path.join(appsPath, folder, 'app.json')) && fs.statSync(path.join(appsPath, folder, 'app.json')).isFile())
+                    .map((folder) => {
+                        return {
+                            folder,
+                            dir: path.join(appsPath, folder),
+                            toZip: path.join(appsPath, folder, '**'),
+                            infoFile: path.join(appsPath, folder, 'app.json'),
+                            info: require('./' + path.join(appsPath, folder, 'app.json'))
+                        };
+                    });
 
     async.series([
         function _testCompileTheTypeScript(next) {
             const promises = folders.map((item) => {
                 return new Promise((resolve) => {
+                    if (!fs.existsSync('.tmp')) {
+                        fs.mkdirSync('./.tmp');
+                    }
                     fs.writeFileSync(`.tmp/${ item.info.id }.json`, JSON.stringify({
                         compilerOptions: appsTsCompileOptions,
                         include: [ __dirname + '/' + item.dir ],
@@ -247,3 +249,31 @@ function _packageTheApps(callback) {
 gulp.task('package-for-develop', ['clean-generated', 'lint-no-exit-ts'], _packageTheApps);
 
 gulp.task('package', ['clean-generated', 'lint-ts'], _packageTheApps);
+
+gulp.task('deploy', [], function() {
+  let source;
+  if(typeof argv.filename != 'string' || argv.filename === undefined) {
+    console.log('Deploying all apps');
+    source = gulp.src('./dist/*.zip');
+  } else if(fs.existsSync(`./dist/${ argv.filename }`)) {
+    source = gulp.src(`./dist/${argv.filename}`);
+  }
+  if (!source) throw Error("Package for deployment was not found.");
+
+  source.pipe(tap((item) => {
+        // console.log(fs.readFileSync(`${item.path}`));
+        const data = new formData();
+        data.append('app', fs.createReadStream(item.path));
+        data.submit({
+            host: 'localhost',
+            port: '3000',
+            path: '/api/apps',
+            headers: {}
+        }, (err) => {
+          if(err) throw err;
+          console.log('deployed', item.path);
+        });
+
+      })
+    );
+});

@@ -1,0 +1,14 @@
+{
+    "id": "497f2898-7f55-424c-88af-f42c08a1b25d",
+    "name": "Giphy",
+    "nameSlug": "giphy",
+    "version": "0.1.4",
+    "requiredApiVersion": "^0.9.13",
+    "description": "Giphy Rocket.Chat App",
+    "author": {
+        "name": "Bradley Hilton",
+        "support": "https://github.com/RocketChat/Rocket.Chat.Apps-ts-definitions/issues"
+    },
+    "classFile": "Giphy.ts",
+    "iconFile": "icon.jpg"
+}

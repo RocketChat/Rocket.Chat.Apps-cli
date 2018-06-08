@@ -3,11 +3,12 @@
     "name": "To Do Lists",
     "nameSlug": "to-do-lists",
     "version": "0.0.1",
-    "requiredApiVersion": ">=0.9.13",
+    "requiredApiVersion": "^0.9.13",
     "description": "App which provides to do lists per channels, including associated commands.",
     "author": {
         "name": "Bradley Hilton <bradley.hilton@rocket.chat>",
         "support": "https://github.com/graywolf336"
     },
-    "classFile": "ToDoApp.ts"
+    "classFile": "ToDoApp.ts",
+    "iconFile": "testing.jpg"
 }
