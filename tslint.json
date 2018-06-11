@@ -2,21 +2,10 @@
   "extends": "tslint:recommended",
   "rules": {
     "array-type": [true, "generic"],
-    "no-console": [false],
-    "no-duplicate-variable": true,
+    "member-access": true,
+    "no-shadowed-variable": false,
     "object-literal-sort-keys": false,
-    "quotemark": [true, "single"],
-    "max-line-length": [true, {
-        "limit": 160,
-        "ignore-pattern": "^import | *export .*? {"
-    }]
-  },
-  "linterOptions": {
-      "exclude": [
-          "apps/**/node_modules"
-      ]
-  },
-  "jsRules": {
-    "quotemark": [true, "single"]
+    "quotemark": [true, "single", "avoid-escape", "avoid-template"],
+    "promise-function-async": true
   }
 }

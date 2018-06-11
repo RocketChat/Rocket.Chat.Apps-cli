@@ -1,28 +1,18 @@
 {
-    "compileOnSave": false,
-    "compilerOptions": {
-        "sourceMap": true,
-        "target": "es6",
-        "module": "commonjs",
-        "declaration": false,
-        "noImplicitAny": false,
-        "removeComments": true,
-        "strictNullChecks": true,
-        "noImplicitReturns": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "moduleResolution": "node",
-        "lib": ["es2017", "dom"],
-        "outDir": "dist"
-    },
-    "include": [
-        "apps"
-    ],
-    "exclude": [
-        "node_modules",
-        "dist"
-    ],
-    "atom": {
-        "rewriteTsconfig": false
-    }
+  "compilerOptions": {
+    "sourceMap": true,
+    "target": "es2017",
+    "module": "commonjs",
+    "declaration": true,
+    "noImplicitAny": true,
+    "forceConsistentCasingInFileNames": true,
+    "importHelpers": true,
+    "strict": true,
+    "outDir": "./lib",
+    "rootDirs": [ "./src" ],
+    "typeRoots": [ "./node_modules/@types" ]
+  },
+  "include": [
+    "./src/**/*"
+  ]
 }
