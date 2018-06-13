@@ -7,7 +7,7 @@
     "noImplicitAny": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
-    "strict": true,
+    // "strict": true,
     "outDir": "./lib",
     "rootDirs": [ "./src" ],
     "typeRoots": [ "./node_modules/@types" ]

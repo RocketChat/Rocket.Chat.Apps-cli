@@ -6,6 +6,7 @@
     "no-shadowed-variable": false,
     "object-literal-sort-keys": false,
     "quotemark": [true, "single", "avoid-escape", "avoid-template"],
-    "promise-function-async": true
+    "promise-function-async": true,
+    "variable-name": false
   }
 }
