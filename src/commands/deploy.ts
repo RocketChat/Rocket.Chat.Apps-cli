@@ -79,7 +79,7 @@ export default class Deploy extends Command {
             body: JSON.stringify({ username: flags.username, password: flags.username }),
         }).then((res: Response) => res.json());
 
-        if (authResult.status === 'error') {
+        if (authResult.status === 'error' || !authResult.success) {
             throw new Error('Invalid username and password');
         }
 
@@ -94,6 +94,8 @@ export default class Deploy extends Command {
 
         if (deployResult.status === 'error') {
             throw new Error('Unknown error occured while deploying');
+        } else if (!deployResult.success) {
+            throw new Error(`Deployment error: ${ deployResult.error }`);
         }
     }
 
