@@ -4,6 +4,7 @@ import chalk from 'chalk';
 import * as figures from 'figures';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as process from 'process';
 import * as tv4 from 'tv4';
 
 import { appJsonSchema } from './appJsonSchema';
@@ -15,16 +16,20 @@ export class FolderDetails {
     public mainFile: string;
     public info: IAppInfo;
 
-    constructor(private command: Command, cwd: string) {
-        this.folder = cwd;
-        this.toZip = path.join(cwd, '{,!(node_modules|test)/**/}*.*');
-        this.infoFile = path.join(cwd, 'app.json');
+    constructor(private command: Command) {
+        this.folder = process.cwd();
+        this.toZip = path.join(this.folder, '{,!(node_modules|test)/**/}*.*');
+        this.infoFile = path.join(this.folder, 'app.json');
         this.mainFile = '';
         this.info = {} as IAppInfo;
     }
 
     public async doesFileExist(file: string): Promise<boolean> {
         return await fs.pathExists(file) && fs.statSync(file).isFile();
+    }
+
+    public mergeWithFolder(item: string): string {
+        return path.join(this.folder, item);
     }
 
     /**

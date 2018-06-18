@@ -2,7 +2,6 @@ import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
 import * as path from 'path';
-import * as process from 'process';
 
 import {
     AppCompiler,
@@ -17,7 +16,10 @@ export default class Package extends Command {
     public static flags = {
         help: flags.help({ char: 'h' }),
         // flag with no value (-f, --force)
-        force: flags.boolean({ char: 'f', description: 'forcefully package the App, ignores lint' }),
+        force: flags.boolean({
+            char: 'f',
+            description: 'forcefully package the App, ignores lint & TypeScript errors',
+        }),
     };
 
     public async run(): Promise<void> {
@@ -25,8 +27,7 @@ export default class Package extends Command {
 
         cli.action.start('packaging your app');
 
-        const cwd = process.cwd();
-        const fd = new FolderDetails(this, cwd);
+        const fd = new FolderDetails(this);
 
         try {
             await fd.readInfoFile();

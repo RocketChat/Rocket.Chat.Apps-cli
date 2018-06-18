@@ -19,7 +19,7 @@ export class AppPackager {
             '**/*.js',
             '**/*.js.map',
             '**/*.d.ts',
-            '**/*.zip',
+            '**/dist/**',
         ],
     };
 
@@ -40,7 +40,7 @@ export class AppPackager {
             throw e;
         }
 
-        const zipName = `${ this.fd.info.nameSlug }_${ this.fd.info.version}.zip`;
+        const zipName = `dist${ path.sep }${ this.fd.info.nameSlug }_${ this.fd.info.version}.zip`;
         const zip = new Yazl.ZipFile();
 
         zip.addBuffer(Buffer.from(JSON.stringify(AppPackager.PackagerInfo)), '.packagedby', { compress: true });
@@ -82,6 +82,7 @@ export class AppPackager {
     // tslint:disable-next-line:promise-function-async
     private asyncWriteZip(zip: Yazl.ZipFile, zipName: string): Promise<void> {
         return new Promise((resolve) => {
+            fs.mkdirpSync('dist');
             zip.outputStream.pipe(fs.createWriteStream(zipName)).on('close', resolve);
         });
     }
