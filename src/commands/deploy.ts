@@ -45,7 +45,7 @@ export default class Deploy extends Command {
         const packager = new AppPackager(this, fd);
         const zipName = await packager.zipItUp();
 
-        cli.action.stop('finished!');
+        cli.action.stop('packaged!');
 
         if (!flags.url) {
             flags.url = await cli.prompt('What is the server\'s url (include https)?');
