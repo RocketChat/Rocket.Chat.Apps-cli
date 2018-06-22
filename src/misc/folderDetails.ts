@@ -17,9 +17,7 @@ export class FolderDetails {
     public info: IAppInfo;
 
     constructor(private command: Command) {
-        this.folder = process.cwd();
-        this.toZip = path.join(this.folder, '{,!(node_modules|test)/**/}*.*');
-        this.infoFile = path.join(this.folder, 'app.json');
+        this.setFolder(process.cwd());
         this.mainFile = '';
         this.info = {} as IAppInfo;
     }
@@ -30,6 +28,16 @@ export class FolderDetails {
 
     public mergeWithFolder(item: string): string {
         return path.join(this.folder, item);
+    }
+
+    public setFolder(folderPath: string): void {
+        this.folder = folderPath;
+        this.toZip = path.join(this.folder, '{,!(node_modules|test)/**/}*.*');
+        this.infoFile = path.join(this.folder, 'app.json');
+    }
+
+    public setAppInfo(appInfo: IAppInfo): void {
+        this.info = appInfo;
     }
 
     /**

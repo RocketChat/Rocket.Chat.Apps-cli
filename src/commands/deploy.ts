@@ -1,4 +1,5 @@
 import { Command, flags } from '@oclif/command';
+import chalk from 'chalk';
 import cli from 'cli-ux';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
@@ -22,7 +23,7 @@ export default class Deploy extends Command {
     public async run() {
         const { flags } = this.parse(Deploy);
 
-        cli.action.start('packaging your app');
+        cli.action.start(`${ chalk.green('packaging') } your app`);
 
         const fd = new FolderDetails(this);
 
@@ -59,7 +60,7 @@ export default class Deploy extends Command {
             flags.password = await cli.prompt('And, what is the password?', { type: 'hide' });
         }
 
-        cli.action.start('deploying your app');
+        cli.action.start(`${ chalk.green('deploying') } your app`);
 
         const data = new FormData();
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)));

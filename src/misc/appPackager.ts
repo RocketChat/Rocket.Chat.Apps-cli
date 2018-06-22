@@ -20,6 +20,7 @@ export class AppPackager {
             '**/*.js.map',
             '**/*.d.ts',
             '**/dist/**',
+            '**/.*',
         ],
     };
 
@@ -38,6 +39,11 @@ export class AppPackager {
         } catch (e) {
             this.command.warn(`Failed to retrieve the list of files for the App ${ this.fd.info.name }.`);
             throw e;
+        }
+
+        // Ensure we have some files to package up before we do the packaging
+        if (matches.length === 0) {
+            throw new Error('No files to package were found');
         }
 
         const zipName = `dist${ path.sep }${ this.fd.info.nameSlug }_${ this.fd.info.version}.zip`;
@@ -82,8 +88,9 @@ export class AppPackager {
     // tslint:disable-next-line:promise-function-async
     private asyncWriteZip(zip: Yazl.ZipFile, zipName: string): Promise<void> {
         return new Promise((resolve) => {
-            fs.mkdirpSync('dist');
-            zip.outputStream.pipe(fs.createWriteStream(zipName)).on('close', resolve);
+            fs.mkdirpSync(this.fd.mergeWithFolder('dist'));
+            const realPath = this.fd.mergeWithFolder(zipName);
+            zip.outputStream.pipe(fs.createWriteStream(realPath)).on('close', resolve);
         });
     }
 }
