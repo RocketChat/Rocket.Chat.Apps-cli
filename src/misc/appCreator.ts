@@ -16,6 +16,7 @@ export class AppCreator {
         this.createTsConfig();
         this.createTsLintConfig();
         this.createPackageJson();
+        this.createGitIgnore();
         this.createEditorConfig();
         this.createVsCodeExts();
 
@@ -109,6 +110,18 @@ export class ${ pascalCase(this.fd.info.name) }App extends App {
 `;
 
         fs.writeFileSync(this.fd.mergeWithFolder('package.json'), toWrite, 'utf8');
+    }
+
+    private createGitIgnore(): void {
+        const toWrite =
+`# ignore modules pulled in from npm
+node_modules/
+
+# rc-apps package output
+dist/
+`;
+
+        fs.writeFileSync(this.fd.mergeWithFolder('.gitignore'), toWrite, 'utf8');
     }
 
     private createEditorConfig(): void {
