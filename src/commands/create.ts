@@ -2,6 +2,7 @@ import { Command, flags } from '@oclif/command';
 import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
 import chalk from 'chalk';
 import cli from 'cli-ux';
+import pascalCase = require('pascal-case');
 import * as path from 'path';
 import * as semver from 'semver';
 import * as uuid from 'uuid';
@@ -31,7 +32,6 @@ export default class Create extends Command {
             id: uuid.v4(),
             version: '0.0.1',
             requiredApiVersion: VariousUtils.getTsDefVersion(),
-            classFile: 'index.ts',
             iconFile: 'icon.png',
             author: {},
         } as IAppInfo;
@@ -42,6 +42,7 @@ export default class Create extends Command {
 
         info.name = await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
+        info.classFile = `${ pascalCase(info.name) }App.ts`;
 
         info.description = await cli.prompt(chalk.bold('   App Description'));
         info.author.name = await cli.prompt(chalk.bold('   Author\'s Name'));
