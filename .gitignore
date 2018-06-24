@@ -1,6 +1,3 @@
-# Created by https://www.gitignore.io/api/node
-
-### Node ###
 # Logs
 logs
 *.log
@@ -40,14 +37,12 @@ jspm_packages
 # Optional REPL history
 .node_repl_history
 
-### Typings ###
-## Ignore downloaded typings
+# Ignore downloaded typings
 /typings
 
-## Ignore distribution folder
+# Ignore distribution folder
 dist/
 
-## dev env items
-.server-dist/
-.server-data/
-.tmp/
+# Various others
+/lib
+/tmp
