@@ -7,7 +7,9 @@
   "bin": {
     "rc-apps": "./bin/run"
   },
-  "bugs": "https://github.com/RocketChat/Rocket.Chat.Apps-cli/issues",
+  "bugs": {
+    "url": "https://github.com/RocketChat/Rocket.Chat.Apps-cli/issues"
+  },
   "dependencies": {
     "@oclif/command": "^1.4.32",
     "@oclif/config": "^1.6.27",
@@ -86,7 +88,10 @@
       "html"
     ]
   },
-  "repository": "RocketChat/Rocket.Chat.Apps-cli",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RocketChat/Rocket.Chat.Apps-cli.git"
+  },
   "scripts": {
     "postpack": "rm -f oclif.manifest.json",
     "posttest": "tsc -p test --noEmit && tslint -p test -t stylish",
