@@ -69,7 +69,9 @@
   ],
   "homepage": "https://github.com/RocketChat/Rocket.Chat.Apps-cli",
   "keywords": [
-    "oclif"
+    "oclif",
+    "rocket.chat",
+    "apps"
   ],
   "license": "MIT",
   "main": "lib/index.js",
