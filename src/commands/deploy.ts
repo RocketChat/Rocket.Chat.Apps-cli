@@ -15,6 +15,7 @@ export default class Deploy extends Command {
         help: flags.help({ char: 'h' }),
         // flag with no value (-f, --force)
         force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
+        update: flags.boolean({ description: 'updates the app, instead of creating' }),
         url: flags.string({ description: 'where the App should be deployed to' }),
         username: flags.string({ char: 'u', dependsOn: ['url'], description: 'username to authenticate with' }),
         password: flags.string({ char: 'p', dependsOn: ['username'], description: 'password of the user' }),
@@ -65,28 +66,31 @@ export default class Deploy extends Command {
         const data = new FormData();
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)));
 
-        await this.asyncSubmitData(data, flags);
+        await this.asyncSubmitData(data, flags, fd);
 
         cli.action.stop('deployed!');
     }
 
     // tslint:disable:promise-function-async
-    private async asyncSubmitData(data: FormData, flags: { [key: string]: any }): Promise<void> {
+    private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<void> {
         const authResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/login'), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username: flags.username, password: flags.username }),
             body: JSON.stringify({ username: flags.username, password: flags.password }),
         }).then((res: Response) => res.json());
 
-        if (authResult.status === 'error' || !authResult.success) {
         if (authResult.status === 'error' || !authResult.data) {
             throw new Error('Invalid username and password');
         }
 
-        const deployResult = await fetch(this.normalizeUrl(flags.url, '/api/apps'), {
+        let endpoint = '/api/apps';
+        if (flags.update) {
+            endpoint += `/${fd.info.id}`;
+        }
+
+        const deployResult = await fetch(this.normalizeUrl(flags.url, endpoint), {
             method: 'POST',
             headers: {
                 'X-Auth-Token': authResult.data.authToken,
