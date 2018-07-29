@@ -78,6 +78,7 @@ export default class Deploy extends Command {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ username: flags.username, password: flags.username }),
+            body: JSON.stringify({ username: flags.username, password: flags.password }),
         }).then((res: Response) => res.json());
 
         if (authResult.status === 'error' || !authResult.success) {
