@@ -82,6 +82,7 @@ export default class Deploy extends Command {
         }).then((res: Response) => res.json());
 
         if (authResult.status === 'error' || !authResult.success) {
+        if (authResult.status === 'error' || !authResult.data) {
             throw new Error('Invalid username and password');
         }
 
