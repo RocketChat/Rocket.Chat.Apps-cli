@@ -1,5 +1,5 @@
 import Command from '@oclif/command';
-import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
+import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 import chalk from 'chalk';
 import * as figures from 'figures';
 import * as fs from 'fs-extra';

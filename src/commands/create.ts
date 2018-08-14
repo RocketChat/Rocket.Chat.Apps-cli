@@ -1,5 +1,5 @@
 import { Command, flags } from '@oclif/command';
-import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
+import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 import chalk from 'chalk';
 import cli from 'cli-ux';
 import pascalCase = require('pascal-case');

@@ -20,7 +20,7 @@ The development tools provide a command to quickly scaffold a new Rocket.Chat Ap
 
 ### App description
 
-The app description file, named `app.json`, contains basic information about the app. You can check the [app-schema.json](https://github.com/RocketChat/Rocket.Chat.Apps-ts-definition/blob/master/src/app-schema.json) file for all the detailed information and fields allowed in the app description file, the basic structure is similar to this:
+The app description file, named `app.json`, contains basic information about the app. You can check the [app-schema.json](https://github.com/RocketChat/Rocket.Chat.Apps-engine/blob/master/src/definition/app-schema.json) file for all the detailed information and fields allowed in the app description file, the basic structure is similar to this:
 
 ```
 {
@@ -41,7 +41,7 @@ The app description file, named `app.json`, contains basic information about the
 
 ### Extending the App class
 
-The basic creation of an App is based on extending the `App` class from the Rocket.Chat Apps _ts-definition_ library. Your class also has to implement the constructor and optionally the `initialize` function, for more details on those check the [App definition documentation](https://rocketchat.github.io/Rocket.Chat.Apps-ts-definition/classes/app.html).
+The basic creation of an App is based on extending the `App` class from the Rocket.Chat Apps _definition_ library. Your class also has to implement the constructor and optionally the `initialize` function, for more details on those check the [App definition documentation](https://rocketchat.github.io/Rocket.Chat.Apps-engine/classes/app.html).
 
 ```
 import {
@@ -49,9 +49,9 @@ import {
     IConfigurationModify,
     IEnvironmentRead,
     ILogger,
-} from '@rocket.chat/apps-ts-definition/accessors';
-import { App } from '@rocket.chat/apps-ts-definition/App';
-import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
+} from '@rocket.chat/apps-engine/definition/accessors';
+import { App } from '@rocket.chat/apps-engine/definition/App';
+import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 
 export class TodoListApp extends App {
     constructor(info: IAppInfo, logger: ILogger) {

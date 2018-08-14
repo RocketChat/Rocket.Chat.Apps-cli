@@ -32,9 +32,9 @@ export class AppCreator {
         const toWrite =
 `import {
     ILogger,
-} from '@rocket.chat/apps-ts-definition/accessors';
-import { App } from '@rocket.chat/apps-ts-definition/App';
-import { IAppInfo } from '@rocket.chat/apps-ts-definition/metadata';
+} from '@rocket.chat/apps-engine/definition/accessors';
+import { App } from '@rocket.chat/apps-engine/definition/App';
+import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 
 export class ${ pascalCase(this.fd.info.name) }App extends App {
     constructor(info: IAppInfo, logger: ILogger) {
@@ -70,8 +70,8 @@ Here are some commands to get started:
 
 ## Documentation
 Here are some links to examples and documentation:
-- [Rocket.Chat Apps TypeScript Definitions Documentation](https://rocketchat.github.io/Rocket.Chat.Apps-ts-definition/)
-- [Rocket.Chat Apps TypeScript Definitions Repository](https://github.com/RocketChat/Rocket.Chat.Apps-ts-definition)
+- [Rocket.Chat Apps TypeScript Definitions Documentation](https://rocketchat.github.io/Rocket.Chat.Apps-engine/)
+- [Rocket.Chat Apps TypeScript Definitions Repository](https://github.com/RocketChat/Rocket.Chat.Apps-engine)
 - [Example Rocket.Chat Apps](https://github.com/graywolf336/RocketChatApps)
 - Community Forums
   - [App Requests](https://forums.rocket.chat/c/rocket-chat-apps/requests)
@@ -133,7 +133,7 @@ Here are some links to examples and documentation:
         const toWrite =
 `{
     "devDependencies": {
-        "@rocket.chat/apps-ts-definition": "^0.9.13",
+        "@rocket.chat/apps-engine": "^0.9.13",
         "tslint": "^5.10.0",
         "typescript": "^2.9.1"
     }
