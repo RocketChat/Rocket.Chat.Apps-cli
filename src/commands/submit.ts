@@ -17,6 +17,7 @@ export default class Submit extends Command {
         help: flags.help({ char: 'h' }),
         // In the future, we will allow people to have their own marketplace instances
         // url: flags.string({ description: 'which marketplace should be used' }),
+        update: flags.boolean({ description: 'submits an update instead of creating one' }),
         email: flags.string({ char: 'e', description: 'the email of the publisher account' }),
         categories: flags.string({
             char: 'c',
@@ -79,6 +80,17 @@ export default class Submit extends Command {
             }]);
 
             flags.email = (result as any).email;
+        }
+
+        if (typeof flags.update === 'undefined') {
+            const isNewApp = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'isNew',
+                message: 'Is this a new App?',
+                default: true,
+            }]);
+
+            flags.update = !(isNewApp as any).isNew;
         }
 
         let selectedCategories = new Array<string>();
@@ -145,14 +157,18 @@ export default class Submit extends Command {
 
     // tslint:disable:promise-function-async
     private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<any> {
-        const res: Response = await fetch('https://marketplace.rocket.chat/v1/apps', {
+        let url = 'http://localhost:7488/v1/apps';
+        if (flags.update) {
+            url += `/${ fd.info.id }`;
+        }
+        const res: Response = await fetch(url, {
             method: 'POST',
             body: data,
         });
 
         if (res.status !== 200) {
             const result = await res.json();
-            throw new Error(`Failed to submit the App: ${ result.error } (code: ${ result.code })`);
+            throw new Error(`Failed to submit the App. Error code ${ result.code }: ${ result.error }`);
         } else {
             return res.json();
         }
