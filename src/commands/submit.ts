@@ -157,7 +157,7 @@ export default class Submit extends Command {
 
     // tslint:disable:promise-function-async
     private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<any> {
-        let url = 'http://localhost:7488/v1/apps';
+        let url = 'https://marketplace.rocket.chat/v1/apps';
         if (flags.update) {
             url += `/${ fd.info.id }`;
         }
