@@ -133,7 +133,7 @@ Here are some links to examples and documentation:
         const toWrite =
 `{
     "devDependencies": {
-        "@rocket.chat/apps-engine": "^0.9.14-alpha.2",
+        "@rocket.chat/apps-engine": "^1.0.0-beta.0",
         "tslint": "^5.10.0",
         "typescript": "^2.9.1"
     }
