@@ -1,4 +1,7 @@
 import * as fs from 'fs';
+import fetch from 'node-fetch';
+
+import { IAppCategory } from './appCategory';
 
 export class VariousUtils {
     public static slugify = function _slugify(text: string): string {
@@ -20,4 +23,20 @@ export class VariousUtils {
 
         return '^0.9.13';
     };
+
+    // tslint:disable:promise-function-async
+    public static async fetchCategories(): Promise<Array<IAppCategory>> {
+        const cats = await fetch('https://marketplace.rocket.chat/v1/categories').then((res) => res.json());
+
+        const categories: Array<IAppCategory> = cats.map((c: any) => {
+            return {
+                title: c.title,
+                description: c.description,
+                name: c.title,
+                value: c.title,
+            };
+        });
+
+        return categories;
+    }
 }
