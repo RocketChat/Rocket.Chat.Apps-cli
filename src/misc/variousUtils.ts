@@ -14,7 +14,7 @@ export class VariousUtils {
     };
 
     public static getTsDefVersion = function _getTsDefVersion(): string {
-        const devLocation = 'node_modules/@rocket.chat/apps-ts-definition/package.json';
+        const devLocation = 'node_modules/@rocket.chat/apps-engine/package.json';
 
         if (fs.existsSync(devLocation)) {
             const info = JSON.parse(fs.readFileSync(devLocation, 'utf8'));
