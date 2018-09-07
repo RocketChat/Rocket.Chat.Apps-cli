@@ -39,7 +39,7 @@ export default class Deploy extends Command {
         const report = compiler.logDiagnostics();
 
         if (!report.isValid && !flags.force) {
-            this.error('TypeScript compiler error(s) occured');
+            this.error('TypeScript compiler error(s) occurred');
             this.exit(1);
             return;
         }
@@ -100,7 +100,7 @@ export default class Deploy extends Command {
         }).then((res: Response) => res.json());
 
         if (deployResult.status === 'error') {
-            throw new Error('Unknown error occured while deploying');
+            throw new Error('Unknown error occurred while deploying');
         } else if (!deployResult.success) {
             throw new Error(`Deployment error: ${ deployResult.error }`);
         }

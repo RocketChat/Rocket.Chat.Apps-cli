@@ -40,7 +40,7 @@ export default class Package extends Command {
         const report = compiler.logDiagnostics();
 
         if (!report.isValid && !flags.force) {
-            this.error('TypeScript compiler error(s) occured');
+            this.error('TypeScript compiler error(s) occurred');
             this.exit(1);
             return;
         }
