@@ -104,6 +104,10 @@ export default class Deploy extends Command {
         } else if (!deployResult.success) {
             throw new Error(`Deployment error: ${ deployResult.error }`);
         }
+
+        if (deployResult.compilerErrors && deployResult.compilerErrors.length > 0) {
+            throw new Error(`Deployment compiler errors: \n${ JSON.stringify(deployResult.compilerErrors, null, 2) }`);
+        }
     }
 
     // expects the `path` to start with the /
