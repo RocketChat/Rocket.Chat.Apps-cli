@@ -134,6 +134,7 @@ Here are some links to examples and documentation:
 `{
     "devDependencies": {
         "@rocket.chat/apps-engine": "^1.3.2",
+        "@types/node": "^10.12.14",
         "tslint": "^5.10.0",
         "typescript": "^2.9.1"
     }
