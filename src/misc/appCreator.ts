@@ -31,14 +31,15 @@ export class AppCreator {
     private createMainTypeScriptFile(): void {
         const toWrite =
 `import {
+    IAppAccessors,
     ILogger,
 } from '@rocket.chat/apps-engine/definition/accessors';
 import { App } from '@rocket.chat/apps-engine/definition/App';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 
 export class ${ pascalCase(this.fd.info.name) }App extends App {
-    constructor(info: IAppInfo, logger: ILogger) {
-        super(info, logger);
+    constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
+        super(info, logger, accessors);
     }
 }
 `;
