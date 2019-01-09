@@ -45,8 +45,8 @@ The basic creation of an App is based on extending the `App` class from the Rock
 
 ```
 import {
+    IAppAccessors,
     IConfigurationExtend,
-    IConfigurationModify,
     IEnvironmentRead,
     ILogger,
 } from '@rocket.chat/apps-engine/definition/accessors';
@@ -54,8 +54,8 @@ import { App } from '@rocket.chat/apps-engine/definition/App';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 
 export class TodoListApp extends App {
-    constructor(info: IAppInfo, logger: ILogger) {
-        super(info, logger);
+    constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
+        super(info, logger, accessors);
     }
 
     public async initialize(configurationExtend: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
