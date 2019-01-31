@@ -52,7 +52,7 @@ export class AppPackager {
         zip.addBuffer(Buffer.from(JSON.stringify(AppPackager.PackagerInfo)), '.packagedby', { compress: true });
 
         for (const realPath of matches) {
-            const zipPath = realPath.replace(this.fd.folder + path.sep, '');
+            const zipPath = path.resolve(realPath).replace(this.fd.folder + path.sep, '');
             const fileStat = await fs.stat(realPath);
 
             const options: Partial<Yazl.Options> = {
