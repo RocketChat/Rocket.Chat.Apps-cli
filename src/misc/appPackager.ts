@@ -26,7 +26,7 @@ export class AppPackager {
 
     public static PackagerInfo: { [key: string]: string } = {
         tool: '@rocket.chat/apps-cli',
-        version: '1.3.2',
+        version: '1.4.0',
     };
 
     constructor(private command: Command, private fd: FolderDetails) {}

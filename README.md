@@ -28,7 +28,7 @@ The app description file, named `app.json`, contains basic information about the
     "name": "App Name",
     "nameSlug": "app-name",
     "version": "0.0.1",
-    "requiredApiVersion": "^1.3.2",
+    "requiredApiVersion": "^1.4.0",
     "description": "App which provides something very useful for Rocket.Chat users.",
     "author": {
         "name": "Author Name <author@email.com>",
