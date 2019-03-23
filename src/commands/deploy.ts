@@ -19,6 +19,8 @@ export default class Deploy extends Command {
         url: flags.string({ description: 'where the App should be deployed to' }),
         username: flags.string({ char: 'u', dependsOn: ['url'], description: 'username to authenticate with' }),
         password: flags.string({ char: 'p', dependsOn: ['username'], description: 'password of the user' }),
+        code: flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
+        i2fa: flags.boolean({ description: 'interactively ask for 2FA code' }),
         token: flags.string({ char: 't', dependsOn: ['userid'],
             description: 'API token to use with UserID (instead of username & password)' }),
         userid: flags.string({ char: 'i', dependsOn: ['token'],
@@ -65,6 +67,10 @@ export default class Deploy extends Command {
             flags.password = await cli.prompt('And, what is the password?', { type: 'hide' });
         }
 
+        if (flags.i2fa) {
+            flags.code = await cli.prompt('2FA code', { type: 'hide' });
+        }
+
         cli.action.start(`${ chalk.green('deploying') } your app`);
 
         const data = new FormData();
@@ -80,16 +86,20 @@ export default class Deploy extends Command {
         let authResult;
 
         if (!flags.token) {
+            let credentials: {username: any, password: any, code?: any};
+            credentials = {username: flags.username, password: flags.password};
+            if (flags.code) { credentials.code = flags.code; }
+
             authResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/login'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({username: flags.username, password: flags.password}),
+                body: JSON.stringify(credentials),
             }).then((res: Response) => res.json());
 
             if (authResult.status === 'error' || !authResult.data) {
-                throw new Error('Invalid username and password');
+                throw new Error('Invalid username and password or missing 2FA code (if active)');
             }
         } else {
             const verificationResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/me'), {
