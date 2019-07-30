@@ -149,6 +149,8 @@ export default class Submit extends Command {
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)));
         data.append('email', flags.email);
         data.append('categories', JSON.stringify(selectedCategories));
+        data.append('purchaseType', 'buy');
+        data.append('price', 0);
 
         await this.asyncSubmitData(data, flags, fd);
 
