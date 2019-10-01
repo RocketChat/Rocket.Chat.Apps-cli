@@ -64,19 +64,6 @@ export default class Submit extends Command {
         //#endregion
 
         //#region asking for information
-        /*
-        const result = await inquirer.prompt([{
-            type: 'input',
-            name: 'email',
-            message: 'What is the publisher\'s email address?',
-            validate: (answer: string) => {
-                const regex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/g;
-
-                return regex.test(answer);
-            },
-        }]);
-        */
-
         const cloudAuth = new CloudAuth();
         const hasToken = await cloudAuth.hasToken();
         let email = '';
@@ -90,10 +77,11 @@ export default class Submit extends Command {
 
             if (cloudAccount.hasAccount) {
                 try {
-                    cli.log(chalk.green('*') + ' ' + chalk.gray('waiting for authorization...'));
+                    cli.action.start(chalk.green('*') + ' ' + chalk.gray('waiting for authorization...'));
                     await cloudAuth.executeAuthFlow();
+                    cli.action.stop(chalk.green('success!'));
                 } catch (e) {
-                    cli.action.stop('failure to authenticate.');
+                    cli.action.stop(chalk.red('failed to authenticate.'));
                     return;
                 }
             } else {

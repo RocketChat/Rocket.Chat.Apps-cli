@@ -18,15 +18,16 @@ export default class Login extends Command {
         const cloudAuth = new CloudAuth();
         const hasToken = await cloudAuth.hasToken();
         if (hasToken) {
+            cli.action.start(chalk.green('verifying') + ' your token...');
             await cloudAuth.getToken();
-            cli.log(chalk.green('you are already logged in!'));
+            cli.action.stop(chalk.green('success, you are already logged in!'));
         } else {
             try {
-                cli.log(chalk.green('*') + ' ' + chalk.gray('waiting for authorization...'));
+                cli.action.start(chalk.green('waiting') + ' for authorization...');
                 await cloudAuth.executeAuthFlow();
-                cli.action.stop('success!');
+                cli.action.stop(chalk.green('success!'));
             } catch (e) {
-                cli.action.stop('failure to authenticate.');
+                cli.action.stop(chalk.red('failed to authenticate.'));
                 return;
             }
         }
