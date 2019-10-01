@@ -1,5 +1,7 @@
 import { Request, Server } from '@hapi/hapi';
 import axios from 'axios';
+import chalk from 'chalk';
+import { cli } from 'cli-ux';
 import Conf = require('conf');
 import { createHash } from 'crypto';
 import open = require('open');
@@ -62,6 +64,9 @@ export class CloudAuth {
 
                 const codeChallenge = createHash('sha256').update(this.codeVerifier).digest('base64');
                 const authorizeUrl = this.buildAuthorizeUrl(codeChallenge);
+                cli.log(chalk.green('*') + ' ' + chalk.white('...if your browser does not open, open this:')
+                    + ' ' + chalk.underline(chalk.blue(authorizeUrl)));
+
                 open(authorizeUrl);
 
                 this.server.start();
