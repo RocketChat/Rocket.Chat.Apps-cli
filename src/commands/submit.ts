@@ -9,19 +9,16 @@ import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
 import { AppCompiler, AppPackager, FolderDetails, VariousUtils } from '../misc';
+import { CloudAuth } from '../misc/cloudAuth';
 
 export default class Submit extends Command {
     public static description = 'submits an App to the Marketplace for review';
 
     public static flags = {
         help: flags.help({ char: 'h' }),
-        // In the future, we will allow people to have their own marketplace instances
-        // url: flags.string({ description: 'which marketplace should be used' }),
         update: flags.boolean({ description: 'submits an update instead of creating one' }),
-        email: flags.string({ char: 'e', description: 'the email of the publisher account' }),
         categories: flags.string({
             char: 'c',
-            dependsOn: ['email'],
             description: 'a comma separated list of the categories for the App',
         }),
     };
@@ -32,7 +29,7 @@ export default class Submit extends Command {
         const { flags } = this.parse(Submit);
 
         //#region app packaging
-        cli.action.start(`${ chalk.green('packaging') } your app`);
+        cli.action.start(`${chalk.green('packaging')} your app`);
 
         const fd = new FolderDetails(this);
 
@@ -59,7 +56,7 @@ export default class Submit extends Command {
         //#endregion
 
         //#region fetching categories
-        cli.action.start(`${ chalk.green('fetching') } the available categories`);
+        cli.action.start(`${chalk.green('fetching')} the available categories`);
 
         const categories = await VariousUtils.fetchCategories();
 
@@ -67,19 +64,53 @@ export default class Submit extends Command {
         //#endregion
 
         //#region asking for information
-        if (!flags.email) {
-            const result = await inquirer.prompt([{
-                type: 'input',
-                name: 'email',
-                message: 'What is the publisher\'s email address?',
-                validate: (answer: string) => {
-                    const regex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/g;
+        /*
+        const result = await inquirer.prompt([{
+            type: 'input',
+            name: 'email',
+            message: 'What is the publisher\'s email address?',
+            validate: (answer: string) => {
+                const regex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/g;
 
-                    return regex.test(answer);
-                },
+                return regex.test(answer);
+            },
+        }]);
+        */
+
+        const cloudAuth = new CloudAuth();
+        let email = '';
+        if (!await cloudAuth.hasToken()) {
+            const cloudAccount: any = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'hasAccount',
+                message: 'Have you logged into our Publisher Portal?',
+                default: false,
             }]);
 
-            flags.email = (result as any).email;
+            if (cloudAccount.hasAccount) {
+                try {
+                    cli.log(chalk.green('*') + ' ' + chalk.gray('waiting for authorization...'));
+                    const r = await cloudAuth.executeAuthFlow();
+                    // tslint:disable-next-line:no-console
+                    console.log('result:', r);
+                } catch (e) {
+                    // tslint:disable-next-line:no-console
+                    console.log(e);
+                }
+            } else {
+                const result: any = await inquirer.prompt([{
+                    type: 'input',
+                    name: 'email',
+                    message: 'What is the publisher\'s email address?',
+                    validate: (answer: string) => {
+                        const regex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/g;
+
+                        return regex.test(answer);
+                    },
+                }]);
+
+                email = result.email;
+            }
         }
 
         if (typeof flags.update === 'undefined') {
@@ -143,32 +174,44 @@ export default class Submit extends Command {
         }
         //#endregion
 
-        cli.action.start(`${ chalk.green('submitting') } your app`);
+        cli.action.start(`${chalk.green('submitting')} your app`);
 
         const data = new FormData();
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)));
-        data.append('email', flags.email);
         data.append('categories', JSON.stringify(selectedCategories));
 
-        await this.asyncSubmitData(data, flags, fd);
+        if (email) {
+            data.append('email', email);
+        }
+
+        const token = await cloudAuth.getToken();
+        await this.asyncSubmitData(data, flags, fd, token);
 
         cli.action.stop('submitted!');
     }
 
     // tslint:disable:promise-function-async
-    private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<any> {
-        let url = 'https://marketplace.rocket.chat/v1/apps';
+    // tslint:disable-next-line:max-line-length
+    private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails, token: string): Promise<any> {
+        let url = 'https://marketplace-beta.rocket.chat/v1/apps';
         if (flags.update) {
-            url += `/${ fd.info.id }`;
+            url += `/${fd.info.id}`;
         }
+
+        const headers: { [key: string]: string } = {};
+        if (token) {
+            headers.Authorization = 'Bearer ' + token;
+        }
+
         const res: Response = await fetch(url, {
             method: 'POST',
             body: data,
+            headers,
         });
 
         if (res.status !== 200) {
             const result = await res.json();
-            throw new Error(`Failed to submit the App. Error code ${ result.code }: ${ result.error }`);
+            throw new Error(`Failed to submit the App. Error code ${result.code}: ${result.error}`);
         } else {
             return res.json();
         }
