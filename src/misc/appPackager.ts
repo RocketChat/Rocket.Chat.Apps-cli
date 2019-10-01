@@ -46,13 +46,13 @@ export class AppPackager {
             throw new Error('No files to package were found');
         }
 
-        const zipName = `dist${ path.sep }${ this.fd.info.nameSlug }_${ this.fd.info.version}.zip`;
+        const zipName = path.join('dist',`${this.fd.info.nameSlug}_${this.fd.info.version}.zip`);
         const zip = new Yazl.ZipFile();
 
         zip.addBuffer(Buffer.from(JSON.stringify(AppPackager.PackagerInfo)), '.packagedby', { compress: true });
 
         for (const realPath of matches) {
-            const zipPath = realPath.replace(this.fd.folder + path.sep, '');
+            const zipPath = path.relative(this.fd.folder + path.sep,realPath)
             const fileStat = await fs.stat(realPath);
 
             const options: Partial<Yazl.Options> = {
