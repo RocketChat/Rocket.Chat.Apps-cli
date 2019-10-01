@@ -78,8 +78,9 @@ export default class Submit extends Command {
         */
 
         const cloudAuth = new CloudAuth();
+        const hasToken = await cloudAuth.hasToken();
         let email = '';
-        if (!await cloudAuth.hasToken()) {
+        if (!hasToken) {
             const cloudAccount: any = await inquirer.prompt([{
                 type: 'confirm',
                 name: 'hasAccount',
@@ -90,12 +91,10 @@ export default class Submit extends Command {
             if (cloudAccount.hasAccount) {
                 try {
                     cli.log(chalk.green('*') + ' ' + chalk.gray('waiting for authorization...'));
-                    const r = await cloudAuth.executeAuthFlow();
-                    // tslint:disable-next-line:no-console
-                    console.log('result:', r);
+                    await cloudAuth.executeAuthFlow();
                 } catch (e) {
-                    // tslint:disable-next-line:no-console
-                    console.log(e);
+                    cli.action.stop('failure to authenticate.');
+                    return;
                 }
             } else {
                 const result: any = await inquirer.prompt([{
