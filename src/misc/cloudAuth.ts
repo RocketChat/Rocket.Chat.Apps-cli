@@ -87,6 +87,10 @@ export class CloudAuth {
         await this.initialize();
 
         const item: ICloudAuthStorage = this.config.get('rcc');
+        if (!item) {
+            throw new Error('invalid cloud auth storage item');
+        }
+
         if (new Date() < new Date(item.expiresAt)) {
             return item.token.access_token;
         }
@@ -94,6 +98,17 @@ export class CloudAuth {
         await this.refreshToken();
 
         return this.config.get('rcc.token.access_token', '') as string;
+    }
+
+    public async revokeToken(): Promise<void> {
+        await this.initialize();
+
+        const item: ICloudAuthStorage = this.config.get('rcc');
+        if (!item) {
+            throw new Error('invalid cloud auth storage item');
+        }
+
+        await this.revokeTheToken();
     }
 
     private async fetchToken(code: string | Array<string>): Promise<ICloudToken> {
@@ -156,6 +171,32 @@ export class CloudAuth {
             const d = err.response.data;
             // tslint:disable-next-line:no-console
             console.log(`[${ err.response.status }] error getting token refreshed: ${ d.error } (${ d.requestId })`);
+
+            throw err;
+        }
+    }
+
+    private async revokeTheToken(): Promise<void> {
+        const refreshToken = this.config.get('rcc.token.refresh_token', '');
+
+        const request = {
+            client_id: clientId,
+            token: refreshToken,
+            token_type_hint: 'refresh_token',
+        };
+
+        try {
+            await axios.post(`${ cloudUrl }/api/oauth/revoke`, stringify(request));
+            this.config.delete('rcc');
+        } catch (err) {
+            if (err.response.status === 401) {
+                this.config.delete('rcc');
+                return;
+            }
+
+            const d = err.response.data;
+            // tslint:disable-next-line:no-console
+            console.log(`[${ err.response.status }] error revoking the token: ${ d.error } (${ d.requestId })`);
 
             throw err;
         }
