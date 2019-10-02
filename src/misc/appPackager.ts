@@ -19,6 +19,8 @@ export class AppPackager {
             '**/*.js',
             '**/*.js.map',
             '**/*.d.ts',
+            '**/*.spec.ts',
+            '**/*.test.ts',
             '**/dist/**',
             '**/.*',
         ],
