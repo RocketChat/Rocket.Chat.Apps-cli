@@ -123,7 +123,7 @@ export class CloudAuth {
         } catch (err) {
             const d = err.response.data;
             // tslint:disable-next-line:no-console
-            console.log(`[${ err.response.statusCode }] error getting token: ${ d.error } (${ d.requestId })`);
+            console.log(`[${ err.response.status }] error getting token: ${ d.error } (${ d.requestId })`);
 
             throw err;
         }
@@ -155,7 +155,7 @@ export class CloudAuth {
         } catch (err) {
             const d = err.response.data;
             // tslint:disable-next-line:no-console
-            console.log(`[${ err.response.statusCode }] error getting token refreshed: ${ d.error } (${ d.requestId })`);
+            console.log(`[${ err.response.status }] error getting token refreshed: ${ d.error } (${ d.requestId })`);
 
             throw err;
         }
