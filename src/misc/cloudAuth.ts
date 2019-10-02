@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 const cloudUrl = 'https://cloud-beta.rocket.chat';
 const clientId = '5d8e59c5d48080ef5497e522';
-const scope = 'offline_access marketplace';
+const scope = 'offline_access marketplace:app-submit';
 
 export interface ICloudToken {
     access_token: string;
