@@ -121,8 +121,9 @@ export class CloudAuth {
 
             return tokenInfo;
         } catch (err) {
+            const d = err.response.data;
             // tslint:disable-next-line:no-console
-            console.log(`[${ err.res.statusCode }] error getting token: ${ err.data.error } (${ err.data.requestId })`);
+            console.log(`[${ err.response.statusCode }] error getting token: ${ d.error } (${ d.requestId })`);
 
             throw err;
         }
@@ -152,9 +153,9 @@ export class CloudAuth {
             this.config.set('rcc.token.token_type', tokenInfo.token_type);
             this.config.set('rcc.expiresAt', expiresAt);
         } catch (err) {
-            const d = err.data;
+            const d = err.response.data;
             // tslint:disable-next-line:no-console
-            console.log(`[${ err.res.statusCode }] error getting token refreshed: ${ d.error } (${ d.requestId })`);
+            console.log(`[${ err.response.statusCode }] error getting token refreshed: ${ d.error } (${ d.requestId })`);
 
             throw err;
         }
