@@ -9,7 +9,7 @@ import { stringify } from 'querystring';
 import { cpu, mem, osInfo, system } from 'systeminformation';
 import { v4 as uuidv4 } from 'uuid';
 
-const cloudUrl = 'https://cloud-beta.rocket.chat';
+const cloudUrl = 'https://cloud.rocket.chat';
 const clientId = '5d8e59c5d48080ef5497e522';
 const scope = 'offline_access marketplace:app-submit';
 
