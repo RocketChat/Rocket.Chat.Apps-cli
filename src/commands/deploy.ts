@@ -21,10 +21,14 @@ export default class Deploy extends Command {
         password: flags.string({ char: 'p', dependsOn: ['username'], description: 'password of the user' }),
         code: flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
         i2fa: flags.boolean({ description: 'interactively ask for 2FA code' }),
-        token: flags.string({ char: 't', dependsOn: ['userid'],
-            description: 'API token to use with UserID (instead of username & password)' }),
-        userid: flags.string({ char: 'i', dependsOn: ['token'],
-            description: 'UserID to use  with API token (instead of username & password)' }),
+        token: flags.string({
+            char: 't', dependsOn: ['userid'],
+            description: 'API token to use with UserID (instead of username & password)',
+        }),
+        userid: flags.string({
+            char: 'i', dependsOn: ['token'],
+            description: 'UserID to use with API token (instead of username & password)',
+        }),
     };
 
     public async run() {
@@ -86,9 +90,11 @@ export default class Deploy extends Command {
         let authResult;
 
         if (!flags.token) {
-            let credentials: {username: any, password: any, code?: any};
-            credentials = {username: flags.username, password: flags.password};
-            if (flags.code) { credentials.code = flags.code; }
+            let credentials: { username: string, password: string, code?: string };
+            credentials = { username: flags.username, password: flags.password };
+            if (flags.code) {
+                credentials.code = flags.code;
+            }
 
             authResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/login'), {
                 method: 'POST',
@@ -115,7 +121,7 @@ export default class Deploy extends Command {
                 throw new Error('Invalid API token');
             }
 
-            authResult = { data: { authToken: flags.token, userId: flags.userid}};
+            authResult = { data: { authToken: flags.token, userId: flags.userid } };
         }
 
         let endpoint = '/api/apps';
