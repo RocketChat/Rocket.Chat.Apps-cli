@@ -62,7 +62,7 @@ export class CloudAuth {
                     },
                 });
 
-                const codeChallenge = createHash('sha256').update(this.codeVerifier).digest('base64');
+                const codeChallenge = base64url(createHash('sha256').update(this.codeVerifier).digest('base64'));
                 const authorizeUrl = this.buildAuthorizeUrl(codeChallenge);
                 cli.log(chalk.green('*') + ' ' + chalk.white('...if your browser does not open, open this:')
                     + ' ' + chalk.underline(chalk.blue(authorizeUrl)));
@@ -237,5 +237,10 @@ export class CloudAuth {
 
         return s.manufacturer + ';' + s.uuid + ';' + String(c.processors) + ';'
                 + c.vendor + ';' + m.total + ';' + o.platform + ';' + o.release;
+    }
+    
+    // base64url - https://base64.guru/standards/base64url
+    private base64url(url: string) {
+        return url.replace( /\+/g, "-" ).replace( /\//g, "_" ).replace( /=+$/, "" );   
     }
 }
