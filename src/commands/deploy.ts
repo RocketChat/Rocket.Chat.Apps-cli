@@ -41,7 +41,7 @@ export default class Deploy extends Command {
         try {
             await fd.readInfoFile();
         } catch (e) {
-            this.error(e.message);
+            this.error(e && e.message ? e.message : e);
             return;
         }
 
