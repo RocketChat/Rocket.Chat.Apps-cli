@@ -88,7 +88,8 @@ export class CloudAuth {
 
         const item: ICloudAuthStorage = this.config.get('rcc');
         if (!item) {
-            throw new Error('invalid cloud auth storage item');
+            // when there isn't an item, we will not return anything or error out
+            return '';
         }
 
         if (new Date() < new Date(item.expiresAt)) {
