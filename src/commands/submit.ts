@@ -180,7 +180,7 @@ export default class Submit extends Command {
     // tslint:disable:promise-function-async
     // tslint:disable-next-line:max-line-length
     private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails, token: string): Promise<any> {
-        let url = 'https://marketplace-beta.rocket.chat/v1/apps';
+        let url = 'https://marketplace.rocket.chat/v1/apps';
         if (flags.update) {
             url += `/${fd.info.id}`;
         }
