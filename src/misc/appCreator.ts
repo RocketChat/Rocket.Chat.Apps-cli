@@ -134,7 +134,7 @@ Here are some links to examples and documentation:
         const toWrite =
 `{
     "devDependencies": {
-        "@rocket.chat/apps-engine": "^1.6.0",
+        "@rocket.chat/apps-engine": "^1.12.0",
         "@types/node": "^10.12.14",
         "tslint": "^5.10.0",
         "typescript": "^2.9.1"
@@ -212,7 +212,7 @@ trim_trailing_whitespace = false
         "eg2.vscode-npm-script",
         "wayou.vscode-todo-highlight",
         "minhthai.vscode-todo-parser",
-        "eg2.tslint",
+        "ms-vscode.vscode-typescript-tslint-plugin",
         "rbbit.typescript-hero"
     ]
 }`;
