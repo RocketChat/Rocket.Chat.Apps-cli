@@ -20,6 +20,7 @@ export default class Create extends Command {
 
     public static flags = {
         help: flags.help({ char: 'h' }),
+        icon: flags.string(),
     };
 
     public async run() {
@@ -54,10 +55,18 @@ export default class Create extends Command {
         const folder = path.join(process.cwd(), info.nameSlug);
 
         cli.action.start(`Creating a Rocket.Chat App in ${ chalk.green(folder) }`);
-
+        const { flags }  = this.parse(Create);
         const fd = new FolderDetails(this);
         fd.setAppInfo(info);
         fd.setFolder(folder);
+        if (flags.icon) {
+            const imagePathIcon = path.resolve(flags.icon);
+            if (fd.doesFileExist(imagePathIcon)) {
+                fd.setImageIconPath(imagePathIcon);
+            } else {
+                this.warn(new Error('Invalid image icon path detected, set default image'));
+            }
+        }
 
         const creator = new AppCreator(fd, this);
         await creator.writeFiles();

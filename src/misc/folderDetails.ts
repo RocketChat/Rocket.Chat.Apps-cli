@@ -14,16 +14,18 @@ export class FolderDetails {
     public toZip: string;
     public infoFile: string;
     public mainFile: string;
+    public imageIconFile: string;
     public info: IAppInfo;
 
     constructor(private command: Command) {
         this.setFolder(process.cwd());
         this.mainFile = '';
+        this.imageIconFile = '';
         this.info = {} as IAppInfo;
     }
 
-    public async doesFileExist(file: string): Promise<boolean> {
-        return await fs.pathExists(file) && fs.statSync(file).isFile();
+    public  doesFileExist(file: string): boolean {
+        return  fs.existsSync(file) && fs.statSync(file).isFile();
     }
 
     public mergeWithFolder(item: string): string {
@@ -38,6 +40,10 @@ export class FolderDetails {
 
     public setAppInfo(appInfo: IAppInfo): void {
         this.info = appInfo;
+    }
+
+    public setImageIconPath(imageIconPath: string): void {
+        this.imageIconFile = imageIconPath;
     }
 
     /**
