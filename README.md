@@ -1,5 +1,6 @@
 # Rocket.Chat Apps CLI
 The Rocket.Chat Apps CLI for interacting with Apps.
+Hello
 
 ## Getting Started
 Extremely simple.
