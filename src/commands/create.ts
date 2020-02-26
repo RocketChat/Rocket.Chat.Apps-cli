@@ -64,7 +64,7 @@ export default class Create extends Command {
             if (await fd.doesFileExist(imagePathIcon)) {
                 fd.setImageIconPath(imagePathIcon);
             } else {
-                cli.action.stop(chalk.bgRed('\nInvalid Image path found'));
+                cli.action.stop(chalk.bgRed(`\nInvalid image path provided. Could not resolve: "${ flags.icon }"`));
                 return;
             }
         }
