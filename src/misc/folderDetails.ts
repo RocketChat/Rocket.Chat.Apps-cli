@@ -24,8 +24,8 @@ export class FolderDetails {
         this.info = {} as IAppInfo;
     }
 
-    public  doesFileExist(file: string): boolean {
-        return  fs.existsSync(file) && fs.statSync(file).isFile();
+    public async doesFileExist(file: string): Promise<boolean> {
+        return await fs.pathExists(file) && fs.statSync(file).isFile();
     }
 
     public mergeWithFolder(item: string): string {

@@ -61,10 +61,11 @@ export default class Create extends Command {
         fd.setFolder(folder);
         if (flags.icon) {
             const imagePathIcon = path.resolve(flags.icon);
-            if (fd.doesFileExist(imagePathIcon)) {
+            if (await fd.doesFileExist(imagePathIcon)) {
                 fd.setImageIconPath(imagePathIcon);
             } else {
-                this.warn(new Error('Invalid image icon path detected, set default image'));
+                cli.action.stop(chalk.bgRed('\nInvalid Image path found'));
+                return;
             }
         }
 
