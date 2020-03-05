@@ -23,6 +23,14 @@ export default class Create extends Command {
         icon: flags.string(),
     };
 
+    public static args = [
+        {
+            name: 'name',
+            required: false,
+            description: 'Change the name of the entry folder',
+        },
+    ];
+
     public async run() {
         if (!semver.satisfies(process.version, '>=4.2.0')) {
             this.error('NodeJS version needs to be at least 4.2.0 or higher.');
@@ -52,17 +60,27 @@ export default class Create extends Command {
 
         this.log('');
 
-        const folder = path.join(process.cwd(), info.nameSlug);
+        let folder = path.join(process.cwd(), info.nameSlug);
 
-        cli.action.start(`Creating a Rocket.Chat App in ${ chalk.green(folder) }`);
-        const { flags }  = this.parse(Create);
+        const { flags, args }  = this.parse(Create);
         const fd = new FolderDetails(this);
+        if (args.name) {
+            const newPath = path.resolve(args.name);
+            if (!fd.doesFolderExist(newPath) || await fd.isFolderEmpty(newPath)) {
+                folder = newPath;
+            } else {
+                this.log(chalk.bgRed(`\nDestination path ${args.name} exists and is not empty`));
+                return;
+            }
+        }
+        cli.action.start(`Creating a Rocket.Chat App in ${ chalk.green(folder) }`);
+
         fd.setAppInfo(info);
         fd.setFolder(folder);
         if (flags.icon) {
-            const imagePathIcon = path.resolve(flags.icon);
-            if (await fd.doesFileExist(imagePathIcon)) {
-                fd.setImageIconPath(imagePathIcon);
+            const imageIconPath = path.resolve(flags.icon);
+            if (await fd.doesFileExist(imageIconPath)) {
+                fd.setImageIconPath(imageIconPath);
             } else {
                 cli.action.stop(chalk.bgRed(`\nInvalid image path provided. Could not resolve: "${ flags.icon }"`));
                 return;

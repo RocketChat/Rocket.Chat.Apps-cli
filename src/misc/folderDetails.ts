@@ -1,6 +1,7 @@
 import Command from '@oclif/command';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 import chalk from 'chalk';
+import * as emptyDir from 'empty-dir';
 import * as figures from 'figures';
 import * as fs from 'fs-extra';
 import * as path from 'path';
@@ -28,6 +29,13 @@ export class FolderDetails {
         return await fs.pathExists(file) && fs.statSync(file).isFile();
     }
 
+    public doesFolderExist(file: string): boolean {
+        return fs.existsSync(file);
+    }
+
+    public async isFolderEmpty(file: string): Promise<boolean> {
+       return await emptyDir(file);
+    }
     public mergeWithFolder(item: string): string {
         return path.join(this.folder, item);
     }
