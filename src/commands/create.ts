@@ -15,6 +15,26 @@ import {
     VariousUtils,
 } from '../misc';
 
+const checkUrl = (url: string) => {
+    // tslint:disable-next-line:max-line-length
+    const urlRegexp =  /^(?:(?:https?|ftp):\/\/)?(?:(?!(?:10|127)(?:\.\d{1,3}){3})(?!(?:169\.254|192\.168)(?:\.\d{1,3}){2})(?!172\.(?:1[6-9]|2\d|3[0-1])(?:\.\d{1,3}){2})(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))|(?:(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)(?:\.(?:[a-z\u00a1-\uffff0-9]-*)*[a-z\u00a1-\uffff0-9]+)*(?:\.(?:[a-z\u00a1-\uffff]{2,})))(?::\d{2,5})?(?:\/\S*)?$/;
+    if (urlRegexp.test(url)) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
+const checkUrlOrEmail = (url: string) => {
+    // tslint:disable-next-line:max-line-length
+    const emailRegexp = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (checkUrl(url) || emailRegexp.test(url)) {
+        return true;
+    } else {
+        return false;
+    }
+};
+
 export default class Create extends Command {
     public static description = 'simplified way of creating an app';
 
@@ -46,8 +66,18 @@ export default class Create extends Command {
 
         info.description = await cli.prompt(chalk.bold('   App Description'));
         info.author.name = await cli.prompt(chalk.bold('   Author\'s Name'));
-        info.author.homepage = await cli.prompt(chalk.bold('   Author\'s Home Page'));
-        info.author.support = await cli.prompt(chalk.bold('   Author\'s Support Page'));
+        let homepage = await cli.prompt(chalk.bold('   Author\'s Home Page'));
+        while (!checkUrl(homepage)) {
+            homepage = await cli.prompt(chalk.bold('   Author\'s Home Page (Enter correct url)'));
+            if (checkUrl(homepage)) { break; }
+        }
+        info.author.homepage = homepage;
+        let supportpage = await cli.prompt(chalk.bold('   Author\'s Support Page'));
+        while (!checkUrlOrEmail(supportpage)) {
+            supportpage = await cli.prompt(chalk.bold('   Author\'s Support Page (Enter correct url or email)'));
+            if (checkUrl(supportpage)) { break; }
+        }
+        info.author.support = supportpage;
 
         this.log('');
 
