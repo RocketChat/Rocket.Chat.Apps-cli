@@ -71,6 +71,7 @@ export default class Create extends Command {
 
         const compiler = new AppCompiler(this, fd);
         const report = compiler.logDiagnostics();
+        const newVar = 'd';
 
         if (!report.isValid) {
             throw new Error('invalid.');

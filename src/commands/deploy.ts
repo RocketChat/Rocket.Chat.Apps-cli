@@ -33,7 +33,6 @@ export default class Deploy extends Command {
 
     public async run() {
         const { flags } = this.parse(Deploy);
-
         cli.action.start(`${ chalk.green('packaging') } your app`);
 
         const fd = new FolderDetails(this);
