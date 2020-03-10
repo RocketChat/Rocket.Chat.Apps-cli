@@ -51,11 +51,16 @@ export default class Watch extends Command {
         }
 
         const fd = new FolderDetails(this);
-        const watcher = chokidar.watch(fd.folder, {ignored: /[\/\\]\./, persistent: true});
+        const watcher = chokidar.watch(fd.folder, {ignored: '/dist', persistent: true});
         watcher
             .on('change', async (path, stats) => {
+                try {
                 return await Deploy.run([`--url=${flags.url}`, `-u=${flags.username}`,
                  `-p=${flags.password}`, '--update']);
+                } catch {
+                    return ;
+                }
             });
+
 }
 }
