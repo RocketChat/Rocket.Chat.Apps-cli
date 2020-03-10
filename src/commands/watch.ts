@@ -51,7 +51,21 @@ export default class Watch extends Command {
         }
 
         const fd = new FolderDetails(this);
-        const watcher = chokidar.watch(fd.folder, {ignored: '/dist', persistent: true});
+        const watcher = chokidar.watch(fd.folder, {
+            ignored: [
+                '**/README.md',
+                '**/package-lock.json',
+                '**/package.json',
+                '**/tslint.json',
+                '**/tsconfig.json',
+                '**/*.js',
+                '**/*.js.map',
+                '**/*.d.ts',
+                '**/*.spec.ts',
+                '**/*.test.ts',
+                '**/dist/**',
+                '**/.*',
+            ], persistent: true});
         watcher
             .on('change', async (path, stats) => {
                 try {
