@@ -36,6 +36,7 @@ export class FolderDetails {
     public async isFolderEmpty(file: string): Promise<boolean> {
        return await emptyDir(file);
     }
+
     public mergeWithFolder(item: string): string {
         return path.join(this.folder, item);
     }
