@@ -141,11 +141,10 @@ export default class Deploy extends Command {
         if (deployResult.status === 'error') {
             throw new Error(`Unknown error occurred while deploying ${JSON.stringify(deployResult)}`);
         } else if (!deployResult.success) {
-            throw new Error(`Deployment error: ${ deployResult.error }`);
-        }
-
-        if (deployResult.compilerErrors && deployResult.compilerErrors.length > 0) {
-            throw new Error(`Deployment compiler errors: \n${ JSON.stringify(deployResult.compilerErrors, null, 2) }`);
+            if (deployResult.status === 'compiler_error') {
+                throw new Error(`Deployment compiler errors: \n${ JSON.stringify(deployResult.messages, null, 2) }`);
+            }
+            throw new Error(`Deployment error: ${ deployResult }`);
         }
     }
 
