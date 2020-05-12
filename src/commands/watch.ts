@@ -8,7 +8,7 @@ import Deploy from './deploy';
 
 export default class Watch extends Command {
 
-    public static description = 'allows ';
+    public static description = 'watches for changes in the app and redeploys to the server';
 
     public static flags = {
         help: flags.help({ char: 'h' }),
