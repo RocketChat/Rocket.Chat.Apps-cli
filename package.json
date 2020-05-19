@@ -14,6 +14,7 @@
     "@hapi/hapi": "^18.4.0",
     "@oclif/command": "^1.5.18",
     "@oclif/config": "^1.13.2",
+    "@oclif/plugin-autocomplete": "^0.2.0",
     "@oclif/plugin-help": "^2.2.0",
     "@oclif/plugin-not-found": "^1.2.2",
     "@rocket.chat/apps-engine": "^1.12.0",
@@ -88,7 +89,8 @@
     "bin": "rc-apps",
     "plugins": [
       "@oclif/plugin-help",
-      "@oclif/plugin-not-found"
+      "@oclif/plugin-not-found",
+      "@oclif/plugin-autocomplete"
     ]
   },
   "nyc": {
