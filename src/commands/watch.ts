@@ -33,7 +33,6 @@ export default class Watch extends Command {
     public async run() {
         const { flags } = this.parse(Watch);
 
-        cli.action.start(`${ chalk.green('watching') } your app`);
         if (!flags.url) {
             flags.url = await cli.prompt('What is the server\'s url (include https)?');
         }
@@ -49,6 +48,7 @@ export default class Watch extends Command {
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
+        cli.action.start(`${ chalk.green('watching') } your app`);
 
         const fd = new FolderDetails(this);
         const watcher = chokidar.watch(fd.folder, {
