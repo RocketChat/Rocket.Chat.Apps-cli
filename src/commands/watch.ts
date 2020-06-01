@@ -13,6 +13,14 @@ export default class Watch extends Command {
     public static flags = {
         help: flags.help({ char: 'h' }),
         // flag with no value (-f, --force)
+        addfiles: flags.string({
+            char: 'a',
+            description: 'add files to be watched during hot reload',
+        }),
+        remfiles: flags.string({
+            char: 'r',
+            description: 'remove files from watchlist during hot reload',
+        }),
         force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
         update: flags.boolean({ description: 'updates the app, instead of creating' }),
         url: flags.string({ description: 'where the App should be deployed to' }),
@@ -69,6 +77,12 @@ export default class Watch extends Command {
             ],
             awaitWriteFinish: true,
             persistent: true});
+        if (flags.addfiles) {
+            watcher.add(flags.addfiles);
+        }
+        if (flags.remfiles) {
+            watcher.unwatch(flags.remfiles);
+        }
         watcher
             .on('change', async () => {
                 try {
