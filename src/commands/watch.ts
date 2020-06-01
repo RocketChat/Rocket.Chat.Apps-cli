@@ -67,10 +67,18 @@ export default class Watch extends Command {
                 '**/.*',
             ], persistent: true});
         watcher
-            .on('change', async (path, stats) => {
+            .on('change', async () => {
                 try {
                 return await Deploy.run([`--url=${flags.url}`, `-u=${flags.username}`,
                  `-p=${flags.password}`, '--update']);
+                } catch {
+                   return ;
+                }
+            })
+            .on('ready', async () => {
+                try {
+                    return await Deploy.run([`--url=${flags.url}`, `-u=${flags.username}`,
+                    `-p=${flags.password}`, '--update']);
                 } catch {
                     return ;
                 }
