@@ -32,7 +32,6 @@ export default class Watch extends Command {
 
     public async run() {
         cli.log(`${ chalk.green('watching') } your app`);
-        cli.flush();
 
         const { flags } = this.parse(Watch);
 
