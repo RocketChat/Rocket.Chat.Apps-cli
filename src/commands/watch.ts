@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
 
-import { AppCompiler, AppPackager, FolderDetails, VariousUtils } from '../misc';
+import { FolderDetails } from '../misc';
 import Deploy from './deploy';
 
 export default class Watch extends Command {
