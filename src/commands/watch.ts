@@ -2,8 +2,10 @@ import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
+import * as Listr from 'listr';
 
 import { FolderDetails } from '../misc';
+import { DeployHelpers } from '../misc/deployHelpers';
 import Deploy from './deploy';
 
 export default class Watch extends Command {
@@ -22,7 +24,6 @@ export default class Watch extends Command {
             description: 'remove files from watchlist during hot reload',
         }),
         force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
-        update: flags.boolean({ description: 'updates the app, instead of creating' }),
         url: flags.string({ description: 'where the App should be deployed to' }),
         username: flags.string({ char: 'u', dependsOn: ['url'], description: 'username to authenticate with' }),
         password: flags.string({ char: 'p', dependsOn: ['username'], description: 'password of the user' }),
@@ -39,9 +40,15 @@ export default class Watch extends Command {
     };
 
     public async run() {
-        cli.log(`${ chalk.green('watching') } your app`);
 
         const { flags } = this.parse(Watch);
+        const fd = new FolderDetails(this);
+        try {
+            await fd.readInfoFile();
+        } catch (e) {
+            this.error(e && e.message ? e.message : e);
+            return;
+        }
 
         if (!flags.url) {
             flags.url = await cli.prompt('What is the server\'s url (include https)?');
@@ -59,7 +66,6 @@ export default class Watch extends Command {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
 
-        const fd = new FolderDetails(this);
         const watcher = chokidar.watch(fd.folder, {
             ignored: [
                 '**/README.md',
@@ -85,20 +91,78 @@ export default class Watch extends Command {
         }
         watcher
             .on('change', async () => {
-                try {
-                return await Deploy.run([`--url=${flags.url}`, `-u=${flags.username}`,
-                 `-p=${flags.password}`, '--update']);
-                } catch {
-                   return ;
-                }
+                const dHelpers = new DeployHelpers();
+                const tasks = new Listr([
+                    {
+                        title: 'Checking report',
+                        task: () => {
+                            dHelpers.checkReport(this, fd, flags);
+                            return;
+                        },
+                    },
+                    {
+                        title: 'Packaging',
+                        task: async (ctx, task) => {
+                            ctx.zipName = dHelpers.packageAndZip(this, fd);
+                            return;
+                        },
+                    },
+                    {
+                        title: 'Updating',
+                        task: async (ctx, task) => {
+                            try {
+                                await dHelpers.uploadApp({...flags, update: true}, fd, ctx.zipName);
+                            } catch (e) {
+                                throw new Error(e.message);
+                            }
+                        },
+                    },
+                ]);
+                tasks.run();
             })
             .on('ready', async () => {
-                try {
-                    return await Deploy.run([`--url=${flags.url}`, `-u=${flags.username}`,
-                    `-p=${flags.password}`, '--update']);
-                } catch {
-                    return ;
-                }
+                const dHelpers = new DeployHelpers();
+                const tasks = new Listr([
+                    {
+                        title: 'Checking report',
+                        task: () => {
+                            dHelpers.checkReport(this, fd, flags);
+                            return;
+                        },
+                    },
+                    {
+                        title: 'Packaging',
+                        task: async (ctx, task) => {
+                            ctx.zipName = await dHelpers.packageAndZip(this, fd);
+                            return;
+                        },
+                    },
+                    {
+                        title: 'Adding App',
+                        task: async (ctx, task) => {
+                            try {
+                                await dHelpers.uploadApp(flags, fd, ctx.zipName);
+                            } catch (e) {
+                                ctx.exists = true;
+                                task.skip('App already exists trying to update');
+                            }
+                        },
+                    },
+                    {
+                        title: 'Updating',
+                        skip: (ctx) => ctx.exists === false,
+                        task: async (ctx, task) => {
+                            try {
+                                await dHelpers.uploadApp({...flags, update: true}, fd, ctx.zipName);
+                            } catch (e) {
+                                throw new Error(e.message);
+                            }
+                        },
+                    },
+                ]);
+                tasks.run().catch((e) => {
+                    return;
+                }) ;
             });
 
 }

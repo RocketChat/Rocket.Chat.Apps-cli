@@ -11,10 +11,9 @@ export class DeployHelpers {
         const report = compiler.logDiagnostics();
 
         if (!report.isValid && !flags.force) {
-            command.error('TypeScript compiler error(s) occurred');
-            command.exit(1);
-            return;
+            throw new Error('TypeScript compiler error(s) occurred');
         }
+        return;
     }
 
     public async packageAndZip(command: Command, fd: FolderDetails): Promise<string> {
@@ -30,7 +29,7 @@ export class DeployHelpers {
         const data = new FormData();
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipname)));
         try {
-        await this.asyncSubmitData(data, flags, fd);
+            await this.asyncSubmitData(data, flags, fd);
         } catch (e) {
             throw new Error(e);
         }
