@@ -1,12 +1,9 @@
 import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
-import * as FormData from 'form-data';
-import * as fs from 'fs';
-import fetch from 'node-fetch';
-import { Response } from 'node-fetch';
 
-import { AppCompiler, AppPackager, FolderDetails } from '../misc';
+import { FolderDetails } from '../misc';
+import { DeployHelpers } from '../misc/deployHelpers';
 
 export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
@@ -43,18 +40,10 @@ export default class Deploy extends Command {
             this.error(e && e.message ? e.message : e);
             return;
         }
+        const dHelpers = new DeployHelpers();
+        dHelpers.checkReport(this, fd, flags);
 
-        const compiler = new AppCompiler(this, fd);
-        const report = compiler.logDiagnostics();
-
-        if (!report.isValid && !flags.force) {
-            this.error('TypeScript compiler error(s) occurred');
-            this.exit(1);
-            return;
-        }
-
-        const packager = new AppPackager(this, fd);
-        const zipName = await packager.zipItUp();
+        const zipName = await dHelpers.packageAndZip(this, fd);
 
         cli.action.stop('packaged!');
 
@@ -76,80 +65,8 @@ export default class Deploy extends Command {
 
         cli.action.start(`${ chalk.green('deploying') } your app`);
 
-        const data = new FormData();
-        data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)));
-
-        await this.asyncSubmitData(data, flags, fd);
+        dHelpers.uploadApp(flags, fd, zipName);
 
         cli.action.stop('deployed!');
-    }
-
-    // tslint:disable:promise-function-async
-    private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<void> {
-        let authResult;
-
-        if (!flags.token) {
-            let credentials: { username: string, password: string, code?: string };
-            credentials = { username: flags.username, password: flags.password };
-            if (flags.code) {
-                credentials.code = flags.code;
-            }
-
-            authResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/login'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(credentials),
-            }).then((res: Response) => res.json());
-
-            if (authResult.status === 'error' || !authResult.data) {
-                throw new Error('Invalid username and password or missing 2FA code (if active)');
-            }
-        } else {
-            const verificationResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/me'), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Auth-Token': flags.token,
-                    'X-User-Id': flags.userid,
-                },
-            }).then((res: Response) => res.json());
-
-            if (!verificationResult.success) {
-                throw new Error('Invalid API token');
-            }
-
-            authResult = { data: { authToken: flags.token, userId: flags.userid } };
-        }
-
-        let endpoint = '/api/apps';
-        if (flags.update) {
-            endpoint += `/${fd.info.id}`;
-        }
-
-        const deployResult = await fetch(this.normalizeUrl(flags.url, endpoint), {
-            method: 'POST',
-            headers: {
-                'X-Auth-Token': authResult.data.authToken,
-                'X-User-Id': authResult.data.userId,
-            },
-            body: data,
-        }).then((res: Response) => res.json());
-
-        if (deployResult.status === 'error') {
-            throw new Error(`Unknown error occurred while deploying ${JSON.stringify(deployResult)}`);
-        } else if (!deployResult.success) {
-            throw new Error(`Deployment error: ${ deployResult.error }`);
-        }
-
-        if (deployResult.compilerErrors && deployResult.compilerErrors.length > 0) {
-            throw new Error(`Deployment compiler errors: \n${ JSON.stringify(deployResult.compilerErrors, null, 2) }`);
-        }
-    }
-
-    // expects the `path` to start with the /
-    private normalizeUrl(url: string, path: string): string {
-        return url.replace(/\/$/, '') + path;
     }
 }
