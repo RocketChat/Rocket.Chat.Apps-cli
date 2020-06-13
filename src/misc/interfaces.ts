@@ -4,3 +4,8 @@ export interface IAppCategory {
     name: string;
     value: string;
 }
+export interface IServerInfo {
+    url: string;
+    username: string;
+    password: string;
+}

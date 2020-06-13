@@ -1,13 +1,10 @@
 import { Command, flags } from '@oclif/command';
-import chalk from 'chalk';
 import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
 import * as Listr from 'listr';
 
 import { FolderDetails } from '../misc';
 import { checkReport, packageAndZip, uploadApp } from '../misc/deployHelpers';
-
-import Deploy from './deploy';
 
 export default class Watch extends Command {
 

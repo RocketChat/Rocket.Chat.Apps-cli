@@ -3,14 +3,16 @@ import { exec } from 'child_process';
 import * as fs from 'fs';
 import pascalCase = require('pascal-case');
 
+import { IServerInfo } from '../misc/interfaces';
 import { FolderDetails } from './folderDetails';
 
 export class AppCreator {
-    constructor(private fd: FolderDetails, private command: Command) { }
+    constructor(private fd: FolderDetails, private command: Command, private serverInfo: IServerInfo) { }
 
     public async writeFiles(): Promise<void> {
         fs.mkdirSync(this.fd.folder);
         this.createAppJson();
+        this.createServerInfoJson();
         this.createMainTypeScriptFile();
         this.createBlankIcon();
         this.createdReadme();
@@ -26,6 +28,10 @@ export class AppCreator {
 
     private createAppJson(): void {
         fs.writeFileSync(this.fd.mergeWithFolder('app.json'), JSON.stringify(this.fd.info, undefined, 4), 'utf8');
+    }
+
+    private createServerInfoJson(): void {
+        fs.writeFileSync(this.fd.mergeWithFolder('serverInfo.json'), JSON.stringify(this.serverInfo), 'utf8');
     }
 
     private createMainTypeScriptFile(): void {
