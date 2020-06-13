@@ -5,8 +5,7 @@ import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import { AppCompiler, AppPackager, FolderDetails } from '.';
 
-export class DeployHelpers {
-    public checkReport(command: Command, fd: FolderDetails, flags: { [key: string]: any }): void {
+export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: string]: any }): void => {
         const compiler = new AppCompiler(command, fd);
         const report = compiler.logDiagnostics();
 
@@ -14,28 +13,29 @@ export class DeployHelpers {
             throw new Error('TypeScript compiler error(s) occurred');
         }
         return;
-    }
+};
 
-    public async packageAndZip(command: Command, fd: FolderDetails): Promise<string> {
+export const packageAndZip = async (command: Command, fd: FolderDetails): Promise<string> => {
         const packager = new AppPackager(command, fd);
         try {
             return await packager.zipItUp();
         } catch (e) {
             throw new Error(e);
         }
-    }
+};
 
-    public async uploadApp(flags: { [key: string]: any }, fd: FolderDetails, zipname: string) {
+export const uploadApp = async (flags: { [key: string]: any }, fd: FolderDetails, zipname: string) => {
         const data = new FormData();
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipname)));
         try {
-            await this.asyncSubmitData(data, flags, fd);
+            await asyncSubmitData(data, flags, fd);
         } catch (e) {
             throw new Error(e);
         }
-    }
+};
 
-    private async asyncSubmitData(data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<void> {
+// tslint:disable-next-line:max-line-length
+export const asyncSubmitData = async (data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<void> => {
         let authResult;
 
         if (!flags.token) {
@@ -45,7 +45,7 @@ export class DeployHelpers {
                 credentials.code = flags.code;
             }
 
-            authResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/login'), {
+            authResult = await fetch(normalizeUrl(flags.url, '/api/v1/login'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export class DeployHelpers {
                 throw new Error('Invalid username and password or missing 2FA code (if active)');
             }
         } else {
-            const verificationResult = await fetch(this.normalizeUrl(flags.url, '/api/v1/me'), {
+            const verificationResult = await fetch(normalizeUrl(flags.url, '/api/v1/me'), {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ export class DeployHelpers {
             endpoint += `/${fd.info.id}`;
         }
 
-        const deployResult = await fetch(this.normalizeUrl(flags.url, endpoint), {
+        const deployResult = await fetch(normalizeUrl(flags.url, endpoint), {
             method: 'POST',
             headers: {
                 'X-Auth-Token': authResult.data.authToken,
@@ -96,10 +96,9 @@ export class DeployHelpers {
         if (deployResult.compilerErrors && deployResult.compilerErrors.length > 0) {
             throw new Error(`Deployment compiler errors: \n${ JSON.stringify(deployResult.compilerErrors, null, 2) }`);
         }
-    }
+    };
 
     // expects the `path` to start with the /
-    private normalizeUrl(url: string, path: string): string {
+export const normalizeUrl = (url: string, path: string): string => {
         return url.replace(/\/$/, '') + path;
-    }
-}
+};

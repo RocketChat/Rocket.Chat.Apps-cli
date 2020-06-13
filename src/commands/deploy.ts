@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import cli from 'cli-ux';
 
 import { FolderDetails } from '../misc';
-import { DeployHelpers } from '../misc/deployHelpers';
+import { checkReport, packageAndZip, uploadApp } from '../misc/deployHelpers';
 
 export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
@@ -40,10 +40,10 @@ export default class Deploy extends Command {
             this.error(e && e.message ? e.message : e);
             return;
         }
-        const dHelpers = new DeployHelpers();
-        dHelpers.checkReport(this, fd, flags);
 
-        const zipName = await dHelpers.packageAndZip(this, fd);
+        checkReport(this, fd, flags);
+
+        const zipName = await packageAndZip(this, fd);
 
         cli.action.stop('packaged!');
 
@@ -65,7 +65,7 @@ export default class Deploy extends Command {
 
         cli.action.start(`${ chalk.green('deploying') } your app`);
 
-        dHelpers.uploadApp(flags, fd, zipName);
+        uploadApp(flags, fd, zipName);
 
         cli.action.stop('deployed!');
     }

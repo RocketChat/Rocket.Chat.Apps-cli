@@ -5,7 +5,8 @@ import cli from 'cli-ux';
 import * as Listr from 'listr';
 
 import { FolderDetails } from '../misc';
-import { DeployHelpers } from '../misc/deployHelpers';
+import { checkReport, packageAndZip, uploadApp } from '../misc/deployHelpers';
+
 import Deploy from './deploy';
 
 export default class Watch extends Command {
@@ -91,19 +92,18 @@ export default class Watch extends Command {
         }
         watcher
             .on('change', async () => {
-                const dHelpers = new DeployHelpers();
                 const tasks = new Listr([
                     {
                         title: 'Checking report',
                         task: () => {
-                            dHelpers.checkReport(this, fd, flags);
+                            checkReport(this, fd, flags);
                             return;
                         },
                     },
                     {
                         title: 'Packaging',
                         task: async (ctx, task) => {
-                            ctx.zipName = dHelpers.packageAndZip(this, fd);
+                            ctx.zipName = await packageAndZip(this, fd);
                             return;
                         },
                     },
@@ -111,7 +111,7 @@ export default class Watch extends Command {
                         title: 'Updating',
                         task: async (ctx, task) => {
                             try {
-                                await dHelpers.uploadApp({...flags, update: true}, fd, ctx.zipName);
+                                await uploadApp({...flags, update: true}, fd, ctx.zipName);
                             } catch (e) {
                                 throw new Error(e.message);
                             }
@@ -121,19 +121,18 @@ export default class Watch extends Command {
                 tasks.run();
             })
             .on('ready', async () => {
-                const dHelpers = new DeployHelpers();
                 const tasks = new Listr([
                     {
                         title: 'Checking report',
                         task: () => {
-                            dHelpers.checkReport(this, fd, flags);
+                            checkReport(this, fd, flags);
                             return;
                         },
                     },
                     {
                         title: 'Packaging',
                         task: async (ctx, task) => {
-                            ctx.zipName = await dHelpers.packageAndZip(this, fd);
+                            ctx.zipName = await packageAndZip(this, fd);
                             return;
                         },
                     },
@@ -141,7 +140,7 @@ export default class Watch extends Command {
                         title: 'Adding App',
                         task: async (ctx, task) => {
                             try {
-                                await dHelpers.uploadApp(flags, fd, ctx.zipName);
+                                await uploadApp(flags, fd, ctx.zipName);
                             } catch (e) {
                                 ctx.exists = true;
                                 task.skip('App already exists trying to update');
@@ -153,7 +152,7 @@ export default class Watch extends Command {
                         skip: (ctx) => ctx.exists === false,
                         task: async (ctx, task) => {
                             try {
-                                await dHelpers.uploadApp({...flags, update: true}, fd, ctx.zipName);
+                                await uploadApp({...flags, update: true}, fd, ctx.zipName);
                             } catch (e) {
                                 throw new Error(e.message);
                             }
