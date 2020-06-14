@@ -54,9 +54,9 @@ export default class Create extends Command {
 
         const folder = path.join(process.cwd(), info.nameSlug);
 
-        const url =  await cli.prompt('What is the server\'s url (include https)?');
-        const username = await cli.prompt('What is the username?');
-        const password = await cli.prompt('And, what is the password?', { type: 'hide' });
+        const url =  await cli.prompt(chalk.bold('   What is the server\'s url (include https)?'));
+        const username = await cli.prompt(chalk.bold('   What is the username?'));
+        const password = await cli.prompt(chalk.bold('   And, what is the password?'), { type: 'hide' });
         const serverInfo: IServerInfo = {
             url,
             username,

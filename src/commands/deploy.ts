@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import cli from 'cli-ux';
 
 import { FolderDetails } from '../misc';
-import { checkReport, packageAndZip, uploadApp } from '../misc/deployHelpers';
+import { checkReport, getServerInfo, packageAndZip, uploadApp  } from '../misc/deployHelpers';
 
 export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
@@ -13,9 +13,6 @@ export default class Deploy extends Command {
         // flag with no value (-f, --force)
         force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
         update: flags.boolean({ description: 'updates the app, instead of creating' }),
-        url: flags.string({ description: 'where the App should be deployed to' }),
-        username: flags.string({ char: 'u', dependsOn: ['url'], description: 'username to authenticate with' }),
-        password: flags.string({ char: 'p', dependsOn: ['username'], description: 'password of the user' }),
         code: flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
         i2fa: flags.boolean({ description: 'interactively ask for 2FA code' }),
         token: flags.string({
@@ -42,22 +39,16 @@ export default class Deploy extends Command {
         }
 
         checkReport(this, fd, flags);
+        let serverInfo;
+        try {
+            serverInfo = await getServerInfo(fd);
+        } catch (e) {
+            this.log(e);
+        }
 
         const zipName = await packageAndZip(this, fd);
 
         cli.action.stop('packaged!');
-
-        if (!flags.url) {
-            flags.url = await cli.prompt('What is the server\'s url (include https)?');
-        }
-
-        if (!flags.username && !flags.token) {
-            flags.username = await cli.prompt('What is the username?');
-        }
-
-        if (!flags.password && !flags.token) {
-            flags.password = await cli.prompt('And, what is the password?', { type: 'hide' });
-        }
 
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
@@ -65,7 +56,7 @@ export default class Deploy extends Command {
 
         cli.action.start(`${ chalk.green('deploying') } your app`);
 
-        uploadApp(flags, fd, zipName);
+        await uploadApp({...flags, ...serverInfo}, fd, zipName);
 
         cli.action.stop('deployed!');
     }

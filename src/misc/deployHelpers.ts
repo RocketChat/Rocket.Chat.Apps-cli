@@ -4,6 +4,7 @@ import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import { AppCompiler, AppPackager, FolderDetails } from '.';
+import { IServerInfo } from './interfaces';
 
 export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: string]: any }): void => {
         const compiler = new AppCompiler(command, fd);
@@ -13,6 +14,17 @@ export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: 
             throw new Error('TypeScript compiler error(s) occurred');
         }
         return;
+};
+
+export const getServerInfo = async (fd: FolderDetails): Promise<IServerInfo> => {
+    return new Promise((resolve, reject) => {
+        fs.readFile(fd.mergeWithFolder('serverInfo.json'), 'utf8', (error, data) => {
+            if (error) {
+                reject(error);
+            }
+            resolve(JSON.parse(data));
+        });
+    });
 };
 
 export const packageAndZip = async (command: Command, fd: FolderDetails): Promise<string> => {

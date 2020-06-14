@@ -4,7 +4,7 @@ import cli from 'cli-ux';
 import * as Listr from 'listr';
 
 import { FolderDetails } from '../misc';
-import { checkReport, packageAndZip, uploadApp } from '../misc/deployHelpers';
+import { checkReport, getServerInfo, packageAndZip, uploadApp } from '../misc/deployHelpers';
 
 export default class Watch extends Command {
 
@@ -22,9 +22,6 @@ export default class Watch extends Command {
             description: 'remove files from watchlist during hot reload',
         }),
         force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
-        url: flags.string({ description: 'where the App should be deployed to' }),
-        username: flags.string({ char: 'u', dependsOn: ['url'], description: 'username to authenticate with' }),
-        password: flags.string({ char: 'p', dependsOn: ['username'], description: 'password of the user' }),
         code: flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
         i2fa: flags.boolean({ description: 'interactively ask for 2FA code' }),
         token: flags.string({
@@ -46,18 +43,6 @@ export default class Watch extends Command {
         } catch (e) {
             this.error(e && e.message ? e.message : e);
             return;
-        }
-
-        if (!flags.url) {
-            flags.url = await cli.prompt('What is the server\'s url (include https)?');
-        }
-
-        if (!flags.username && !flags.token) {
-            flags.username = await cli.prompt('What is the username?');
-        }
-
-        if (!flags.password && !flags.token) {
-            flags.password = await cli.prompt('And, what is the password?', { type: 'hide' });
         }
 
         if (flags.i2fa) {
@@ -105,10 +90,20 @@ export default class Watch extends Command {
                         },
                     },
                     {
+                        title: 'Reading server info',
+                        task: async (ctx, task)  => {
+                            try {
+                                ctx.serverInfo = await getServerInfo(fd);
+                            } catch (e) {
+                                throw new Error(e);
+                            }
+                        },
+                    },
+                    {
                         title: 'Updating',
                         task: async (ctx, task) => {
                             try {
-                                await uploadApp({...flags, update: true}, fd, ctx.zipName);
+                                await uploadApp({...flags, update: true, ...ctx.serverInfo}, fd, ctx.zipName);
                             } catch (e) {
                                 throw new Error(e.message);
                             }
@@ -134,10 +129,20 @@ export default class Watch extends Command {
                         },
                     },
                     {
+                        title: 'Reading server info',
+                        task: async (ctx, task)  => {
+                            try {
+                                ctx.serverInfo = await getServerInfo(fd);
+                            } catch (e) {
+                                throw new Error(e);
+                            }
+                        },
+                    },
+                    {
                         title: 'Adding App',
                         task: async (ctx, task) => {
                             try {
-                                await uploadApp(flags, fd, ctx.zipName);
+                                await uploadApp({...flags, ...ctx.serverInfo}, fd, ctx.zipName);
                             } catch (e) {
                                 ctx.exists = true;
                                 task.skip('App already exists trying to update');
@@ -149,7 +154,7 @@ export default class Watch extends Command {
                         skip: (ctx) => ctx.exists === false,
                         task: async (ctx, task) => {
                             try {
-                                await uploadApp({...flags, update: true}, fd, ctx.zipName);
+                                await uploadApp({...flags, update: true, ...ctx.serverInfo}, fd, ctx.zipName);
                             } catch (e) {
                                 throw new Error(e.message);
                             }
