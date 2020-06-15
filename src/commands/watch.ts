@@ -41,8 +41,7 @@ export default class Watch extends Command {
         try {
             await fd.readInfoFile();
         } catch (e) {
-            this.error(e && e.message ? e.message : e);
-            return;
+            this.error(e && e.message ? e.message : e, {exit: 2});
         }
 
         if (flags.i2fa) {
@@ -78,15 +77,23 @@ export default class Watch extends Command {
                     {
                         title: 'Checking report',
                         task: () => {
-                            checkReport(this, fd, flags);
-                            return;
+                            try {
+                                checkReport(this, fd, flags);
+                                return;
+                            } catch (e) {
+                                throw new Error(e);
+                            }
                         },
                     },
                     {
                         title: 'Packaging',
                         task: async (ctx, task) => {
-                            ctx.zipName = await packageAndZip(this, fd);
-                            return;
+                            try {
+                                ctx.zipName = await packageAndZip(this, fd);
+                                return;
+                            } catch (e) {
+                                throw new Error(e);
+                            }
                         },
                     },
                     {
@@ -117,15 +124,23 @@ export default class Watch extends Command {
                     {
                         title: 'Checking report',
                         task: () => {
-                            checkReport(this, fd, flags);
-                            return;
+                            try {
+                                checkReport(this, fd, flags);
+                                return;
+                            } catch (e) {
+                                throw new Error(e);
+                            }
                         },
                     },
                     {
                         title: 'Packaging',
                         task: async (ctx, task) => {
-                            ctx.zipName = await packageAndZip(this, fd);
-                            return;
+                            try {
+                                ctx.zipName = await packageAndZip(this, fd);
+                                return;
+                            } catch (e) {
+                                throw new Error(e);
+                            }
                         },
                     },
                     {
