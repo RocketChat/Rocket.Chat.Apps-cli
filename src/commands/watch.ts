@@ -55,6 +55,7 @@ export default class Watch extends Command {
                 '**/package.json',
                 '**/tslint.json',
                 '**/tsconfig.json',
+                '**/serverInfo.json',
                 '**/*.js',
                 '**/*.js.map',
                 '**/*.d.ts',
