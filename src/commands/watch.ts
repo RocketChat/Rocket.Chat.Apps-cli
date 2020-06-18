@@ -111,7 +111,9 @@ export default class Watch extends Command {
                         },
                     },
                 ]);
-                tasks.run();
+                tasks.run().catch((e) => {
+                    return;
+                });
             })
             .on('ready', async () => {
                 const tasks = new Listr([

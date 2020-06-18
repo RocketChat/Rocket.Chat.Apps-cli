@@ -1,7 +1,7 @@
 import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
-
+import * as Listr from 'listr';
 import { FolderDetails } from '../misc';
 import { checkReport, getServerInfo, packageAndZip, uploadApp  } from '../misc/deployHelpers';
 import {IServerInfo1, IServerInfo2} from '../misc/interfaces';
@@ -19,7 +19,6 @@ export default class Deploy extends Command {
 
     public async run() {
         const { flags } = this.parse(Deploy);
-        cli.action.start(`${ chalk.green('packaging') } your app`);
 
         const fd = new FolderDetails(this);
 
@@ -28,27 +27,51 @@ export default class Deploy extends Command {
         } catch (e) {
             this.error(e && e.message ? e.message : e, {exit: 2});
         }
-
-        checkReport(this, fd, flags);
-        let serverInfo: IServerInfo1 | IServerInfo2;
-        try {
-            serverInfo = await getServerInfo(fd);
-        } catch (e) {
-            this.log(e);
-        }
-
-        const zipName = await packageAndZip(this, fd);
-
-        cli.action.stop('packaged!');
-
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
-
-        cli.action.start(`${ chalk.green('deploying') } your app`);
-
-        await uploadApp({...flags, ...serverInfo}, fd, zipName);
-
-        cli.action.stop('deployed!');
+        let serverInfo: IServerInfo1 | IServerInfo2;
+        const tasks = new Listr([
+            {
+                title: 'Checking Report',
+                task: () => {
+                    checkReport(this, fd, flags);
+                    return;
+                },
+            },
+            {
+                title: 'Getting Server Info',
+                task: async ()  => {
+                    try {
+                        serverInfo = await getServerInfo(fd);
+                    } catch (e) {
+                        throw new Error(e.message);
+                    }
+                },
+            },
+            {
+                title: 'Packaging',
+                task: async (ctx, task) => {
+                    try {
+                        ctx.zipName = await packageAndZip(this, fd);
+                    } catch (e) {
+                        throw new Error(e.message);
+                    }
+                },
+            },
+            {
+                title: 'Deploying',
+                task: async (ctx, task) => {
+                    try {
+                        await uploadApp({...flags, ...serverInfo}, fd, ctx.zipName);
+                    } catch (e) {
+                        throw new Error(e.message);
+                    }
+                },
+            },
+        ]);
+        tasks.run().catch((e) => {
+            return;
+        });
     }
 }

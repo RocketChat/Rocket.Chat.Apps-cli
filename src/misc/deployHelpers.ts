@@ -105,7 +105,7 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
             if (deployResult.status === 'compiler_error') {
                 throw new Error(`Deployment compiler errors: \n${ JSON.stringify(deployResult.messages, null, 2) }`);
             }
-            throw new Error(`Deployment error: ${ deployResult }`);
+            throw new Error(`Deployment error: ${ deployResult.error }`);
         }
     };
 
