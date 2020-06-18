@@ -15,7 +15,7 @@ import {
     VariousUtils,
 } from '../misc';
 
-import { IServerInfo } from '../misc/interfaces';
+import { IServerInfo1, IServerInfo2 } from '../misc/interfaces';
 export default class Create extends Command {
     public static description = 'simplified way of creating an app';
 
@@ -57,11 +57,11 @@ export default class Create extends Command {
         const url =  await cli.prompt(chalk.bold('   What is the server\'s url (include https)?'));
         const username = await cli.prompt(chalk.bold('   What is the username?'));
         const password = await cli.prompt(chalk.bold('   And, what is the password?'), { type: 'hide' });
-        const serverInfo: IServerInfo = {
+        const serverInfo: IServerInfo1  = {
             url,
             username,
             password,
-        } as IServerInfo;
+        } as IServerInfo1;
 
         cli.action.start(`Creating a Rocket.Chat App in ${ chalk.green(folder) }`);
 

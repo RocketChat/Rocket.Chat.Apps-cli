@@ -3,11 +3,11 @@ import { exec } from 'child_process';
 import * as fs from 'fs';
 import pascalCase = require('pascal-case');
 
-import { IServerInfo } from '../misc/interfaces';
+import { IServerInfo1 } from '../misc/interfaces';
 import { FolderDetails } from './folderDetails';
 
 export class AppCreator {
-    constructor(private fd: FolderDetails, private command: Command, private serverInfo: IServerInfo) { }
+    constructor(private fd: FolderDetails, private command: Command, private serverInfo: IServerInfo1) { }
 
     public async writeFiles(): Promise<void> {
         fs.mkdirSync(this.fd.folder);

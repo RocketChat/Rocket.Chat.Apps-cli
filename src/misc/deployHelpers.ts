@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 import { AppCompiler, AppPackager, FolderDetails } from '.';
-import { IServerInfo } from './interfaces';
+import { IServerInfo1, IServerInfo2 } from './interfaces';
 
 export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: string]: any }): void => {
         const compiler = new AppCompiler(command, fd);
@@ -16,7 +16,7 @@ export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: 
         return;
 };
 
-export const getServerInfo = async (fd: FolderDetails): Promise<IServerInfo> => {
+export const getServerInfo = async (fd: FolderDetails): Promise<IServerInfo1 | IServerInfo2> => {
     return new Promise((resolve, reject) => {
         fs.readFile(fd.mergeWithFolder('serverInfo.json'), 'utf8', (error, data) => {
             if (error) {

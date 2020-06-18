@@ -4,7 +4,7 @@ import cli from 'cli-ux';
 
 import { FolderDetails } from '../misc';
 import { checkReport, getServerInfo, packageAndZip, uploadApp  } from '../misc/deployHelpers';
-
+import {IServerInfo1, IServerInfo2} from '../misc/interfaces';
 export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
 
@@ -15,14 +15,6 @@ export default class Deploy extends Command {
         update: flags.boolean({ description: 'updates the app, instead of creating' }),
         code: flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
         i2fa: flags.boolean({ description: 'interactively ask for 2FA code' }),
-        token: flags.string({
-            char: 't', dependsOn: ['userid'],
-            description: 'API token to use with UserID (instead of username & password)',
-        }),
-        userid: flags.string({
-            char: 'i', dependsOn: ['token'],
-            description: 'UserID to use with API token (instead of username & password)',
-        }),
     };
 
     public async run() {
@@ -34,12 +26,11 @@ export default class Deploy extends Command {
         try {
             await fd.readInfoFile();
         } catch (e) {
-            this.error(e && e.message ? e.message : e);
-            return;
+            this.error(e && e.message ? e.message : e, {exit: 2});
         }
 
         checkReport(this, fd, flags);
-        let serverInfo;
+        let serverInfo: IServerInfo1 | IServerInfo2;
         try {
             serverInfo = await getServerInfo(fd);
         } catch (e) {

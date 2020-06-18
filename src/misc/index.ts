@@ -5,12 +5,13 @@ import { AppPackager } from './appPackager';
 import { compilerOptions } from './compilerOptions';
 import { DiagnosticReport } from './diagnosticReport';
 import { FolderDetails } from './folderDetails';
-import { IAppCategory, IServerInfo} from './interfaces';
+import { IAppCategory, IServerInfo1, IServerInfo2} from './interfaces';
 import { VariousUtils } from './variousUtils';
 
 export {
     IAppCategory,
-    IServerInfo,
+    IServerInfo1,
+    IServerInfo2,
     appJsonSchema,
     AppCreator,
     AppPackager,
