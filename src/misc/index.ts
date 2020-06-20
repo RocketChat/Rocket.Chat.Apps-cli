@@ -5,13 +5,13 @@ import { AppPackager } from './appPackager';
 import { compilerOptions } from './compilerOptions';
 import { DiagnosticReport } from './diagnosticReport';
 import { FolderDetails } from './folderDetails';
-import { IAppCategory, IServerInfo1, IServerInfo2} from './interfaces';
+import { IAppCategory, INormalLoginInfo, IPersonalAccessTokenLoginInfo} from './interfaces';
 import { VariousUtils } from './variousUtils';
 
 export {
     IAppCategory,
-    IServerInfo1,
-    IServerInfo2,
+    INormalLoginInfo,
+    IPersonalAccessTokenLoginInfo,
     appJsonSchema,
     AppCreator,
     AppPackager,

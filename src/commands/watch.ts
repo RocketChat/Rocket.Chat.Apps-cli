@@ -5,7 +5,8 @@ import * as Listr from 'listr';
 
 import { FolderDetails } from '../misc';
 import { checkReport, getServerInfo, packageAndZip, uploadApp } from '../misc/deployHelpers';
-import {IServerInfo1, IServerInfo2} from '../misc/interfaces';
+import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
+
 export default class Watch extends Command {
 
     public static description = 'watches for changes in the app and redeploys to the server';
@@ -47,7 +48,6 @@ export default class Watch extends Command {
                 '**/package.json',
                 '**/tslint.json',
                 '**/tsconfig.json',
-                '**/serverInfo.json',
                 '**/*.js',
                 '**/*.js.map',
                 '**/*.d.ts',
@@ -57,124 +57,93 @@ export default class Watch extends Command {
                 '**/.*',
             ],
             awaitWriteFinish: true,
-            persistent: true});
+            persistent: true,
+        });
         if (flags.addfiles) {
             watcher.add(flags.addfiles);
         }
         if (flags.remfiles) {
             watcher.unwatch(flags.remfiles);
         }
-        let serverInfo: IServerInfo1 | IServerInfo2;
+        let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo;
+        const tasks = new Listr([
+            {
+                title: 'Checking report',
+                task: (ctx, task) => {
+                    ctx.checkReport = false;
+                    try {
+                        checkReport(this, fd, flags);
+                        ctx.checkReport = true;
+                        return;
+                    } catch (e) {
+                        throw new Error(e && e.message ? e.message : e);
+                    }
+                },
+            },
+            {
+                title: 'Packaging',
+                enabled: (ctx) => ctx.checkReport,
+                task: async (ctx, task) => {
+                    ctx.package = false;
+                    try {
+                        ctx.zipName = await packageAndZip(this, fd);
+                        ctx.package = true;
+                        return;
+                    } catch (e) {
+                        throw new Error(e && e.message ? e.message : e);
+                    }
+                },
+            },
+            {
+                title: 'Reading server info',
+                enabled: (ctx) => ctx.checkReport && ctx.package,
+                task: async (ctx, task)  => {
+                    ctx.serverInfo = false;
+                    try {
+                        serverInfo = await getServerInfo(fd);
+                        ctx.serverInfo = true;
+                    } catch (e) {
+                        throw new Error(e && e.message ? e.message : e);
+                    }
+                },
+            },
+            {
+                title: 'Adding App',
+                enabled: (ctx) => ctx.checkReport && ctx.package && ctx.serverInfo,
+                task: async (ctx, task) => {
+                    ctx.exists = false;
+                    try {
+                        await uploadApp({...flags, ...serverInfo}, fd, ctx.zipName);
+                    } catch (e) {
+                        ctx.exists = true;
+                        task.skip('App already exists trying to update');
+                    }
+                },
+            },
+            {
+                title: 'Updating',
+                enabled: (ctx) => ctx.checkReport && ctx.package && ctx.serverInfo && ctx.exists,
+                task: async (ctx, task) => {
+                    try {
+                        await uploadApp({...flags, update: true, ...serverInfo}, fd, ctx.zipName);
+                    } catch (e) {
+                        throw new Error(e && e.message ? e.message : e);
+                    }
+                },
+            },
+        ]);
         watcher
             .on('change', async () => {
-                const tasks = new Listr([
-                    {
-                        title: 'Checking report',
-                        task: () => {
-                            try {
-                                checkReport(this, fd, flags);
-                                return;
-                            } catch (e) {
-                                throw new Error(e);
-                            }
-                        },
-                    },
-                    {
-                        title: 'Packaging',
-                        task: async (ctx, task) => {
-                            try {
-                                ctx.zipName = await packageAndZip(this, fd);
-                                return;
-                            } catch (e) {
-                                throw new Error(e);
-                            }
-                        },
-                    },
-                    {
-                        title: 'Reading server info',
-                        task: async (ctx, task)  => {
-                            try {
-                                serverInfo = await getServerInfo(fd);
-                            } catch (e) {
-                                throw new Error(e);
-                            }
-                        },
-                    },
-                    {
-                        title: 'Updating',
-                        task: async (ctx, task) => {
-                            try {
-                                await uploadApp({...flags, update: true, ...serverInfo}, fd, ctx.zipName);
-                            } catch (e) {
-                                throw new Error(e.message);
-                            }
-                        },
-                    },
-                ]);
                 tasks.run().catch((e) => {
                     return;
                 });
+                this.log('');
             })
             .on('ready', async () => {
-                const tasks = new Listr([
-                    {
-                        title: 'Checking report',
-                        task: () => {
-                            try {
-                                checkReport(this, fd, flags);
-                                return;
-                            } catch (e) {
-                                throw new Error(e);
-                            }
-                        },
-                    },
-                    {
-                        title: 'Packaging',
-                        task: async (ctx, task) => {
-                            try {
-                                ctx.zipName = await packageAndZip(this, fd);
-                                return;
-                            } catch (e) {
-                                throw new Error(e);
-                            }
-                        },
-                    },
-                    {
-                        title: 'Reading server info',
-                        task: async (ctx, task)  => {
-                            try {
-                                serverInfo = await getServerInfo(fd);
-                            } catch (e) {
-                                throw new Error(e);
-                            }
-                        },
-                    },
-                    {
-                        title: 'Adding App',
-                        task: async (ctx, task) => {
-                            try {
-                                await uploadApp({...flags, ...serverInfo}, fd, ctx.zipName);
-                            } catch (e) {
-                                ctx.exists = true;
-                                task.skip('App already exists trying to update');
-                            }
-                        },
-                    },
-                    {
-                        title: 'Updating',
-                        skip: (ctx) => ctx.exists === false,
-                        task: async (ctx, task) => {
-                            try {
-                                await uploadApp({...flags, update: true, ...serverInfo}, fd, ctx.zipName);
-                            } catch (e) {
-                                throw new Error(e.message);
-                            }
-                        },
-                    },
-                ]);
                 tasks.run().catch((e) => {
                     return;
                 }) ;
+                this.log('');
             });
 
 }

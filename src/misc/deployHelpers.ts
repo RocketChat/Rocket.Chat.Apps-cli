@@ -3,8 +3,9 @@ import * as FormData from 'form-data';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
+
 import { AppCompiler, AppPackager, FolderDetails } from '.';
-import { IServerInfo1, IServerInfo2 } from './interfaces';
+import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from './interfaces';
 
 export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: string]: any }): void => {
         const compiler = new AppCompiler(command, fd);
@@ -16,13 +17,18 @@ export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: 
         return;
 };
 
-export const getServerInfo = async (fd: FolderDetails): Promise<IServerInfo1 | IServerInfo2> => {
+export const getServerInfo = async (fd: FolderDetails): Promise<INormalLoginInfo | IPersonalAccessTokenLoginInfo> => {
     return new Promise((resolve, reject) => {
         fs.readFile(fd.mergeWithFolder('serverInfo.json'), 'utf8', (error, data) => {
             if (error) {
                 reject(error);
             }
-            resolve(JSON.parse(data));
+            try {
+                const parsedData = JSON.parse(data);
+                resolve(parsedData);
+            } catch (e) {
+                reject(e);
+            }
         });
     });
 };
@@ -30,7 +36,7 @@ export const getServerInfo = async (fd: FolderDetails): Promise<IServerInfo1 | I
 export const packageAndZip = async (command: Command, fd: FolderDetails): Promise<string> => {
         const packager = new AppPackager(command, fd);
         try {
-            return await packager.zipItUp();
+            return  packager.zipItUp();
         } catch (e) {
             throw new Error(e);
         }

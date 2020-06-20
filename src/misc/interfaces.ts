@@ -4,12 +4,12 @@ export interface IAppCategory {
     name: string;
     value: string;
 }
-export interface IServerInfo1 {
+export interface INormalLoginInfo {
     url: string;
     username: string;
     password: string;
 }
-export interface IServerInfo2 {
+export interface IPersonalAccessTokenLoginInfo {
     url: string;
     userid: string;
     token: string;

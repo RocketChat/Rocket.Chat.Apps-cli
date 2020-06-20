@@ -1,10 +1,11 @@
 import { Command, flags } from '@oclif/command';
-import chalk from 'chalk';
 import cli from 'cli-ux';
 import * as Listr from 'listr';
+
 import { FolderDetails } from '../misc';
 import { checkReport, getServerInfo, packageAndZip, uploadApp  } from '../misc/deployHelpers';
-import {IServerInfo1, IServerInfo2} from '../misc/interfaces';
+import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
+
 export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
 
@@ -30,42 +31,55 @@ export default class Deploy extends Command {
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
-        let serverInfo: IServerInfo1 | IServerInfo2;
+        let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo;
         const tasks = new Listr([
             {
                 title: 'Checking Report',
-                task: () => {
-                    checkReport(this, fd, flags);
-                    return;
+                task: (ctx, task) => {
+                    ctx.checkReport = false;
+                    try {
+                        checkReport(this, fd, flags);
+                        ctx.checkReport = true;
+                        return;
+                    } catch (e) {
+                        throw new Error(e && e.message ? e.message : e);
+                    }
                 },
             },
             {
                 title: 'Getting Server Info',
-                task: async ()  => {
+                enabled: (ctx) => ctx.checkReport,
+                task: async (ctx, task)  => {
+                    ctx.serverInfo = false;
                     try {
                         serverInfo = await getServerInfo(fd);
+                        ctx.serverInfo = true;
                     } catch (e) {
-                        throw new Error(e.message);
+                        throw new Error(e && e.message ? e.message : e);
                     }
                 },
             },
             {
                 title: 'Packaging',
+                enabled: (ctx) => ctx.checkReport && ctx.serverInfo,
                 task: async (ctx, task) => {
+                    ctx.package = false;
                     try {
                         ctx.zipName = await packageAndZip(this, fd);
+                        ctx.package = true;
                     } catch (e) {
-                        throw new Error(e.message);
+                        throw new Error(e && e.message ? e.message : e);
                     }
                 },
             },
             {
                 title: 'Deploying',
+                enabled: (ctx) => ctx.checkReport && ctx.serverInfo && ctx.package,
                 task: async (ctx, task) => {
                     try {
                         await uploadApp({...flags, ...serverInfo}, fd, ctx.zipName);
                     } catch (e) {
-                        throw new Error(e.message);
+                        throw new Error(e && e.message ? e.message : e);
                     }
                 },
             },
