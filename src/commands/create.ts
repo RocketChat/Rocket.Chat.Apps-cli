@@ -15,13 +15,16 @@ import {
     VariousUtils,
 } from '../misc';
 
-import { INormalLoginInfo } from '../misc/interfaces';
-
 export default class Create extends Command {
     public static description = 'simplified way of creating an app';
 
     public static flags = {
         help: flags.help({ char: 'h' }),
+        name: flags.string({char: 'n', description: 'Name of the app'}),
+        description: flags.string({char: 'd', description: 'Description of the app'}),
+        author: flags.string({char: 'a', description: 'Author of  the app'}),
+        homepage: flags.string({char: 'H', description: 'Homepage of the author'}),
+        support: flags.string({char: 's', description: 'Support the author'}),
     };
 
     public async run() {
@@ -42,27 +45,17 @@ export default class Create extends Command {
         this.log('We need some information first:');
         this.log('');
 
-        info.name = await cli.prompt(chalk.bold('   App Name'));
+        const { flags } = this.parse(Create);
+        info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
         info.classFile = `${ pascalCase(info.name) }App.ts`;
 
-        info.description = await cli.prompt(chalk.bold('   App Description'));
-        info.author.name = await cli.prompt(chalk.bold('   Author\'s Name'));
-        info.author.homepage = await cli.prompt(chalk.bold('   Author\'s Home Page'));
-        info.author.support = await cli.prompt(chalk.bold('   Author\'s Support Page'));
-
-        this.log('');
+        info.description = flags.description ? flags.description : await cli.prompt(chalk.bold('   App Description'));
+        info.author.name = flags.author ? flags.author : await cli.prompt(chalk.bold('   Author\'s Name'));
+        info.author.homepage = flags.homepage ? flags.homepage : await cli.prompt(chalk.bold('   Author\'s Home Page'));
+        info.author.support = flags.support ? flags.support : await cli.prompt(chalk.bold('   Author\'s Support Page'));
 
         const folder = path.join(process.cwd(), info.nameSlug);
-
-        const url =  await cli.prompt(chalk.bold('   What is the server\'s url (include https)?'));
-        const username = await cli.prompt(chalk.bold('   What is the username?'));
-        const password = await cli.prompt(chalk.bold('   And, what is the password?'), { type: 'hide' });
-        const serverInfo: INormalLoginInfo  = {
-            url,
-            username,
-            password,
-        } as INormalLoginInfo;
 
         cli.action.start(`Creating a Rocket.Chat App in ${ chalk.green(folder) }`);
 
@@ -70,7 +63,7 @@ export default class Create extends Command {
         fd.setAppInfo(info);
         fd.setFolder(folder);
 
-        const creator = new AppCreator(fd, this, serverInfo);
+        const creator = new AppCreator(fd, this);
         await creator.writeFiles();
 
         try {

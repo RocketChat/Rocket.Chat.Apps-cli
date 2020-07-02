@@ -3,11 +3,10 @@ import { exec } from 'child_process';
 import * as fs from 'fs';
 import pascalCase = require('pascal-case');
 
-import { INormalLoginInfo } from '../misc/interfaces';
 import { FolderDetails } from './folderDetails';
 
 export class AppCreator {
-    constructor(private fd: FolderDetails, private command: Command, private serverInfo: INormalLoginInfo) { }
+    constructor(private fd: FolderDetails, private command: Command) { }
 
     public async writeFiles(): Promise<void> {
         fs.mkdirSync(this.fd.folder);
@@ -31,7 +30,7 @@ export class AppCreator {
     }
 
     private createServerInfoJson(): void {
-        fs.writeFileSync(this.fd.mergeWithFolder('serverInfo.json'), JSON.stringify(this.serverInfo), 'utf8');
+        fs.writeFileSync(this.fd.mergeWithFolder('serverInfo.json'), JSON.stringify({}), 'utf8');
     }
 
     private createMainTypeScriptFile(): void {
