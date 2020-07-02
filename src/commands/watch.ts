@@ -1,7 +1,7 @@
 import { Command, flags } from '@oclif/command';
+import chalk from 'chalk';
 import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
-import * as Listr from 'listr';
 
 import { FolderDetails } from '../misc';
 import { checkReport, getServerInfo, packageAndZip, uploadApp } from '../misc/deployHelpers';
@@ -34,7 +34,7 @@ export default class Watch extends Command {
         try {
             await fd.readInfoFile();
         } catch (e) {
-            this.error(e && e.message ? e.message : e, {exit: 2});
+            this.error(chalk.bold.red(e && e.message ? e.message : e), {exit: 2});
         }
 
         if (flags.i2fa) {
@@ -65,86 +65,65 @@ export default class Watch extends Command {
         if (flags.remfiles) {
             watcher.unwatch(flags.remfiles);
         }
-        let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo;
-        const tasks = new Listr([
-            {
-                title: 'Checking report',
-                task: (ctx, task) => {
-                    ctx.checkReport = false;
-                    try {
-                        checkReport(this, fd, flags);
-                        ctx.checkReport = true;
-                        return;
-                    } catch (e) {
-                        throw new Error(e && e.message ? e.message : e);
-                    }
-                },
-            },
-            {
-                title: 'Packaging',
-                enabled: (ctx) => ctx.checkReport,
-                task: async (ctx, task) => {
-                    ctx.package = false;
-                    try {
-                        ctx.zipName = await packageAndZip(this, fd);
-                        ctx.package = true;
-                        return;
-                    } catch (e) {
-                        throw new Error(e && e.message ? e.message : e);
-                    }
-                },
-            },
-            {
-                title: 'Reading server info',
-                enabled: (ctx) => ctx.checkReport && ctx.package,
-                task: async (ctx, task)  => {
-                    ctx.serverInfo = false;
-                    try {
-                        serverInfo = await getServerInfo(fd);
-                        ctx.serverInfo = true;
-                    } catch (e) {
-                        throw new Error(e && e.message ? e.message : e);
-                    }
-                },
-            },
-            {
-                title: 'Adding App',
-                enabled: (ctx) => ctx.checkReport && ctx.package && ctx.serverInfo,
-                task: async (ctx, task) => {
-                    ctx.exists = false;
-                    try {
-                        await uploadApp({...flags, ...serverInfo}, fd, ctx.zipName);
-                    } catch (e) {
-                        ctx.exists = true;
-                        task.skip('App already exists trying to update');
-                    }
-                },
-            },
-            {
-                title: 'Updating',
-                enabled: (ctx) => ctx.checkReport && ctx.package && ctx.serverInfo && ctx.exists,
-                task: async (ctx, task) => {
-                    try {
-                        await uploadApp({...flags, update: true, ...serverInfo}, fd, ctx.zipName);
-                    } catch (e) {
-                        throw new Error(e && e.message ? e.message : e);
-                    }
-                },
-            },
-        ]);
+
         watcher
             .on('change', async () => {
-                tasks.run().catch((e) => {
-                    return;
+                tasks(this, fd, flags)
+                .catch((e) => {
+                    this.log(chalk.bold.redBright(`   \u27ff  ${e && e.message ? e.message : e}`));
                 });
-                this.log('');
             })
             .on('ready', async () => {
-                tasks.run().catch((e) => {
-                    return;
-                }) ;
-                this.log('');
+                tasks(this, fd, flags)
+                .catch((e) => {
+                    this.log(chalk.bold.redBright(`   \u27ff  ${e && e.message ? e.message : e}`));
+                });
+                return;
             });
-
+    }
 }
-}
+const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]: any }): Promise<void> => {
+    let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo;
+    let zipName;
+    try {
+        command.log('\n');
+        cli.action.start(chalk.bold.greenBright('   Checking App Report'));
+        checkReport(command, fd, flags);
+        cli.action.stop(chalk.bold.greenBright('\u2713'));
+    } catch (e) {
+        cli.action.stop(chalk.red('\u2716'));
+        throw new Error(e);
+    }
+    try {
+        cli.action.start(chalk.bold.greenBright('   Packaging the app'));
+        zipName = await packageAndZip(command, fd);
+        cli.action.stop(chalk.bold.greenBright('\u2713'));
+    } catch (e) {
+        cli.action.stop(chalk.red('\u2716'));
+        throw new Error(e);
+    }
+    try {
+        cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
+        serverInfo = await getServerInfo(fd);
+        cli.action.stop(chalk.bold.greenBright('\u2713'));
+    } catch (e) {
+        cli.action.stop(chalk.red('\u2716'));
+        throw new Error(e);
+    }
+    try {
+        cli.action.start(chalk.bold.greenBright('   Uploading App'));
+        await uploadApp({...flags, ...serverInfo}, fd, zipName);
+        cli.action.stop(chalk.bold.greenBright('\u2713'));
+    } catch (e) {
+        cli.action.stop(chalk.red('\u2716'));
+        command.log(chalk.bold.red(`   \u27ff  ${e && e.message ? e.message : e}`));
+        try {
+            cli.action.start(chalk.bold.greenBright('   Installing App'));
+            await uploadApp({...flags, ...serverInfo, update: true}, fd, zipName);
+            cli.action.stop(chalk.bold.greenBright('\u2713'));
+        } catch (e) {
+            cli.action.stop(chalk.red('\u2716'));
+            throw new Error(e);
+        }
+    }
+};
