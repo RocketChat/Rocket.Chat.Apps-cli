@@ -34,19 +34,21 @@ export default class Deploy extends Command {
         let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo;
         let zipName;
         cli.log(chalk.bold.greenBright('   Starting App Deployment to Server\n'));
+
         try {
             cli.action.start(chalk.bold.greenBright('   Checking App Report'));
             checkReport(this, fd, flags);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
         } catch (e) {
+            cli.action.stop(chalk.red('\u2716'));
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
-
         try {
             cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
             serverInfo = await getServerInfo(fd);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
         } catch (e) {
+            cli.action.stop(chalk.red('\u2716'));
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
         try {
@@ -54,14 +56,15 @@ export default class Deploy extends Command {
             zipName = await packageAndZip(this, fd);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
         } catch (e) {
+            cli.action.stop(chalk.red('\u2716'));
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
-
         try {
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
             await uploadApp({...flags, ...serverInfo}, fd, zipName);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
         } catch (e) {
+            cli.action.stop(chalk.red('\u2716'));
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
     }

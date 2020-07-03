@@ -78,7 +78,6 @@ export default class Watch extends Command {
                 .catch((e) => {
                     this.log(chalk.bold.redBright(`   \u27ff  ${e && e.message ? e.message : e}`));
                 });
-                return;
             });
     }
 }
