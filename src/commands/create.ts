@@ -22,9 +22,9 @@ export default class Create extends Command {
         help: flags.help({ char: 'h' }),
         name: flags.string({char: 'n', description: 'Name of the app'}),
         description: flags.string({char: 'd', description: 'Description of the app'}),
-        author: flags.string({char: 'a', description: 'Author of  the app'}),
-        homepage: flags.string({char: 'H', description: 'Homepage of the author'}),
-        support: flags.string({char: 's', description: 'Support the author'}),
+        author: flags.string({char: 'a', description: 'Author\'s name'}),
+        homepage: flags.string({char: 'H', description: 'Author\'s or app\'s home page'}),
+        support: flags.string({char: 's', description: 'URL or email address to get support for the app'}),
     };
 
     public async run() {

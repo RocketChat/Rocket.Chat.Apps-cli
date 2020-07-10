@@ -82,12 +82,12 @@ For uploading the app you need add to the required parameters in the serverInfo.
     password: string;
 }
 ```
-2. Upload using personal access token and userid 
+2. Upload using personal access token and userId 
 
 ```
 {
     url: string;
-    userid: string;
+    userId: string;
     token: string;
 }
 ```

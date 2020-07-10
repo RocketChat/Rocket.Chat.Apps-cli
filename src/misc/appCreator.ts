@@ -30,7 +30,27 @@ export class AppCreator {
     }
 
     private createServerInfoJson(): void {
-        fs.writeFileSync(this.fd.mergeWithFolder('serverInfo.json'), JSON.stringify({}), 'utf8');
+        const toWrite = {
+            url: 'http:localhost:3000',
+            username: '',
+            password: '',
+            ignoredFiles: [
+                '**/README.md',
+                '**/package-lock.json',
+                '**/package.json',
+                '**/tslint.json',
+                '**/tsconfig.json',
+                '**/*.js',
+                '**/*.js.map',
+                '**/*.d.ts',
+                '**/*.spec.ts',
+                '**/*.test.ts',
+                '**/dist/**',
+                '**/.*',
+            ],
+        };
+
+        fs.writeFileSync(this.fd.mergeWithFolder('.rcappsconfig.json'), JSON.stringify(toWrite, null, 4) , 'utf8');
     }
 
     private createMainTypeScriptFile(): void {

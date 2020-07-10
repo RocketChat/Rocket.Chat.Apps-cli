@@ -19,7 +19,7 @@ export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: 
 
 export const getServerInfo = async (fd: FolderDetails): Promise<INormalLoginInfo | IPersonalAccessTokenLoginInfo> => {
     return new Promise((resolve, reject) => {
-        fs.readFile(fd.mergeWithFolder('serverInfo.json'), 'utf8', (error, data) => {
+        fs.readFile(fd.mergeWithFolder('.rcappsconfig.json'), 'utf8', (error, data) => {
             if (error) {
                 reject(error);
             }
@@ -80,7 +80,7 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Auth-Token': flags.token,
-                    'X-User-Id': flags.userid,
+                    'X-User-Id': flags.userId,
                 },
             }).then((res: Response) => res.json());
 
@@ -88,7 +88,7 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
                 throw new Error('Invalid API token');
             }
 
-            authResult = { data: { authToken: flags.token, userId: flags.userid } };
+            authResult = { data: { authToken: flags.token, userId: flags.userId } };
         }
 
         let endpoint = '/api/apps';
@@ -104,7 +104,6 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
             },
             body: data,
         }).then((res: Response) => res.json());
-
         if (deployResult.status === 'error') {
             throw new Error(`Unknown error occurred while deploying ${JSON.stringify(deployResult)}`);
         } else if (!deployResult.success) {
@@ -118,4 +117,20 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
     // expects the `path` to start with the /
 export const normalizeUrl = (url: string, path: string): string => {
         return url.replace(/\/$/, '') + path;
+};
+
+export const getIgnoredFiles = async (fd: FolderDetails): Promise<Array<string>> => {
+    return new Promise((resolve, reject) => {
+        fs.readFile(fd.mergeWithFolder('.rcappsconfig.json'), 'utf8', (error, data) => {
+            if (error) {
+                reject(error);
+            }
+            try {
+                const parsedData = JSON.parse(data);
+                resolve(parsedData.ignoredFiles);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    });
 };

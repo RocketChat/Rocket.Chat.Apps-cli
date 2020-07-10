@@ -4,7 +4,7 @@ import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
 
 import { FolderDetails } from '../misc';
-import { checkReport, getServerInfo, packageAndZip, uploadApp } from '../misc/deployHelpers';
+import { checkReport, getIgnoredFiles, getServerInfo, packageAndZip, uploadApp } from '../misc/deployHelpers';
 import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
 
 export default class Watch extends Command {
@@ -40,22 +40,15 @@ export default class Watch extends Command {
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
+        let ignoredFiles: Array<string>;
+        try {
+            ignoredFiles = await getIgnoredFiles(fd);
+        } catch (e) {
+            this.error(chalk.bold.red(e && e.message ? e.message : e));
+        }
 
         const watcher = chokidar.watch(fd.folder, {
-            ignored: [
-                '**/README.md',
-                '**/package-lock.json',
-                '**/package.json',
-                '**/tslint.json',
-                '**/tsconfig.json',
-                '**/*.js',
-                '**/*.js.map',
-                '**/*.d.ts',
-                '**/*.spec.ts',
-                '**/*.test.ts',
-                '**/dist/**',
-                '**/.*',
-            ],
+            ignored: ignoredFiles,
             awaitWriteFinish: true,
             persistent: true,
         });
@@ -89,40 +82,32 @@ const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]
         cli.action.start(chalk.bold.greenBright('   Checking App Report'));
         checkReport(command, fd, flags);
         cli.action.stop(chalk.bold.greenBright('\u2713'));
-    } catch (e) {
-        cli.action.stop(chalk.red('\u2716'));
-        throw new Error(e);
-    }
-    try {
+
         cli.action.start(chalk.bold.greenBright('   Packaging the app'));
         zipName = await packageAndZip(command, fd);
         cli.action.stop(chalk.bold.greenBright('\u2713'));
-    } catch (e) {
-        cli.action.stop(chalk.red('\u2716'));
-        throw new Error(e);
-    }
-    try {
+
         cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
         serverInfo = await getServerInfo(fd);
         cli.action.stop(chalk.bold.greenBright('\u2713'));
-    } catch (e) {
-        cli.action.stop(chalk.red('\u2716'));
-        throw new Error(e);
-    }
-    try {
-        cli.action.start(chalk.bold.greenBright('   Uploading App'));
-        await uploadApp({...flags, ...serverInfo}, fd, zipName);
-        cli.action.stop(chalk.bold.greenBright('\u2713'));
-    } catch (e) {
-        cli.action.stop(chalk.red('\u2716'));
-        command.log(chalk.bold.red(`   \u27ff  ${e && e.message ? e.message : e}`));
+
         try {
-            cli.action.start(chalk.bold.greenBright('   Installing App'));
-            await uploadApp({...flags, ...serverInfo, update: true}, fd, zipName);
+            cli.action.start(chalk.bold.greenBright('   Uploading App'));
+            await uploadApp({...flags, ...serverInfo}, fd, zipName);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
         } catch (e) {
             cli.action.stop(chalk.red('\u2716'));
-            throw new Error(e);
+            try {
+                cli.action.start(chalk.bold.greenBright('   Installing App'));
+                await uploadApp({...flags, ...serverInfo, update: true}, fd, zipName);
+                cli.action.stop(chalk.bold.greenBright('\u2713'));
+            } catch (e) {
+                cli.action.stop(chalk.red('\u2716'));
+                throw new Error(e);
+            }
         }
+    } catch (e) {
+        cli.action.stop(chalk.red('\u2716'));
+        throw new Error(e);
     }
 };
