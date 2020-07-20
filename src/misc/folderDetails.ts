@@ -40,6 +40,36 @@ export class FolderDetails {
         this.info = appInfo;
     }
 
+    public generateDirectory(dirName: string): void {
+        const dirPath = path.join(this.folder, dirName);
+        if (!fs.existsSync(dirPath)) {
+            fs.mkdirSync(dirPath);
+        }
+    }
+
+    public generateEndpointClass(name: string, toWrite: string): void {
+        const dir = 'endpoints';
+        const dirPath = path.join(this.folder, dir);
+        this.generateDirectory(dir);
+        fs.writeFileSync(path.join(dirPath, `${name}.ts`), toWrite, 'utf8');
+    }
+
+    public generateCommandClass(name: string, toWrite: string): void {
+        const dir = 'commands';
+        const dirPath = path.join(this.folder, dir);
+        this.generateDirectory(dir);
+        fs.writeFileSync(path.join(dirPath, `${name}.ts`), toWrite, 'utf8');
+    }
+
+    public readSettingsFile(): string {
+        return fs.readFileSync(path.join(this.folder, 'settings.ts'), 'utf-8');
+    }
+
+    public writeToSettingsFile(toWrite: string): void {
+        if (this.doesFileExist('settings.ts')) {
+            fs.writeFileSync(path.join(this.folder, 'settings.ts'), toWrite, 'utf-8');
+        }
+    }
     /**
      * Validates the "app.json" file, loads it, and then retrieves the classFile property from it.
      * Throws an error when something isn't right.
