@@ -82,22 +82,22 @@ export default class Generate extends Command {
 
     }
 
-    private ApiExtensionBoilerplate = async (fd: FolderDetails) => {
+    private ApiExtensionBoilerplate = async (fd: FolderDetails): Promise<void> => {
         const name = await cli.prompt(chalk.bold.greenBright('Name of endpoint class'));
         const path = await cli.prompt(chalk.bold.greenBright('Path for endpoint'));
         const toWrite = apiEndpointTemplate(name, path);
         fd.generateEndpointClass(name, toWrite);
     }
 
-    private SlashCommandExtension = async (fd: FolderDetails) => {
+    private SlashCommandExtension = async (fd: FolderDetails): Promise<void> => {
         const  name = await cli.prompt(chalk.bold.greenBright('Name of command class'));
         const toWrite = slashCommandTemplate(name);
         fd.generateCommandClass(name, toWrite);
     }
 
-    private SettingExtension = async (fd: FolderDetails) => {
+    private SettingExtension = async (fd: FolderDetails): Promise<void> => {
         let data;
-        if (fd.doesFileExist('settings')) {
+        if (await fd.doesFileExist('settings.ts')) {
             data = fd.readSettingsFile();
         } else {
             data = initialSettingTemplate();

@@ -66,9 +66,7 @@ export class FolderDetails {
     }
 
     public writeToSettingsFile(toWrite: string): void {
-        if (this.doesFileExist('settings.ts')) {
-            fs.writeFileSync(path.join(this.folder, 'settings.ts'), toWrite, 'utf-8');
-        }
+        fs.writeFileSync(path.join(this.folder, 'settings.ts'), toWrite, 'utf-8');
     }
     /**
      * Validates the "app.json" file, loads it, and then retrieves the classFile property from it.
