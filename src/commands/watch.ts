@@ -4,7 +4,8 @@ import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
 
 import { FolderDetails } from '../misc';
-import { checkReport, getIgnoredFiles, getServerInfo, packageAndZip, uploadApp } from '../misc/deployHelpers';
+import { checkReport, checkUpload, getIgnoredFiles, getServerInfo,
+    packageAndZip, uploadApp } from '../misc/deployHelpers';
 import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
 
 export default class Watch extends Command {
@@ -51,6 +52,7 @@ export default class Watch extends Command {
             ignored: ignoredFiles,
             awaitWriteFinish: true,
             persistent: true,
+            interval: 300,
         });
         if (flags.addfiles) {
             watcher.add(flags.addfiles);
@@ -91,20 +93,15 @@ const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]
         serverInfo = await getServerInfo(fd);
         cli.action.stop(chalk.bold.greenBright('\u2713'));
 
-        try {
+        const status = await checkUpload({...flags, ...serverInfo}, fd);
+        if (status) {
+            cli.action.start(chalk.bold.greenBright('   Updating App'));
+            await uploadApp({...flags, ...serverInfo, update: true}, fd, zipName);
+            cli.action.stop(chalk.bold.greenBright('\u2713'));
+        } else {
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
             await uploadApp({...flags, ...serverInfo}, fd, zipName);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
-        } catch (e) {
-            cli.action.stop(chalk.red('\u2716'));
-            try {
-                cli.action.start(chalk.bold.greenBright('   Installing App'));
-                await uploadApp({...flags, ...serverInfo, update: true}, fd, zipName);
-                cli.action.stop(chalk.bold.greenBright('\u2713'));
-            } catch (e) {
-                cli.action.stop(chalk.red('\u2716'));
-                throw new Error(e);
-            }
         }
     } catch (e) {
         cli.action.stop(chalk.red('\u2716'));

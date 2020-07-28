@@ -53,7 +53,56 @@ export const uploadApp = async (flags: { [key: string]: any }, fd: FolderDetails
 };
 
 // tslint:disable-next-line:max-line-length
-export const asyncSubmitData = async (data: FormData, flags: { [key: string]: any }, fd: FolderDetails): Promise<void> => {
+export const checkUpload = async (flags: { [key: string]: any }, fd: FolderDetails): Promise<boolean> => {
+    let authResult;
+    if (!flags.token) {
+        let credentials: { username: string, password: string, code?: string };
+        credentials = { username: flags.username, password: flags.password };
+        if (flags.code) {
+            credentials.code = flags.code;
+        }
+
+        authResult = await fetch(normalizeUrl(flags.url, '/api/v1/login'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(credentials),
+        }).then((res: Response) => res.json());
+
+        if (authResult.status === 'error' || !authResult.data) {
+            throw new Error('Invalid username and password or missing 2FA code (if active)');
+        }
+    } else {
+        const verificationResult = await fetch(normalizeUrl(flags.url, '/api/v1/me'), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Auth-Token': flags.token,
+                'X-User-Id': flags.userId,
+            },
+        }).then((res: Response) => res.json());
+
+        if (!verificationResult.success) {
+            throw new Error('Invalid API token');
+        }
+
+        authResult = { data: { authToken: flags.token, userId: flags.userId } };
+    }
+    const endpoint = `/api/apps/${fd.info.id}`;
+
+    const findApp = await fetch(normalizeUrl(flags.url, endpoint), {
+        method: 'GET',
+        headers: {
+            'X-Auth-Token': authResult.data.authToken,
+            'X-User-Id': authResult.data.userId,
+        },
+    }).then((res: Response) => res.json());
+    return findApp.success;
+};
+
+export const asyncSubmitData = async (data: FormData, flags: { [key: string]: any },
+                                      fd: FolderDetails): Promise<void> => {
         let authResult;
 
         if (!flags.token) {
