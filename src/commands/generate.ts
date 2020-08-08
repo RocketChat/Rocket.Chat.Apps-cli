@@ -6,7 +6,7 @@ import * as inquirer from 'inquirer';
 
 import { FolderDetails } from '../misc';
 import { apiEndpointTemplate, appendNewSetting,
-    initialSettingTemplate, slashCommandTemplate } from '../templates/boilerplateTemplate';
+    initialSettingTemplate, slashCommandTemplate } from '../templates/boilerplate/boilerplateTemplate';
 
 export default class Generate extends Command {
     public static description = 'Adds boilerplate code for various functions';
