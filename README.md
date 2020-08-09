@@ -68,3 +68,8 @@ export class TodoListApp extends App {
 ### Packaging the app
 
 Currently the Rocket.Chat servers and Marketplace allow submission of zip files, these files can be created by running `rc-apps package` which packages your app and creates the zip file under `dist` folder.
+
+
+### Enabling autocomplete for commands
+
+To enable autocomplete for the apps cli use the command `rc-apps autocomplete <your-shell-type>` with the shell type as zsh or bash as the supported types. This would provide a step by step instruction to enable shell completion in your preferred shell. 
