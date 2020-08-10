@@ -11,6 +11,25 @@ export default class Deploy extends Command {
 
     public static flags = {
         help: flags.help({ char: 'h' }),
+        url: flags.string({
+            description: 'where the app should be deployed to',
+        }),
+        username: flags.string({
+            char: 'u',
+            description: 'username to authenticate with',
+        }),
+        password: flags.string({
+            char: 'p',
+            description: 'password for the user',
+        }),
+        token: flags.string({
+            char: 't',
+            description: 'API token to use with UserID (instead of username & password)',
+        }),
+        userid: flags.string({
+            char: 'i',
+            description: 'UserID to use with API token (instead of username & password)',
+        }),
         // flag with no value (-f, --force)
         force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
         update: flags.boolean({ description: 'updates the app, instead of creating' }),
@@ -31,7 +50,7 @@ export default class Deploy extends Command {
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
-        let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo;
+        let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo | {};
         let zipName;
         cli.log(chalk.bold.greenBright('   Starting App Deployment to Server\n'));
         try {
@@ -40,7 +59,7 @@ export default class Deploy extends Command {
             cli.action.stop(chalk.bold.greenBright('\u2713'));
 
             cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
-            serverInfo = await getServerInfo(fd);
+            serverInfo = await getServerInfo(fd, flags);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
 
             cli.action.start(chalk.bold.greenBright('   Packaging the app'));
@@ -48,12 +67,11 @@ export default class Deploy extends Command {
             cli.action.stop(chalk.bold.greenBright('\u2713'));
 
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
-            await uploadApp({...flags, ...serverInfo}, fd, zipName);
+            await uploadApp({...serverInfo, ...flags}, fd, zipName);
             cli.action.stop(chalk.bold.greenBright('\u2713'));
         } catch (e) {
             cli.action.stop(chalk.red('\u2716'));
             this.log(chalk.bold.redBright(`   \u27ff  ${e && e.message ? e.message : e}`));
         }
-
     }
 }

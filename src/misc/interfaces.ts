@@ -8,11 +8,9 @@ export interface INormalLoginInfo {
     url: string;
     username: string;
     password: string;
-    ignoredFiles: Array<string>;
 }
 export interface IPersonalAccessTokenLoginInfo {
     url: string;
     userId: string;
     token: string;
-    ignoredFiles: Array<string>;
 }

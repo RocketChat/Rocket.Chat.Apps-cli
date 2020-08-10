@@ -50,7 +50,7 @@ export class AppCreator {
             ],
         };
 
-        fs.writeFileSync(this.fd.mergeWithFolder('.rcappsconfig.json'), JSON.stringify(toWrite, null, 4) , 'utf8');
+        fs.writeFileSync(this.fd.mergeWithFolder('.rcappsconfig'), JSON.stringify(toWrite, null, 4) , 'utf8');
     }
 
     private createMainTypeScriptFile(): void {

@@ -17,20 +17,43 @@ export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: 
         return;
 };
 
-export const getServerInfo = async (fd: FolderDetails): Promise<INormalLoginInfo | IPersonalAccessTokenLoginInfo> => {
-    return new Promise((resolve, reject) => {
-        fs.readFile(fd.mergeWithFolder('.rcappsconfig.json'), 'utf8', (error, data) => {
-            if (error) {
-                reject(error);
+export const getServerInfo = async (fd: FolderDetails, flags: {[key: string]: any}):
+    Promise<INormalLoginInfo | IPersonalAccessTokenLoginInfo | {}> => {
+    if (!(await fd.doesFileExist(fd.mergeWithFolder('.rcappsconfig')))) {
+        if (flags.url && ((flags.username && flags.password) ||  (flags.userId && flags.token))) {
+            return {};
+        } else if (!flags.url) {
+            throw new Error('No url found, please add url either as flag or rcappsconfig variable');
+        } else {
+            if (flags.password || flags.username) {
+                if (!flags.password) {
+                    // tslint:disable-next-line:max-line-length
+                    throw new Error('No password found with username, please add password either as flag or as rcappsconfig variable');
+                } else {
+                    // tslint:disable-next-line:max-line-length
+                    throw new Error('No username found with password, please add username either as flag or as rcappsconfig variable');
+                }
+            } else if (flags.token || flags.userId) {
+                if (!flags.token) {
+                    // tslint:disable-next-line:max-line-length
+                    throw new Error('No token found for userId, please add token either as flag or as rcapps config variable');
+                } else {
+                    // tslint:disable-next-line:max-line-length
+                    throw new Error('No userId found for token, please add userId either as flag or as rcapps config variable');
+                }
+            } else {
+                throw new Error('No username, password or userId, personal access token found for login');
             }
-            try {
-                const parsedData = JSON.parse(data);
-                resolve(parsedData);
-            } catch (e) {
-                reject(e);
-            }
-        });
-    });
+        }
+    } else {
+        try {
+            const data = await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8');
+            const {url, username, password} = JSON.parse(data);
+            return {url, username, password};
+        } catch (e) {
+            throw new Error(e);
+        }
+    }
 };
 
 export const packageAndZip = async (command: Command, fd: FolderDetails): Promise<string> => {
@@ -169,17 +192,11 @@ export const normalizeUrl = (url: string, path: string): string => {
 };
 
 export const getIgnoredFiles = async (fd: FolderDetails): Promise<Array<string>> => {
-    return new Promise((resolve, reject) => {
-        fs.readFile(fd.mergeWithFolder('.rcappsconfig.json'), 'utf8', (error, data) => {
-            if (error) {
-                reject(error);
-            }
-            try {
-                const parsedData = JSON.parse(data);
-                resolve(parsedData.ignoredFiles);
-            } catch (e) {
-                reject(e);
-            }
-        });
-    });
+    try {
+        const data = await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8');
+        const parsedData =  JSON.parse(data);
+        return parsedData.ignoredFiles;
+    } catch (e) {
+        throw new Error(e && e.message ? e.message : e);
+    }
 };
