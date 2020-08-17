@@ -20,29 +20,66 @@ export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: 
 export const getServerInfo = async (fd: FolderDetails, flags: {[key: string]: any}):
     Promise<INormalLoginInfo | IPersonalAccessTokenLoginInfo | {}> => {
     if (!(await fd.doesFileExist(fd.mergeWithFolder('.rcappsconfig')))) {
-        if (flags.url && ((flags.username && flags.password) ||  (flags.userId && flags.token))) {
+        const providedLoginArguments = ((flags.username && flags.password) ||  (flags.userId && flags.token));
+        if (flags.url && providedLoginArguments) {
             return {};
-        } else if (!flags.url) {
-            throw new Error('No url found, please add url either as flag or rcappsconfig variable');
+        } else if (!flags.url && providedLoginArguments) {
+            throw new Error(`
+    No url found.
+    Consider adding url with the flag --url
+    or create a .rcappsconfig file and add the url as
+    {
+        "url": "your-server-url"
+    }
+            `);
         } else {
             if (flags.password || flags.username) {
                 if (!flags.password) {
-                    // tslint:disable-next-line:max-line-length
-                    throw new Error('No password found with username, please add password either as flag or as rcappsconfig variable');
+                    throw new Error(`
+    No password found for username.
+    Consider adding password as a flag with -p="your-password"
+    or create a .rcappsconfig file and add the password as
+    {
+        "password":"your-password"
+    }
+                    `);
                 } else {
-                    // tslint:disable-next-line:max-line-length
-                    throw new Error('No username found with password, please add username either as flag or as rcappsconfig variable');
+                    throw new Error(`
+    No username found for given password.
+    Consider adding username as a flag with -u="your-username"
+    or create a .rcappsconfig file and add the username as
+    {
+        "username":"your-username"
+    }
+                    `);
                 }
             } else if (flags.token || flags.userId) {
                 if (!flags.token) {
-                    // tslint:disable-next-line:max-line-length
-                    throw new Error('No token found for userId, please add token either as flag or as rcapps config variable');
+                    throw new Error(`
+    No token found for given user Id.
+    Consider adding token as a flag with -t="your-token"
+    or create a .rcappsconfig file and add the token as
+    {
+        "token":"your-token"
+    }
+                    `);
                 } else {
-                    // tslint:disable-next-line:max-line-length
-                    throw new Error('No userId found for token, please add userId either as flag or as rcapps config variable');
+                    throw new Error(`
+    No user Id found for given token.
+    Consider adding user Id as a flag with -i="your-userId"
+    or create a .rcappsconfig file and add the user Id as
+    {
+        "userId":"your-userId"
+    }
+                    `);
                 }
             } else {
-                throw new Error('No username, password or userId, personal access token found for login');
+                throw new Error(`
+    No login arguments found.
+    Consider adding the server url with either username and password
+    or userId and personal access token through flags
+    or create a .rcappsconfig file to pass them as a JSON object.
+                `);
             }
         }
     } else {
@@ -127,7 +164,9 @@ export const checkUpload = async (flags: { [key: string]: any }, fd: FolderDetai
 export const asyncSubmitData = async (data: FormData, flags: { [key: string]: any },
                                       fd: FolderDetails): Promise<void> => {
         let authResult;
-
+        if (!flags.url) {
+            throw new Error('Url not found');
+        }
         if (!flags.token) {
             let credentials: { username: string, password: string, code?: string };
             credentials = { username: flags.username, password: flags.password };
