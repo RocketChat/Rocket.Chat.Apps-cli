@@ -55,7 +55,7 @@ export class FolderDetails {
     }
 
     public generateCommandClass(name: string, toWrite: string): void {
-        const dir = 'commands';
+        const dir = 'slashCommands';
         const dirPath = path.join(this.folder, dir);
         this.generateDirectory(dir);
         fs.writeFileSync(path.join(dirPath, `${name}.ts`), toWrite, 'utf8');

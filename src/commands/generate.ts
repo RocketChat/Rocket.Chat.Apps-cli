@@ -6,7 +6,7 @@ import * as inquirer from 'inquirer';
 
 import { FolderDetails } from '../misc';
 import { apiEndpointTemplate, appendNewSetting,
-    initialSettingTemplate, slashCommandTemplate } from '../templates/boilerplate/boilerplateTemplate';
+    initialSettingTemplate, slashCommandTemplate } from '../templates/boilerplate';
 
 export default class Generate extends Command {
     public static description = 'Adds boilerplate code for various functions';
@@ -96,10 +96,11 @@ export default class Generate extends Command {
     }
 
     private SettingExtension = async (fd: FolderDetails): Promise<void> => {
-        let data;
+        let data = '';
         if (await fd.doesFileExist('settings.ts')) {
             data = fd.readSettingsFile();
-        } else {
+        }
+        if (data === '') {
             data = initialSettingTemplate();
         }
         data = appendNewSetting(data);
