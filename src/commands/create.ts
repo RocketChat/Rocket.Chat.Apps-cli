@@ -8,9 +8,7 @@ import * as semver from 'semver';
 import * as uuid from 'uuid';
 
 import {
-    AppCompiler,
     AppCreator,
-    AppPackager,
     FolderDetails,
     VariousUtils,
 } from '../misc';
@@ -72,16 +70,6 @@ export default class Create extends Command {
             this.error(e && e.message ? e.message : e);
             return;
         }
-
-        const compiler = new AppCompiler(this, fd);
-        const report = compiler.logDiagnostics();
-
-        if (!report.isValid) {
-            throw new Error('invalid.');
-        }
-
-        const packager = new AppPackager(this, fd);
-        await packager.zipItUp();
 
         cli.action.stop(chalk.cyan('done!'));
     }
