@@ -31,7 +31,7 @@ export class AppCreator {
 
     private createServerInfoJson(): void {
         const toWrite = {
-            url: 'http:localhost:3000',
+            url: 'http://localhost:3000',
             username: '',
             password: '',
             ignoredFiles: [

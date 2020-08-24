@@ -6,6 +6,7 @@ import { compilerOptions } from './compilerOptions';
 import { DiagnosticReport } from './diagnosticReport';
 import { FolderDetails } from './folderDetails';
 import { IAppCategory, INormalLoginInfo, IPersonalAccessTokenLoginInfo} from './interfaces';
+import { unicodeSymbols } from './unicodeSymbols';
 import { VariousUtils } from './variousUtils';
 
 export {
@@ -19,5 +20,6 @@ export {
     compilerOptions,
     DiagnosticReport,
     FolderDetails,
+    unicodeSymbols,
     VariousUtils,
 };

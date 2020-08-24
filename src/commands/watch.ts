@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
 
-import { FolderDetails } from '../misc';
+import { FolderDetails, unicodeSymbols } from '../misc';
 import { checkReport, checkUpload, getIgnoredFiles, getServerInfo,
     packageAndZip, uploadApp } from '../misc/deployHelpers';
 import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
@@ -69,13 +69,15 @@ export default class Watch extends Command {
             .on('change', async () => {
                 tasks(this, fd, flags)
                 .catch((e) => {
-                    this.log(chalk.bold.redBright(`   \u27ff  ${e && e.message ? e.message : e}`));
+                    this.log(chalk.bold.redBright(
+                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
                 });
             })
             .on('ready', async () => {
                 tasks(this, fd, flags)
                 .catch((e) => {
-                    this.log(chalk.bold.redBright(`   \u27ff  ${e && e.message ? e.message : e}`));
+                    this.log(chalk.bold.redBright(
+                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
                 });
             });
     }
@@ -85,30 +87,28 @@ const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]
     let zipName;
     try {
         command.log('\n');
-        cli.action.start(chalk.bold.greenBright('   Checking App Report'));
-        checkReport(command, fd, flags);
-        cli.action.stop(chalk.bold.greenBright('\u2713'));
 
         cli.action.start(chalk.bold.greenBright('   Packaging the app'));
+        checkReport(command, fd, flags);
         zipName = await packageAndZip(command, fd);
-        cli.action.stop(chalk.bold.greenBright('\u2713'));
+        cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
         cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
         serverInfo = await getServerInfo(fd, flags);
-        cli.action.stop(chalk.bold.greenBright('\u2713'));
+        cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
         const status = await checkUpload({...flags, ...serverInfo}, fd);
         if (status) {
             cli.action.start(chalk.bold.greenBright('   Updating App'));
             await uploadApp({...serverInfo, ...flags, update: true}, fd, zipName);
-            cli.action.stop(chalk.bold.greenBright('\u2713'));
+            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         } else {
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
             await uploadApp({...serverInfo, ...flags}, fd, zipName);
-            cli.action.stop(chalk.bold.greenBright('\u2713'));
+            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         }
     } catch (e) {
-        cli.action.stop(chalk.red('\u2716'));
+        cli.action.stop(chalk.red(unicodeSymbols.get('heavyMultiplicationX')));
         throw new Error(e);
     }
 };

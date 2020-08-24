@@ -71,7 +71,7 @@ Currently the Rocket.Chat servers and Marketplace allow submission of zip files,
 
 
 ### Uploading the app 
-For uploading the app you need add to the required parameters in the .rcappsconfig.json already created in the apps directory. It accepts two types of objects:-
+For uploading the app you need add to the required parameters in the .rcappsconfig already created in the apps directory. It accepts two types of objects:-
 
 1. Upload using username, password
 

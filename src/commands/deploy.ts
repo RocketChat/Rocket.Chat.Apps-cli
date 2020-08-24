@@ -2,7 +2,7 @@ import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
 
-import { FolderDetails } from '../misc';
+import { FolderDetails, unicodeSymbols } from '../misc';
 import { checkReport, getServerInfo, packageAndZip, uploadApp  } from '../misc/deployHelpers';
 import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
 
@@ -54,24 +54,22 @@ export default class Deploy extends Command {
         let zipName;
         cli.log(chalk.bold.greenBright('   Starting App Deployment to Server\n'));
         try {
-            cli.action.start(chalk.bold.greenBright('   Checking App Report'));
-            checkReport(this, fd, flags);
-            cli.action.stop(chalk.bold.greenBright('\u2713'));
-
             cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
             serverInfo = await getServerInfo(fd, flags);
-            cli.action.stop(chalk.bold.greenBright('\u2713'));
+            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
             cli.action.start(chalk.bold.greenBright('   Packaging the app'));
+            checkReport(this, fd, flags);
             zipName = await packageAndZip(this, fd);
-            cli.action.stop(chalk.bold.greenBright('\u2713'));
+            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
             await uploadApp({...serverInfo, ...flags}, fd, zipName);
-            cli.action.stop(chalk.bold.greenBright('\u2713'));
+            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         } catch (e) {
-            cli.action.stop(chalk.red('\u2716'));
-            this.log(chalk.bold.redBright(`   \u27ff  ${e && e.message ? e.message : e}`));
+            cli.action.stop(chalk.red(unicodeSymbols.get('heavyMultiplicationX')));
+            this.log(chalk.bold.redBright(
+            `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
         }
     }
 }
