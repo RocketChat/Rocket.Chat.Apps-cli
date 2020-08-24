@@ -6,7 +6,6 @@ import cli from 'cli-ux';
 import { FolderDetails, unicodeSymbols } from '../misc';
 import { checkReport, checkUpload, getIgnoredFiles, getServerInfo,
     packageAndZip, uploadApp } from '../misc/deployHelpers';
-import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
 
 export default class Watch extends Command {
 
@@ -83,7 +82,7 @@ export default class Watch extends Command {
     }
 }
 const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]: any }): Promise<void> => {
-    let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo | {};
+    let serverInfo;
     let zipName;
     try {
         command.log('\n');
@@ -100,11 +99,11 @@ const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]
         const status = await checkUpload({...flags, ...serverInfo}, fd);
         if (status) {
             cli.action.start(chalk.bold.greenBright('   Updating App'));
-            await uploadApp({...serverInfo, ...flags, update: true}, fd, zipName);
+            await uploadApp({...serverInfo, update: true}, fd, zipName);
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         } else {
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
-            await uploadApp({...serverInfo, ...flags}, fd, zipName);
+            await uploadApp(serverInfo, fd, zipName);
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         }
     } catch (e) {

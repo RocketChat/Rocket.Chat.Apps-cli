@@ -4,7 +4,6 @@ import cli from 'cli-ux';
 
 import { FolderDetails, unicodeSymbols } from '../misc';
 import { checkReport, getServerInfo, packageAndZip, uploadApp  } from '../misc/deployHelpers';
-import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from '../misc/interfaces';
 
 export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
@@ -50,7 +49,7 @@ export default class Deploy extends Command {
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
-        let serverInfo: INormalLoginInfo | IPersonalAccessTokenLoginInfo | {};
+        let serverInfo;
         let zipName;
         cli.log(chalk.bold.greenBright('   Starting App Deployment to Server\n'));
         try {
@@ -64,7 +63,7 @@ export default class Deploy extends Command {
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
-            await uploadApp({...serverInfo, ...flags}, fd, zipName);
+            await uploadApp(serverInfo, fd, zipName);
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         } catch (e) {
             cli.action.stop(chalk.red(unicodeSymbols.get('heavyMultiplicationX')));

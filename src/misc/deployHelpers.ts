@@ -5,7 +5,6 @@ import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
 import { AppCompiler, AppPackager, FolderDetails } from '.';
-import { INormalLoginInfo, IPersonalAccessTokenLoginInfo } from './interfaces';
 
 export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: string]: any }): void => {
         const compiler = new AppCompiler(command, fd);
@@ -17,13 +16,22 @@ export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: 
         return;
 };
 
-export const getServerInfo = async (fd: FolderDetails, flags: {[key: string]: any}):
-    Promise<INormalLoginInfo | IPersonalAccessTokenLoginInfo | {}> => {
-    if (!(await fd.doesFileExist(fd.mergeWithFolder('.rcappsconfig')))) {
-        const providedLoginArguments = ((flags.username && flags.password) ||  (flags.userId && flags.token));
-        if (flags.url && providedLoginArguments) {
-            return {};
-        } else if (!flags.url && providedLoginArguments) {
+export const getServerInfo = async (fd: FolderDetails,  flags: {[key: string]: any}):
+    Promise<{[key: string]: any}> => {
+        let loginInfo = flags;
+        try {
+            if (await fd.doesFileExist(fd.mergeWithFolder('.rcappsconfig'))) {
+                const data = JSON.parse(await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8'));
+                loginInfo = { ...data, ...loginInfo};
+            }
+        } catch (e) {
+            throw new Error(e && e.message ? e.message : e);
+        }
+        // tslint:disable-next-line:max-line-length
+        const providedLoginArguments = ((loginInfo.username && loginInfo.password) || (loginInfo.userId && loginInfo.token));
+        if (loginInfo.url && providedLoginArguments) {
+            return loginInfo;
+        } else if (!loginInfo.url && providedLoginArguments) {
             throw new Error(`
     No url found.
     Consider adding url with the flag --url
@@ -33,8 +41,8 @@ export const getServerInfo = async (fd: FolderDetails, flags: {[key: string]: an
     }
             `);
         } else {
-            if (flags.password || flags.username) {
-                if (!flags.password) {
+            if (loginInfo.password || loginInfo.username) {
+                if (!loginInfo.password) {
                     throw new Error(`
     No password found for username.
     Consider adding password as a flag with -p="your-password"
@@ -53,8 +61,8 @@ export const getServerInfo = async (fd: FolderDetails, flags: {[key: string]: an
     }
                     `);
                 }
-            } else if (flags.token || flags.userId) {
-                if (!flags.token) {
+            } else if (loginInfo.token || loginInfo.userId) {
+                if (!loginInfo.token) {
                     throw new Error(`
     No token found for given user Id.
     Consider adding token as a flag with -t="your-token"
@@ -82,15 +90,6 @@ export const getServerInfo = async (fd: FolderDetails, flags: {[key: string]: an
                 `);
             }
         }
-    } else {
-        try {
-            const data = await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8');
-            const {url, username, password} = JSON.parse(data);
-            return {url, username, password};
-        } catch (e) {
-            throw new Error(e);
-        }
-    }
 };
 
 export const packageAndZip = async (command: Command, fd: FolderDetails): Promise<string> => {
@@ -232,9 +231,15 @@ export const normalizeUrl = (url: string, path: string): string => {
 
 export const getIgnoredFiles = async (fd: FolderDetails): Promise<Array<string>> => {
     try {
-        const data = await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8');
-        const parsedData =  JSON.parse(data);
-        return parsedData.ignoredFiles;
+        if (await fd.doesFileExist(fd.mergeWithFolder('.rcappsconfig'))) {
+            const data = await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8');
+            const parsedData =  JSON.parse(data);
+            return parsedData.ignoredFiles;
+        } else {
+            return [
+                '**/dist/**',
+            ];
+        }
     } catch (e) {
         throw new Error(e && e.message ? e.message : e);
     }
