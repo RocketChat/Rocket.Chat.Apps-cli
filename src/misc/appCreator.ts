@@ -11,6 +11,7 @@ export class AppCreator {
     public async writeFiles(): Promise<void> {
         fs.mkdirSync(this.fd.folder);
         this.createAppJson();
+        this.createServerInfoJson();
         this.createMainTypeScriptFile();
         this.createBlankIcon();
         this.createdReadme();
@@ -26,6 +27,30 @@ export class AppCreator {
 
     private createAppJson(): void {
         fs.writeFileSync(this.fd.mergeWithFolder('app.json'), JSON.stringify(this.fd.info, undefined, 4), 'utf8');
+    }
+
+    private createServerInfoJson(): void {
+        const toWrite = {
+            url: 'http://localhost:3000',
+            username: '',
+            password: '',
+            ignoredFiles: [
+                '**/README.md',
+                '**/package-lock.json',
+                '**/package.json',
+                '**/tslint.json',
+                '**/tsconfig.json',
+                '**/*.js',
+                '**/*.js.map',
+                '**/*.d.ts',
+                '**/*.spec.ts',
+                '**/*.test.ts',
+                '**/dist/**',
+                '**/.*',
+            ],
+        };
+
+        fs.writeFileSync(this.fd.mergeWithFolder('.rcappsconfig'), JSON.stringify(toWrite, null, 4) , 'utf8');
     }
 
     private createMainTypeScriptFile(): void {
