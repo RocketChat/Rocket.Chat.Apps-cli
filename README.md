@@ -69,6 +69,27 @@ export class TodoListApp extends App {
 
 Currently the Rocket.Chat servers and Marketplace allow submission of zip files, these files can be created by running `rc-apps package` which packages your app and creates the zip file under `dist` folder.
 
+### Uploading the app 
+For uploading the app you need add to the required parameters in the .rcappsconfig already created in the apps directory. It accepts two types of objects:-
+
+1. Upload using username, password
+
+```
+{
+    url: string;
+    username: string;
+    password: string;
+}
+```
+2. Upload using personal access token and userId 
+
+```
+{
+    url: string;
+    userId: string;
+    token: string;
+}
+```
 
 ### Enabling autocomplete for commands
 

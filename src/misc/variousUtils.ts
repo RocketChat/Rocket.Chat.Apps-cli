@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 
-import { IAppCategory } from './appCategory';
+import { IAppCategory } from './interfaces';
 
 export class VariousUtils {
     public static slugify = function _slugify(text: string): string {
