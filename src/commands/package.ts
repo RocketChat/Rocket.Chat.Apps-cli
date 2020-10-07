@@ -1,13 +1,17 @@
 import { Command, flags } from '@oclif/command';
+import { AppsCompiler, ICompilerDiagnostic } from '@rocket.chat/apps-compiler';
 import chalk from 'chalk';
 import cli from 'cli-ux';
+import * as TS from 'typescript';
+
 import * as path from 'path';
 
-import {
-    AppCompiler,
-    AppPackager,
-    FolderDetails,
-} from '../misc';
+import { FolderDetails } from '../misc';
+
+import packageInfo = require('../../package.json');
+
+// tslint:disable-next-line:no-var-requires
+const createRequire = require('module').createRequire;
 
 export default class Package extends Command {
     public static description = 'packages up your App in a distributable format';
@@ -23,7 +27,6 @@ export default class Package extends Command {
     };
 
     public async run(): Promise<void> {
-        const { flags } = this.parse(Package);
 
         cli.action.start('packaging your app');
 
@@ -36,21 +39,37 @@ export default class Package extends Command {
             return;
         }
 
-        const compiler = new AppCompiler(this, fd);
-        const report = compiler.logDiagnostics();
+        const compiler = new AppsCompiler({
+            tool: packageInfo.name,
+            version: packageInfo.version,
+            when: new Date(),
+        }, this.getTypescriptForApp(fd) as any); // typing this is hard
 
-        if (!report.isValid && !flags.force) {
-            this.error('TypeScript compiler error(s) occurred');
+        const result = await compiler.compile(fd.folder);
+
+        if (result.diagnostics.length) {
+            this.reportDiagnostics(result.diagnostics);
+            this.error('TypeScript compiler asldk error(s) occurred');
             this.exit(1);
             return;
         }
 
-        const packager = new AppPackager(this, fd);
-        const zipName = await packager.zipItUp();
+        const zipName = path.join('dist', `${fd.info.nameSlug}_${fd.info.version}.zip`);
+        await compiler.outputZip(zipName);
 
         cli.action.stop('finished!');
 
         this.log(chalk.black(' '));
         this.log(chalk.green('App packaged up at:'), path.join(fd.folder, zipName));
+    }
+
+    private getTypescriptForApp(fd: FolderDetails): typeof TS {
+        const appRequire = createRequire(fd.mergeWithFolder('app.json'));
+
+        return appRequire('typescript');
+    }
+
+    private reportDiagnostics(diag: Array<ICompilerDiagnostic>): void {
+        diag.forEach((d) => this.error(d.message));
     }
 }
