@@ -68,7 +68,7 @@ export default class Submit extends Command {
                 type: 'confirm',
                 name: 'hasAccount',
                 message: 'Have you logged into our Publisher Portal?',
-                default: false,
+                default: true,
             }]);
 
             if (cloudAccount.hasAccount) {
@@ -180,6 +180,11 @@ export default class Submit extends Command {
 
         if (res.status !== 200) {
             const result = await res.json();
+
+            if (result.code === 467 || result.code === 466) {
+                throw new Error(result.error);
+            }
+
             throw new Error(`Failed to submit the App. Error code ${result.code}: ${result.error}`);
         } else {
             return res.json();
