@@ -111,6 +111,17 @@ export default class Submit extends Command {
             flags.update = !(isNewApp as any).isNew;
         }
 
+        let changes = '';
+        if (flags.update) {
+            const result: any = await inquirer.prompt([{
+                type: 'input',
+                name: 'changes',
+                message: 'What changes were made in this version?',
+            }]);
+
+            changes = result.changes;
+        }
+
         let selectedCategories = new Array<string>();
         if (flags.categories) {
             selectedCategories = flags.categories.split(',');
@@ -169,6 +180,10 @@ export default class Submit extends Command {
 
         if (email) {
             data.append('email', email);
+        }
+
+        if (changes) {
+            data.append('changes', changes);
         }
 
         const token = await cloudAuth.getToken();
