@@ -106,7 +106,7 @@ export default class Submit extends Command {
             }]);
 
             if (!isFreeQuestion.isFree) {
-                this.error('Paid Apps must be submitted via our Publisher Portal:'
+                this.error('Paid Apps must be submitted via our Publisher Portal: '
                     + 'https://marketplace.rocket.chat/publisher/new/app');
             }
         }
