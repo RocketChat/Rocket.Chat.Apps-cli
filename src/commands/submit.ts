@@ -97,6 +97,20 @@ export default class Submit extends Command {
             flags.update = !(isNewApp as any).isNew;
         }
 
+        if (!flags.update) {
+            const isFreeQuestion: any = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'isFree',
+                message: 'Is this App free or will it require payment?',
+                default: true,
+            }]);
+
+            if (!isFreeQuestion.isFree) {
+                this.error('Paid Apps must be submitted via our Publisher Portal:'
+                    + 'https://marketplace.rocket.chat/publisher/new/app');
+            }
+        }
+
         let selectedCategories = new Array<string>();
         if (flags.categories) {
             selectedCategories = flags.categories.split(',');
