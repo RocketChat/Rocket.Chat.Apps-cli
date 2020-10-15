@@ -8,7 +8,7 @@ import * as inquirer from 'inquirer';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
-import { AppCompiler, FolderDetails, VariousUtils } from '../misc';
+import { AppCompiler, AppPackager, FolderDetails, VariousUtils } from '../misc';
 import { CloudAuth } from '../misc/cloudAuth';
 
 export default class Submit extends Command {
@@ -49,7 +49,8 @@ export default class Submit extends Command {
             return;
         }
 
-        const zipName = await compiler.outputZip();
+        const packager = new AppPackager(this, fd);
+        const zipName = await packager.zipItUp();
 
         cli.action.stop('packaged!');
         //#endregion
@@ -129,7 +130,7 @@ export default class Submit extends Command {
                     return true;
                 },
                 // tslint:disable:promise-function-async
-                source: (answersSoFar: object, input: string) => {
+                source: (_answersSoFar: object, input: string) => {
                     input = input || '';
 
                     return new Promise((resolve) => {
