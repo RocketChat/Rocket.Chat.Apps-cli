@@ -1,20 +1,11 @@
 import Command from '@oclif/command';
+import { AppsCompiler } from '@rocket.chat/apps-compiler';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
-import { AppCompiler, AppPackager, FolderDetails } from '.';
-
-export const checkReport = (command: Command, fd: FolderDetails, flags: { [key: string]: any }): void => {
-        const compiler = new AppCompiler(command, fd);
-        const report = compiler.logDiagnostics();
-
-        if (!report.isValid && !flags.force) {
-            throw new Error('TypeScript compiler error(s) occurred');
-        }
-        return;
-};
+import { AppPackager, FolderDetails } from '.';
 
 export const getServerInfo = async (fd: FolderDetails,  flags: {[key: string]: any}):
     Promise<{[key: string]: any}> => {

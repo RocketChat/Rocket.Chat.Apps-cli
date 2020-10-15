@@ -1,50 +1,40 @@
-import { Command } from '@oclif/command';
-import chalk from 'chalk';
-import * as ts from 'typescript';
+import * as path from 'path';
 
-import { compilerOptions } from './compilerOptions';
-import { DiagnosticReport } from './diagnosticReport';
+import { AppsCompiler, ICompilerResult } from '@rocket.chat/apps-compiler';
 import { FolderDetails } from './folderDetails';
 
+import packageInfo = require('../../package.json');
+
+// tslint:disable-next-line:no-var-requires
+const createRequire = require('module').createRequire;
+
+export function getTypescriptForApp(fd: FolderDetails): any {
+    const appRequire = createRequire(fd.mergeWithFolder('app.json'));
+
+    return appRequire('typescript');
+}
+
 export class AppCompiler {
-    public program: ts.Program;
+    private compiler: AppsCompiler;
 
-    constructor(private command: Command, private fd: FolderDetails) {
-        this.program = ts.createProgram({
-            rootNames: [this.fd.mainFile],
-            options: compilerOptions,
-        });
+    constructor(private fd: FolderDetails) {
+        this.compiler = new AppsCompiler({
+            tool: packageInfo.name,
+            version: packageInfo.version,
+            when: new Date(),
+        }, getTypescriptForApp(fd));
     }
 
-    // TODO: Determine which diagnostics we need to actually report, or is preEmit fine?
-    public logDiagnostics(): DiagnosticReport {
-        const report = new DiagnosticReport();
-
-        report.options = this.reportDiagnostics(this.program.getOptionsDiagnostics());
-        report.syntactic = this.reportDiagnostics(this.program.getSyntacticDiagnostics());
-        report.global = this.reportDiagnostics(this.program.getGlobalDiagnostics());
-        // report.semantic = this.reportDiagnostics(this.program.getSemanticDiagnostics());
-        report.declaration = this.reportDiagnostics(this.program.getDeclarationDiagnostics());
-        report.emit = this.reportDiagnostics(ts.getPreEmitDiagnostics(this.program));
-
-        return report;
+    public async compile(): Promise<ICompilerResult> {
+        return this.compiler.compile(this.fd.folder);
     }
 
-    private reportDiagnostics(diagnos: ReadonlyArray<ts.Diagnostic>): number {
-        for (const d of diagnos) {
-            if (!d.file || !d.start) {
-                this.command.warn(ts.DiagnosticCategory[d.category].toLowerCase() +
-                    d.code + ': ' + ts.flattenDiagnosticMessageText(d.messageText, '\n'));
-                continue;
-            }
+    public async outputZip(): Promise<string> {
+        const zipName = path.join('dist', `${this.fd.info.nameSlug}_${this.fd.info.version}.zip`);
 
-            const startPos = ts.getLineAndCharacterOfPosition(d.file, d.start);
+        await this.compiler.outputZip(zipName);
 
-            // tslint:disable-next-line:max-line-length
-            const redPart = chalk.red(`${ d.file.fileName } (${ startPos.line + 1 },${ startPos.character + 1 }): \n  `);
-            this.command.error(redPart + ts.flattenDiagnosticMessageText(d.messageText, '\n'), { exit: false });
-        }
-
-        return diagnos.length;
+        return zipName;
     }
+
 }

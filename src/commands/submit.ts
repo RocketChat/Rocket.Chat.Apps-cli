@@ -8,7 +8,7 @@ import * as inquirer from 'inquirer';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
-import { AppCompiler, AppPackager, FolderDetails, VariousUtils } from '../misc';
+import { AppCompiler, FolderDetails, VariousUtils } from '../misc';
 import { CloudAuth } from '../misc/cloudAuth';
 
 export default class Submit extends Command {
@@ -40,17 +40,16 @@ export default class Submit extends Command {
             return;
         }
 
-        const compiler = new AppCompiler(this, fd);
-        const report = compiler.logDiagnostics();
+        const compiler = new AppCompiler(fd);
+        const report = await compiler.compile();
 
-        if (!report.isValid) {
+        if (!report.diagnostics.length) {
             this.error('TypeScript compiler error(s) occurred');
             this.exit(1);
             return;
         }
 
-        const packager = new AppPackager(this, fd);
-        const zipName = await packager.zipItUp();
+        const zipName = await compiler.outputZip();
 
         cli.action.stop('packaged!');
         //#endregion

@@ -4,6 +4,8 @@ import * as glob from 'glob';
 import * as path from 'path';
 import * as Yazl from 'yazl';
 
+import packageInfo = require('../../package.json');
+
 import { FolderDetails } from './folderDetails';
 
 export class AppPackager {
@@ -27,8 +29,8 @@ export class AppPackager {
     };
 
     public static PackagerInfo: { [key: string]: string } = {
-        tool: '@rocket.chat/apps-cli',
-        version: '1.6.0',
+        tool: packageInfo.name,
+        version: packageInfo.version,
     };
 
     constructor(private command: Command, private fd: FolderDetails) {}

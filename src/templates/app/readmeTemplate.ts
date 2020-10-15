@@ -1,3 +1,4 @@
+// tslint:disable: max-line-length
 export const readmeTemplate = (name: string, description: string): string => {
     return `# ${ name }
 ${ description }

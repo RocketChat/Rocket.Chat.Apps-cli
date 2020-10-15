@@ -2,8 +2,9 @@ import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
 
-import { FolderDetails, unicodeSymbols } from '../misc';
-import { checkReport, getServerInfo, packageAndZip, uploadApp  } from '../misc/deployHelpers';
+import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler';
+import { AppCompiler, FolderDetails, unicodeSymbols } from '../misc';
+import { getServerInfo, uploadApp } from '../misc/deployHelpers';
 
 export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
@@ -46,20 +47,30 @@ export default class Deploy extends Command {
         } catch (e) {
             this.error(e && e.message ? e.message : e, {exit: 2});
         }
+
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
-        let serverInfo;
-        let zipName;
+
         cli.log(chalk.bold.greenBright('   Starting App Deployment to Server\n'));
+
         try {
             cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
-            serverInfo = await getServerInfo(fd, flags);
+            const serverInfo = await getServerInfo(fd, flags);
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
             cli.action.start(chalk.bold.greenBright('   Packaging the app'));
-            checkReport(this, fd, flags);
-            zipName = await packageAndZip(this, fd);
+            const compiler = new AppCompiler(fd);
+            const result = await compiler.compile();
+
+            if (result.diagnostics.length && !flags.force) {
+                this.reportDiagnostics(result.diagnostics);
+                this.error('TypeScript compiler asldk error(s) occurred');
+                this.exit(1);
+                return;
+            }
+
+            const zipName = await compiler.outputZip();
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
             cli.action.start(chalk.bold.greenBright('   Uploading App'));
@@ -67,8 +78,12 @@ export default class Deploy extends Command {
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         } catch (e) {
             cli.action.stop(chalk.red(unicodeSymbols.get('heavyMultiplicationX')));
-            this.log(chalk.bold.redBright(
+            this.error(chalk.bold.redBright(
             `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
         }
+    }
+
+    private reportDiagnostics(diag: Array<ICompilerDiagnostic>): void {
+        diag.forEach((d) => this.error(d.message));
     }
 }
