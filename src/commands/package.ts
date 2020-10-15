@@ -39,7 +39,7 @@ export default class Package extends Command {
 
         if (result.diagnostics.length && !flags.force) {
             this.reportDiagnostics(result.diagnostics);
-            this.error('TypeScript compiler asldk error(s) occurred');
+            this.error('TypeScript compiler error(s) occurred');
             this.exit(1);
             return;
         }

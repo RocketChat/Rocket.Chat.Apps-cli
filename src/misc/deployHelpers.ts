@@ -1,5 +1,4 @@
 import Command from '@oclif/command';
-import { AppsCompiler } from '@rocket.chat/apps-compiler';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
