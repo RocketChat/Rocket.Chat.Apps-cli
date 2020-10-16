@@ -1,6 +1,8 @@
 import * as path from 'path';
 
-import { AppsCompiler, ICompilerResult } from '@rocket.chat/apps-compiler';
+import { AppsCompiler } from '@rocket.chat/apps-compiler';
+import { ICompilerResult } from '@rocket.chat/apps-compiler/definition';
+
 import { FolderDetails } from './folderDetails';
 
 import packageInfo = require('../../package.json');

@@ -2,7 +2,7 @@ import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
 
-import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler';
+import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
 import { AppCompiler, FolderDetails, unicodeSymbols } from '../misc';
 import { getServerInfo, uploadApp } from '../misc/deployHelpers';
 
@@ -65,7 +65,7 @@ export default class Deploy extends Command {
 
             if (result.diagnostics.length && !flags.force) {
                 this.reportDiagnostics(result.diagnostics);
-                this.error('TypeScript compiler asldk error(s) occurred');
+                this.error('TypeScript compiler error(s) occurred');
                 this.exit(1);
                 return;
             }

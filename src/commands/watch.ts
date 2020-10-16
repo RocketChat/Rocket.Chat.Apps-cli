@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
 
-import {ICompilerDiagnostic} from '@rocket.chat/apps-compiler';
+import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
 import { AppCompiler, FolderDetails, unicodeSymbols } from '../misc';
 import { checkUpload, getIgnoredFiles, getServerInfo, uploadApp } from '../misc/deployHelpers';
 
@@ -93,7 +93,7 @@ const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]
 
         if (result.diagnostics.length && !flags.force) {
             reportDiagnostics(command, result.diagnostics);
-            command.error('TypeScript compiler asldk error(s) occurred');
+            command.error('TypeScript compiler error(s) occurred');
             command.exit(1);
             return;
         }

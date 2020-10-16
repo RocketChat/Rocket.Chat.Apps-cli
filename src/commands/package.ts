@@ -1,5 +1,5 @@
 import { Command, flags } from '@oclif/command';
-import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler';
+import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
 import chalk from 'chalk';
 import cli from 'cli-ux';
 
