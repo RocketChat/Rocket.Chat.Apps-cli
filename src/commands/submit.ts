@@ -37,7 +37,6 @@ export default class Submit extends Command {
             await fd.readInfoFile();
         } catch (e) {
             this.error(e && e.message ? e.message : e);
-            return;
         }
 
         const compiler = new AppCompiler(this, fd);
@@ -45,8 +44,6 @@ export default class Submit extends Command {
 
         if (!report.isValid) {
             this.error('TypeScript compiler error(s) occurred');
-            this.exit(1);
-            return;
         }
 
         const packager = new AppPackager(this, fd);
@@ -66,13 +63,12 @@ export default class Submit extends Command {
         //#region asking for information
         const cloudAuth = new CloudAuth();
         const hasToken = await cloudAuth.hasToken();
-        let email = '';
         if (!hasToken) {
             const cloudAccount: any = await inquirer.prompt([{
                 type: 'confirm',
                 name: 'hasAccount',
                 message: 'Have you logged into our Publisher Portal?',
-                default: false,
+                default: true,
             }]);
 
             if (cloudAccount.hasAccount) {
@@ -85,18 +81,8 @@ export default class Submit extends Command {
                     return;
                 }
             } else {
-                const result: any = await inquirer.prompt([{
-                    type: 'input',
-                    name: 'email',
-                    message: 'What is the publisher\'s email address?',
-                    validate: (answer: string) => {
-                        const regex = /^[^@\s]+@[^@\s]+\.[^@\s]+$/g;
-
-                        return regex.test(answer);
-                    },
-                }]);
-
-                email = result.email;
+                this.error('A Rocket.Chat Cloud account and a Marketplace Publisher account '
+                    + 'is required to submit an App to the Marketplace. (rc-apps login)');
             }
         }
 
@@ -120,6 +106,18 @@ export default class Submit extends Command {
             }]);
 
             changes = result.changes;
+        } else {
+            const isFreeQuestion: any = await inquirer.prompt([{
+                type: 'confirm',
+                name: 'isFree',
+                message: 'Is this App free or will it require payment?',
+                default: true,
+            }]);
+
+            if (!isFreeQuestion.isFree) {
+                this.error('Paid Apps must be submitted via our Publisher Portal: '
+                    + 'https://marketplace.rocket.chat/publisher/new/app');
+            }
         }
 
         let selectedCategories = new Array<string>();
@@ -178,10 +176,6 @@ export default class Submit extends Command {
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)));
         data.append('categories', JSON.stringify(selectedCategories));
 
-        if (email) {
-            data.append('email', email);
-        }
-
         if (changes) {
             data.append('changes', changes);
         }
@@ -213,6 +207,11 @@ export default class Submit extends Command {
 
         if (res.status !== 200) {
             const result = await res.json();
+
+            if (result.code === 467 || result.code === 466) {
+                throw new Error(result.error);
+            }
+
             throw new Error(`Failed to submit the App. Error code ${result.code}: ${result.error}`);
         } else {
             return res.json();
