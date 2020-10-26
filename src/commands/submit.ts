@@ -97,7 +97,16 @@ export default class Submit extends Command {
             flags.update = !(isNewApp as any).isNew;
         }
 
-        if (!flags.update) {
+        let changes = '';
+        if (flags.update) {
+            const result: any = await inquirer.prompt([{
+                type: 'input',
+                name: 'changes',
+                message: 'What changes were made in this version?',
+            }]);
+
+            changes = result.changes;
+        } else {
             const isFreeQuestion: any = await inquirer.prompt([{
                 type: 'confirm',
                 name: 'isFree',
@@ -166,6 +175,10 @@ export default class Submit extends Command {
         const data = new FormData();
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)));
         data.append('categories', JSON.stringify(selectedCategories));
+
+        if (changes) {
+            data.append('changes', changes);
+        }
 
         const token = await cloudAuth.getToken();
         await this.asyncSubmitData(data, flags, fd, token);
