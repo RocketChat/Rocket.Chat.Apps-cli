@@ -1,9 +1,10 @@
 import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
+import * as semver from 'semver';
 
 import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
-import { AppCompiler, FolderDetails, unicodeSymbols } from '../misc';
+import { AppCompiler, AppPackager, FolderDetails, unicodeSymbols } from '../misc';
 import { getServerInfo, uploadApp } from '../misc/deployHelpers';
 
 export default class Deploy extends Command {
@@ -70,7 +71,15 @@ export default class Deploy extends Command {
                 return;
             }
 
-            const zipName = await compiler.outputZip();
+            let zipName: string;
+
+            if (semver.satisfies(semver.coerce(serverInfo.serverVersion), '>=3.8')) {
+                zipName = await compiler.outputZip();
+            } else {
+                const packager = new AppPackager(this, fd);
+                zipName = await packager.zipItUp();
+            }
+
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
             cli.action.start(chalk.bold.greenBright('   Uploading App'));

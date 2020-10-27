@@ -17,11 +17,22 @@ export const getServerInfo = async (fd: FolderDetails,  flags: {[key: string]: a
         } catch (e) {
             throw new Error(e && e.message ? e.message : e);
         }
+
+        try {
+            const serverInfo = await fetch(loginInfo.url + '/api/info').then((response) => response.json());
+
+            loginInfo.serverVersion = serverInfo.version;
+        } catch (e) {
+            throw new Error(`Problems conecting to Rocket.Chat at ${loginInfo.url} - please check the address`);
+        }
+
         // tslint:disable-next-line:max-line-length
         const providedLoginArguments = ((loginInfo.username && loginInfo.password) || (loginInfo.userId && loginInfo.token));
         if (loginInfo.url && providedLoginArguments) {
             return loginInfo;
-        } else if (!loginInfo.url && providedLoginArguments) {
+        }
+
+        if (!loginInfo.url && providedLoginArguments) {
             throw new Error(`
     No url found.
     Consider adding url with the flag --url
