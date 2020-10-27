@@ -14,8 +14,6 @@ export class AppPackager {
         silent: true,
         ignore: [
             '**/README.md',
-            '**/package-lock.json',
-            '**/package.json',
             '**/tslint.json',
             '**/tsconfig.json',
             '**/*.js',

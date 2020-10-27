@@ -3,16 +3,19 @@ import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
 import chalk from 'chalk';
 import cli from 'cli-ux';
 
-import { AppCompiler, FolderDetails } from '../misc';
+import { AppCompiler, AppPackager, FolderDetails } from '../misc';
 
 export default class Package extends Command {
     public static description = 'packages up your App in a distributable format';
     public static aliases = ['p', 'pack'];
 
     public static flags = {
-        help: flags.help({ char: 'h' }),
+        'help': flags.help({ char: 'h' }),
         // flag with no value (-f, --force)
-        force: flags.boolean({
+        'no-compile': flags.boolean({
+            description: "don't compile the source, package as is (for older Rocket.Chat versions)",
+        }),
+        'force': flags.boolean({
             char: 'f',
             description: 'forcefully package the App, ignores lint & TypeScript errors',
         }),
@@ -44,7 +47,14 @@ export default class Package extends Command {
             return;
         }
 
-        const zipName = await compiler.outputZip();
+        let zipName: string;
+
+        if (flags['no-compile']) {
+            const packager = new AppPackager(this, fd);
+            zipName = await packager.zipItUp();
+        } else {
+            zipName = await compiler.outputZip();
+        }
 
         cli.action.stop('finished!');
 
