@@ -93,4 +93,4 @@ For uploading the app you need add to the required parameters in the .rcappsconf
 
 ### Enabling autocomplete for commands
 
-To enable autocomplete for the apps cli use the command `rc-apps autocomplete <your-shell-type>` with the shell type as zsh or bash as the supported types. This would provide a step by step instruction to enable shell completion in your preferred shell. 
+To enable autocomplete for the apps cli use the command `rc-apps autocomplete <your-shell-type>` with the shell type as zsh or bash as the supported types. This would provide a step by step instruction to enable shell completion in your preferred shell.
