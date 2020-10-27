@@ -15,6 +15,7 @@ export class AppPackager {
         ignore: [
             '**/README.md',
             '**/tslint.json',
+            '**/package-lock.json',
             '**/tsconfig.json',
             '**/*.js',
             '**/*.js.map',
