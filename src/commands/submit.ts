@@ -39,10 +39,10 @@ export default class Submit extends Command {
             this.error(e && e.message ? e.message : e);
         }
 
-        const compiler = new AppCompiler(this, fd);
-        const report = compiler.logDiagnostics();
+        const compiler = new AppCompiler(fd);
+        const report = await compiler.compile();
 
-        if (!report.isValid) {
+        if (!report.diagnostics.length) {
             this.error('TypeScript compiler error(s) occurred');
         }
 
@@ -139,7 +139,7 @@ export default class Submit extends Command {
                     return true;
                 },
                 // tslint:disable:promise-function-async
-                source: (answersSoFar: object, input: string) => {
+                source: (_answersSoFar: object, input: string) => {
                     input = input || '';
 
                     return new Promise((resolve) => {

@@ -3,9 +3,9 @@ import chalk from 'chalk';
 import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
 
-import { FolderDetails, unicodeSymbols } from '../misc';
-import { checkReport, checkUpload, getIgnoredFiles, getServerInfo,
-    packageAndZip, uploadApp } from '../misc/deployHelpers';
+import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
+import { AppCompiler, FolderDetails, unicodeSymbols } from '../misc';
+import { checkUpload, getIgnoredFiles, getServerInfo, uploadApp } from '../misc/deployHelpers';
 
 export default class Watch extends Command {
 
@@ -39,9 +39,10 @@ export default class Watch extends Command {
     };
 
     public async run() {
-
         const { flags } = this.parse(Watch);
+
         const fd = new FolderDetails(this);
+
         try {
             await fd.readInfoFile();
         } catch (e) {
@@ -51,6 +52,7 @@ export default class Watch extends Command {
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
+
         let ignoredFiles: Array<string>;
         try {
             ignoredFiles = await getIgnoredFiles(fd);
@@ -58,42 +60,49 @@ export default class Watch extends Command {
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
 
-        const watcher = chokidar.watch(fd.folder, {
+        chokidar.watch(fd.folder, {
             ignored: ignoredFiles,
             awaitWriteFinish: true,
             persistent: true,
             interval: 300,
-        });
-        watcher
-            .on('change', async () => {
-                tasks(this, fd, flags)
-                .catch((e) => {
-                    this.log(chalk.bold.redBright(
+        }).on('change', async () => {
+            tasks(this, fd, flags)
+            .catch((e) => {
+                this.log(chalk.bold.redBright(
                     `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
-                });
-            })
-            .on('ready', async () => {
-                tasks(this, fd, flags)
-                .catch((e) => {
-                    this.log(chalk.bold.redBright(
-                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
-                });
             });
+        }).on('ready', async () => {
+            tasks(this, fd, flags)
+            .catch((e) => {
+                this.log(chalk.bold.redBright(
+                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
+            });
+        });
     }
 }
-const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]: any }): Promise<void> => {
-    let serverInfo;
-    let zipName;
-    try {
-        command.log('\n');
 
+function reportDiagnostics(command: Command, diag: Array<ICompilerDiagnostic>): void {
+    diag.forEach((d) => command.error(d.message));
+}
+
+const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]: any }): Promise<void> => {
+    try {
         cli.action.start(chalk.bold.greenBright('   Packaging the app'));
-        checkReport(command, fd, flags);
-        zipName = await packageAndZip(command, fd);
+        const compiler = new AppCompiler(fd);
+        const result = await compiler.compile();
+
+        if (result.diagnostics.length && !flags.force) {
+            reportDiagnostics(command, result.diagnostics);
+            command.error('TypeScript compiler error(s) occurred');
+            command.exit(1);
+            return;
+        }
+
+        const zipName = await compiler.outputZip();
         cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
         cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
-        serverInfo = await getServerInfo(fd, flags);
+        const serverInfo = await getServerInfo(fd, flags);
         cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
         const status = await checkUpload({...flags, ...serverInfo}, fd);

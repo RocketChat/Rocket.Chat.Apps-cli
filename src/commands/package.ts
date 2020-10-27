@@ -1,29 +1,27 @@
 import { Command, flags } from '@oclif/command';
+import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
 import chalk from 'chalk';
 import cli from 'cli-ux';
-import * as path from 'path';
 
-import {
-    AppCompiler,
-    AppPackager,
-    FolderDetails,
-} from '../misc';
+import { AppCompiler, AppPackager, FolderDetails } from '../misc';
 
 export default class Package extends Command {
     public static description = 'packages up your App in a distributable format';
     public static aliases = ['p', 'pack'];
 
     public static flags = {
-        help: flags.help({ char: 'h' }),
+        'help': flags.help({ char: 'h' }),
         // flag with no value (-f, --force)
-        force: flags.boolean({
+        'no-compile': flags.boolean({
+            description: "don't compile the source, package as is (for older Rocket.Chat versions)",
+        }),
+        'force': flags.boolean({
             char: 'f',
             description: 'forcefully package the App, ignores lint & TypeScript errors',
         }),
     };
 
     public async run(): Promise<void> {
-        const { flags } = this.parse(Package);
 
         cli.action.start('packaging your app');
 
@@ -36,21 +34,35 @@ export default class Package extends Command {
             return;
         }
 
-        const compiler = new AppCompiler(this, fd);
-        const report = compiler.logDiagnostics();
+        const compiler = new AppCompiler(fd);
 
-        if (!report.isValid && !flags.force) {
+        const result = await compiler.compile();
+
+        const { flags } = this.parse(Package);
+
+        if (result.diagnostics.length && !flags.force) {
+            this.reportDiagnostics(result.diagnostics);
             this.error('TypeScript compiler error(s) occurred');
             this.exit(1);
             return;
         }
 
-        const packager = new AppPackager(this, fd);
-        const zipName = await packager.zipItUp();
+        let zipName: string;
+
+        if (flags['no-compile']) {
+            const packager = new AppPackager(this, fd);
+            zipName = await packager.zipItUp();
+        } else {
+            zipName = await compiler.outputZip();
+        }
 
         cli.action.stop('finished!');
 
         this.log(chalk.black(' '));
-        this.log(chalk.green('App packaged up at:'), path.join(fd.folder, zipName));
+        this.log(chalk.green('App packaged up at:'), fd.mergeWithFolder(zipName));
+    }
+
+    private reportDiagnostics(diag: Array<ICompilerDiagnostic>): void {
+        diag.forEach((d) => this.error(d.message));
     }
 }
