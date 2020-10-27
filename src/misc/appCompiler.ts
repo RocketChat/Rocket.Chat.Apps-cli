@@ -5,7 +5,11 @@ import { ICompilerResult } from '@rocket.chat/apps-compiler/definition';
 
 import { FolderDetails } from './folderDetails';
 
-import packageInfo = require('../../package.json');
+/* import packageInfo = require('../package.json'); */
+const packageInfo = {
+    version: '1.7.0',
+    name: '@rocket.chat/apps-cli',
+};
 
 // tslint:disable-next-line:no-var-requires
 const createRequire = require('module').createRequire;
