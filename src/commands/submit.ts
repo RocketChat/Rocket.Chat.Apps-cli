@@ -221,7 +221,7 @@ export default class Submit extends Command {
             return res.json();
         }
     }
-    
+
     private reportDiagnostics(diag: Array<ICompilerDiagnostic>): void {
         diag.forEach((d) => this.error(d.message));
     }
