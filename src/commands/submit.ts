@@ -42,8 +42,11 @@ export default class Submit extends Command {
         const compiler = new AppCompiler(fd);
         const report = await compiler.compile();
 
-        if (!report.diagnostics.length) {
+        if (result.diagnostics.length) {
+            this.reportDiagnostics(result.diagnostics);
             this.error('TypeScript compiler error(s) occurred');
+            this.exit(1);
+            return;
         }
 
         const packager = new AppPackager(this, fd);
@@ -216,5 +219,9 @@ export default class Submit extends Command {
         } else {
             return res.json();
         }
+    }
+    
+    private reportDiagnostics(diag: Array<ICompilerDiagnostic>): void {
+        diag.forEach((d) => this.error(d.message));
     }
 }
