@@ -8,6 +8,7 @@ import * as inquirer from 'inquirer';
 import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
+import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
 import { AppCompiler, AppPackager, FolderDetails, VariousUtils } from '../misc';
 import { CloudAuth } from '../misc/cloudAuth';
 
@@ -40,7 +41,7 @@ export default class Submit extends Command {
         }
 
         const compiler = new AppCompiler(fd);
-        const report = await compiler.compile();
+        const result = await compiler.compile();
 
         if (result.diagnostics.length) {
             this.reportDiagnostics(result.diagnostics);
