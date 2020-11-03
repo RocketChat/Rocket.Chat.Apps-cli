@@ -19,6 +19,10 @@ export default class Package extends Command {
             char: 'f',
             description: 'forcefully package the App, ignores lint & TypeScript errors',
         }),
+        'verbose': flags.boolean({
+            char: 'v',
+            description: 'show additional details about the results of running the command',
+        }),
     };
 
     public async run(): Promise<void> {
@@ -39,6 +43,10 @@ export default class Package extends Command {
         const result = await compiler.compile();
 
         const { flags } = this.parse(Package);
+
+        if (flags.verbose) {
+            this.log(`${chalk.green('[info]')} using TypeScript v${ result.typeScriptVersion }`);
+        }
 
         if (result.diagnostics.length && !flags.force) {
             this.reportDiagnostics(result.diagnostics);

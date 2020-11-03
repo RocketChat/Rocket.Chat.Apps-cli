@@ -27,6 +27,10 @@ export default class Deploy extends Command {
             char: 't',
             description: 'API token to use with UserID (instead of username & password)',
         }),
+        verbose: flags.boolean({
+            char: 'v',
+            description: 'show additional details about the results of running the command',
+        }),
         userid: flags.string({
             char: 'i',
             description: 'UserID to use with API token (instead of username & password)',
@@ -63,6 +67,10 @@ export default class Deploy extends Command {
             cli.action.start(chalk.bold.greenBright('   Packaging the app'));
             const compiler = new AppCompiler(fd);
             const result = await compiler.compile();
+
+            if (flags.verbose) {
+                this.log(`${chalk.green('[info]')} using TypeScript v${ result.typeScriptVersion }`);
+            }
 
             if (result.diagnostics.length && !flags.force) {
                 this.reportDiagnostics(result.diagnostics);
