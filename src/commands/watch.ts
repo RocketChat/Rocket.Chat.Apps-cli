@@ -96,8 +96,7 @@ const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]
         const result = await compiler.compile();
 
         if (flags.verbose) {
-            // tslint:disable-next-line:no-console
-            console.log(`${chalk.green('[info]')} using TypeScript v${ result.typeScriptVersion }`);
+            command.log(`${chalk.green('[info]')} using TypeScript v${ result.typeScriptVersion }`);
         }
 
         if (result.diagnostics.length && !flags.force) {
