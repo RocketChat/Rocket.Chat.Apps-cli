@@ -32,6 +32,10 @@ export default class Watch extends Command {
             char: 'i',
             description: 'UserID to use with API token (instead of username & password)',
         }),
+        verbose: flags.boolean({
+            char: 'v',
+            description: 'show additional details about the results of running the command',
+        }),
         // flag with no value (-f, --force)
         force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
         code: flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
@@ -90,6 +94,10 @@ const tasks = async (command: Command, fd: FolderDetails, flags: { [key: string]
         cli.action.start(chalk.bold.greenBright('   Packaging the app'));
         const compiler = new AppCompiler(fd);
         const result = await compiler.compile();
+
+        if (flags.verbose) {
+            command.log(`${chalk.green('[info]')} using TypeScript v${ result.typeScriptVersion }`);
+        }
 
         if (result.diagnostics.length && !flags.force) {
             reportDiagnostics(command, result.diagnostics);
