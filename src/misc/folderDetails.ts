@@ -1,13 +1,15 @@
 import Command from '@oclif/command';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 import chalk from 'chalk';
-import * as compareVersions from 'compare-versions';
 import * as figures from 'figures';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as process from 'process';
+import {
+    coerce as coerceVersion,
+    diff as diffVersion,
+} from 'semver';
 import * as tv4 from 'tv4';
-import { VariousUtils } from './variousUtils';
 
 import { appJsonSchema } from './appJsonSchema';
 
@@ -111,10 +113,10 @@ export class FolderDetails {
         const packageJson = require(path.join(this.folder, 'package.json'));
         const appsEngineVersion = packageJson.devDependencies['@rocket.chat/apps-engine'];
 
-        if (!compareVersions
-            .compare(VariousUtils.stripVersionRangeSugar(appsEngineVersion),
-                     VariousUtils.stripVersionRangeSugar(this.info.requiredApiVersion),
-                     '=')) {
+        if (diffVersion(
+            coerceVersion(appsEngineVersion),
+            coerceVersion(this.info.requiredApiVersion))
+           ) {
 
             // tslint:disable-next-line:no-console
             console.log(chalk.bgYellow('Warning:'),
@@ -122,8 +124,8 @@ export class FolderDetails {
                         this.info.requiredApiVersion,
                         ') and package.json (',
                         appsEngineVersion,
-                        ').\n',
-                        'Updating app.json to reflect the same version of Apps Engine from package.json'));
+                        ').',
+                        '\nUpdating app.json to reflect the same version of Apps Engine from package.json'));
 
             await this.updateInfoFileRequiredVersion(appsEngineVersion);
         }
