@@ -39,4 +39,11 @@ export class VariousUtils {
 
         return categories;
     }
+
+    public static stripVersionRangeSugar(versionStr: string): string {
+        if (['^', '~'].includes(versionStr.charAt(0))) {
+            return versionStr.substr(1);
+        }
+        return versionStr;
+    }
 }

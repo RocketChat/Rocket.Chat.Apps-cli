@@ -49,6 +49,7 @@ export default class Deploy extends Command {
 
         try {
             await fd.readInfoFile();
+            await fd.matchAppsEngineVersion();
         } catch (e) {
             this.error(e && e.message ? e.message : e, {exit: 2});
         }

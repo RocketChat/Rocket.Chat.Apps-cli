@@ -36,6 +36,7 @@ export default class Submit extends Command {
 
         try {
             await fd.readInfoFile();
+            await fd.matchAppsEngineVersion();
         } catch (e) {
             this.error(e && e.message ? e.message : e);
         }

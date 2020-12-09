@@ -1,11 +1,13 @@
 import Command from '@oclif/command';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
 import chalk from 'chalk';
+import * as compareVersions from 'compare-versions';
 import * as figures from 'figures';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as process from 'process';
 import * as tv4 from 'tv4';
+import { VariousUtils } from './variousUtils';
 
 import { appJsonSchema } from './appJsonSchema';
 
@@ -97,6 +99,36 @@ export class FolderDetails {
         }
     }
 
+    public async matchAppsEngineVersion(): Promise<void> {
+        if (!this.info) {
+            throw new Error('App Manifest not loaded. Exiting...');
+        }
+
+        if (!await this.doesFileExist('package.json')) {
+            throw new Error('package.json not found. Exiting...');
+        }
+
+        const packageJson = require(path.join(this.folder, 'package.json'));
+        const appsEngineVersion = packageJson.devDependencies['@rocket.chat/apps-engine'];
+
+        if (!compareVersions
+            .compare(VariousUtils.stripVersionRangeSugar(appsEngineVersion),
+                     VariousUtils.stripVersionRangeSugar(this.info.requiredApiVersion),
+                     '=')) {
+
+            // tslint:disable-next-line:no-console
+            console.log(chalk.bgYellow('Warning:'),
+                        chalk.yellow('Different versions of the Apps Engine were found between app.json (',
+                        this.info.requiredApiVersion,
+                        ') and package.json (',
+                        appsEngineVersion,
+                        ').\n',
+                        'Updating app.json to reflect the same version of Apps Engine from package.json'));
+
+            await this.updateInfoFileRequiredVersion(appsEngineVersion);
+        }
+    }
+
     private validateAppDotJson(): void {
         const result = tv4.validateMultiple(this.info, appJsonSchema);
 
@@ -158,5 +190,15 @@ export class FolderDetails {
             chalk.red(`${figures.pointerSmall} Missing:`),
             uri,
         );
+    }
+
+    private async updateInfoFileRequiredVersion(requiredApiVersion: string): Promise<void> {
+        const info = {
+            ...this.info,
+            requiredApiVersion,
+        };
+
+        await fs.writeFile(path.join(this.folder, 'app.json'), JSON.stringify(info), 'utf-8');
+        await this.readInfoFile();
     }
 }
