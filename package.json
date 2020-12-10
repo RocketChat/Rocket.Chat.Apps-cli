@@ -1,7 +1,7 @@
 {
   "name": "@rocket.chat/apps-cli",
   "description": "The CLI tool for helping with Rocket.Chat Apps.",
-  "version": "1.7.3",
+  "version": "1.8.0",
   "author": "Rocket.Chat <support@rocket.chat>",
   "preferGlobal": true,
   "bin": {
