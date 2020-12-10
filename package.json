@@ -51,7 +51,7 @@
     "@types/chai": "^4.1.7",
     "@types/fs-extra": "^8.0.0",
     "@types/glob": "^7.1.1",
-    "@types/hapi__hapi": "^18.2.5",
+    "@types/hapi__hapi": "^20.0.2",
     "@types/inquirer": "6.0.3",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.6.8",
