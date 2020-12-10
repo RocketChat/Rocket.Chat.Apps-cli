@@ -5,6 +5,10 @@ import * as figures from 'figures';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as process from 'process';
+import {
+    coerce as coerceVersion,
+    diff as diffVersion,
+} from 'semver';
 import * as tv4 from 'tv4';
 
 import { appJsonSchema } from './appJsonSchema';
@@ -97,6 +101,36 @@ export class FolderDetails {
         }
     }
 
+    public async matchAppsEngineVersion(): Promise<void> {
+        if (!this.info) {
+            throw new Error('App Manifest not loaded. Exiting...');
+        }
+
+        if (!await this.doesFileExist('package.json')) {
+            throw new Error('package.json not found. Exiting...');
+        }
+
+        const packageJson = require(path.join(this.folder, 'package.json'));
+        const appsEngineVersion = packageJson.devDependencies['@rocket.chat/apps-engine'];
+
+        if (diffVersion(
+            coerceVersion(appsEngineVersion),
+            coerceVersion(this.info.requiredApiVersion))
+           ) {
+
+            // tslint:disable-next-line:no-console
+            console.log(chalk.bgYellow('Warning:'),
+                        chalk.yellow('Different versions of the Apps Engine were found between app.json (',
+                        this.info.requiredApiVersion,
+                        ') and package.json (',
+                        appsEngineVersion,
+                        ').',
+                        '\nUpdating app.json to reflect the same version of Apps Engine from package.json'));
+
+            await this.updateInfoFileRequiredVersion(appsEngineVersion);
+        }
+    }
+
     private validateAppDotJson(): void {
         const result = tv4.validateMultiple(this.info, appJsonSchema);
 
@@ -158,5 +192,15 @@ export class FolderDetails {
             chalk.red(`${figures.pointerSmall} Missing:`),
             uri,
         );
+    }
+
+    private async updateInfoFileRequiredVersion(requiredApiVersion: string): Promise<void> {
+        const info = {
+            ...this.info,
+            requiredApiVersion,
+        };
+
+        await fs.writeFile(path.join(this.folder, 'app.json'), JSON.stringify(info), 'utf-8');
+        await this.readInfoFile();
     }
 }
