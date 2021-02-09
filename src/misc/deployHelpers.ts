@@ -1,4 +1,5 @@
 import Command from '@oclif/command';
+import {IPermission} from '@rocket.chat/apps-engine/definition/permissions/IPermission';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
@@ -105,6 +106,7 @@ export const packageAndZip = async (command: Command, fd: FolderDetails): Promis
 export const uploadApp = async (flags: { [key: string]: any }, fd: FolderDetails, zipname: string) => {
         const data = new FormData();
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipname)));
+        data.append('permissions', JSON.stringify(fd.info.permissions));
         try {
             await asyncSubmitData(data, flags, fd);
         } catch (e) {
