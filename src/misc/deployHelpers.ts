@@ -103,32 +103,9 @@ export const packageAndZip = async (command: Command, fd: FolderDetails): Promis
         }
 };
 
-export const validateAppPermissionsSchema = (permissions: Array<IPermission>): void => {
-    const examplePermissions = [{ name: 'user.read' }, { name: 'upload.write' }];
-    const error = new Error('Permissions declared in the app.json doesn\'t match the schema. '
-    + `It shoud be an peemissions array. e.g. ${ JSON.stringify(examplePermissions) }`);
-
-    if (!permissions) {
-        return;
-    }
-
-    if (!Array.isArray(permissions)) {
-        throw error;
-    }
-
-    if (permissions.length) {
-        permissions.forEach((permission) => {
-            if (!permission || !permission.name) {
-                throw error;
-            }
-        });
-    }
-};
-
 export const uploadApp = async (flags: { [key: string]: any }, fd: FolderDetails, zipname: string) => {
         const data = new FormData();
 
-        validateAppPermissionsSchema(fd.info.permissions);
         data.append('app', fs.createReadStream(fd.mergeWithFolder(zipname)));
         if (fd.info.permissions) {
             data.append('permissions', JSON.stringify(fd.info.permissions));
