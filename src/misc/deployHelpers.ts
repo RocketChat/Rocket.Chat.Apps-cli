@@ -1,5 +1,4 @@
 import Command from '@oclif/command';
-import {IPermission} from '@rocket.chat/apps-engine/definition/permissions/IPermission';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
