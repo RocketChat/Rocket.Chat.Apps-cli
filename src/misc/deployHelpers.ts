@@ -201,7 +201,7 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
 
             authResult = { data: { authToken: flags.token, userId: flags.userId } };
         }
-    
+
         if (await checkUpload(flags, fd)) {
            flags.update = true;
         }
