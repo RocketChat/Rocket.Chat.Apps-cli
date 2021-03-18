@@ -1,4 +1,6 @@
 import Command from '@oclif/command';
+import chalk from 'chalk';
+import cli from 'cli-ux';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import fetch from 'node-fetch';
@@ -205,6 +207,11 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
             }
 
             authResult = { data: { authToken: flags.token, userId: flags.userId } };
+        }
+
+        if (await checkUpload(flags, fd)) {
+            cli.log(chalk.bold.greenBright('   App already exists - updating it.'));
+            flags.update = true;
         }
 
         let endpoint = '/api/apps';
