@@ -67,15 +67,24 @@ export default class Deploy extends Command {
 
             cli.action.start(chalk.bold.greenBright('   Packaging the app'));
             const compiler = new AppCompiler(fd);
-            const result = await compiler.compile();
+            const compilationResult = await compiler.compile();
 
             if (flags.verbose) {
-                this.log(`${chalk.green('[info]')} using TypeScript v${ result.typeScriptVersion }`);
+                this.log(`${chalk.green('[info]')} using TypeScript v${ compilationResult.typeScriptVersion }`);
             }
 
-            if (result.diagnostics.length && !flags.force) {
-                this.reportDiagnostics(result.diagnostics);
+            if (compilationResult.diagnostics.length && !flags.force) {
+                this.reportDiagnostics(compilationResult.diagnostics);
                 this.error('TypeScript compiler error(s) occurred');
+                this.exit(1);
+                return;
+            }
+
+            const bundlingResult = await compiler.bundle();
+
+            if (bundlingResult.diagnostics.length && !flags.force) {
+                this.reportDiagnostics(bundlingResult.diagnostics);
+                this.error('Bundler error(s) occurred');
                 this.exit(1);
                 return;
             }

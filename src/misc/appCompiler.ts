@@ -1,7 +1,7 @@
 import * as path from 'path';
 
 import { AppsCompiler } from '@rocket.chat/apps-compiler';
-import { ICompilerResult } from '@rocket.chat/apps-compiler/definition';
+import { IBundledCompilerResult, ICompilerResult } from '@rocket.chat/apps-compiler/definition';
 
 import { FolderDetails } from './folderDetails';
 
@@ -28,11 +28,17 @@ export class AppCompiler {
             tool: packageInfo.name,
             version: packageInfo.version,
             when: new Date(),
-        }, getTypescriptForApp(fd));
+        },
+        this.fd.folder,
+        getTypescriptForApp(fd));
     }
 
     public async compile(): Promise<ICompilerResult> {
-        return this.compiler.compile(this.fd.folder);
+        return this.compiler.compile();
+    }
+
+    public async bundle(): Promise<IBundledCompilerResult> {
+        return this.compiler.bundle();
     }
 
     public async outputZip(): Promise<string> {
