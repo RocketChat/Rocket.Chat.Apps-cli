@@ -1,11 +1,11 @@
 import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
+import fetch from 'fetch-with-proxy';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
 import * as fuzzy from 'fuzzy';
 import * as inquirer from 'inquirer';
-import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
 import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
