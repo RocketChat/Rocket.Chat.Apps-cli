@@ -42,11 +42,20 @@ export default class Submit extends Command {
         }
 
         const compiler = new AppCompiler(fd);
-        const result = await compiler.compile();
+        const compilationResult = await compiler.compile();
 
-        if (result.diagnostics.length) {
-            this.reportDiagnostics(result.diagnostics);
+        if (compilationResult.diagnostics.length) {
+            this.reportDiagnostics(compilationResult.diagnostics);
             this.error('TypeScript compiler error(s) occurred');
+            this.exit(1);
+            return;
+        }
+
+        const bundlingResult = await compiler.bundle();
+
+        if (bundlingResult.diagnostics.length) {
+            this.reportDiagnostics(bundlingResult.diagnostics);
+            this.error('Bundler error(s) occurred');
             this.exit(1);
             return;
         }
