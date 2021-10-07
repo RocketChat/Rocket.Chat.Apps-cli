@@ -1,5 +1,5 @@
+import fetch from 'fetch-with-proxy';
 import * as fs from 'fs';
-import fetch from 'node-fetch';
 
 import { IAppCategory } from './interfaces';
 

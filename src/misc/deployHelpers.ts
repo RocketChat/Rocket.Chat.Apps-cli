@@ -1,9 +1,9 @@
 import Command from '@oclif/command';
 import chalk from 'chalk';
 import cli from 'cli-ux';
+import fetch from 'fetch-with-proxy';
 import * as FormData from 'form-data';
 import * as fs from 'fs';
-import fetch from 'node-fetch';
 import { Response } from 'node-fetch';
 
 import { AppPackager, FolderDetails } from '.';
