@@ -31,7 +31,7 @@ export default class Deploy extends Command {
             char: 'v',
             description: 'show additional details about the results of running the command',
         }),
-        userid: flags.string({
+        userId: flags.string({
             char: 'i',
             description: 'UserID to use with API token (instead of username & password)',
         }),

@@ -28,7 +28,7 @@ export default class Watch extends Command {
             char: 't',
             description: 'API token to use with UserID (instead of username & password)',
         }),
-        userid: flags.string({
+        userId: flags.string({
             char: 'i',
             description: 'UserID to use with API token (instead of username & password)',
         }),
