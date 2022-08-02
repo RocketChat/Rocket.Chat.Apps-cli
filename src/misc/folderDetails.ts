@@ -110,8 +110,9 @@ export class FolderDetails {
             throw new Error('package.json not found. Exiting...');
         }
 
-        const packageJson = require(path.join(this.folder, 'package.json'));
-        const appsEngineVersion = packageJson.devDependencies['@rocket.chat/apps-engine'];
+        const packageJson: Record<string, any> = require(path.join(this.folder, 'package.json'));
+        const appsEngineEntry = packageJson.devDependencies['@rocket.chat/apps-engine'] as string;
+        const appsEngineVersion = appsEngineEntry.startsWith('file:') ? require(appsEngineEntry.replace(/^file:/, '')).version : appsEngineEntry;
 
         if (diffVersion(
             coerceVersion(appsEngineVersion),
