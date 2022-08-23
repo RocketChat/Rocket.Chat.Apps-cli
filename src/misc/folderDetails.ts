@@ -112,7 +112,9 @@ export class FolderDetails {
 
         const packageJson: Record<string, any> = require(path.join(this.folder, 'package.json'));
         const appsEngineEntry = packageJson.devDependencies['@rocket.chat/apps-engine'] as string;
-        const appsEngineVersion = appsEngineEntry.startsWith('file:') ? require(appsEngineEntry.replace(/^file:/, '')).version : appsEngineEntry;
+        const appsEngineVersion = appsEngineEntry.startsWith('file:') ?
+            require(path.join(appsEngineEntry.replace(/^file:/, ''), 'package.json')).version :
+            appsEngineEntry;
 
         if (diffVersion(
             coerceVersion(appsEngineVersion),
