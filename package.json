@@ -67,7 +67,7 @@
     "mocha": "^10.2.0",
     "nyc": "^14.1.1",
     "pre-commit": "^1.2.2",
-    "ts-node": "^8.3.0",
+    "ts-node": "^8.10.2",
     "tslint": "^5.18.0"
   },
   "engines": {
@@ -111,7 +111,7 @@
     "posttest": "tsc -p test --noEmit && tslint -p test -t stylish",
     "prepack": "rm -rf lib && tsc && oclif-dev manifest && oclif-dev readme",
     "prepare": "rm -rf lib && tsc",
-    "test": "nyc mocha --forbid-only \"test/**/*.test.ts\"",
+    "test": "nyc mocha -r ts-node/register --forbid-only \"test/**/*.test.ts\"",
     "version": "oclif-dev readme && git add README.md",
     "lint": "tslint --project tsconfig.json",
     "view-coverage": "npm run test && http-server coverage -p 9083 -c-1"

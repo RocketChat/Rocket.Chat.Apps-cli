@@ -1,6 +1,8 @@
 import { test } from '@oclif/test';
 
-describe('package', () => {
+describe('package', function() {
+    this.timeout(10000);
+
     test
         .stdout()
         .command(['package'])
