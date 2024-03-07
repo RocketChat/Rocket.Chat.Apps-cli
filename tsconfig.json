@@ -5,6 +5,7 @@
     "module": "commonjs",
     "declaration": true,
     "noImplicitAny": true,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
