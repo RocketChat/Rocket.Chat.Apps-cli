@@ -21,7 +21,7 @@ export class VariousUtils {
             return '^' + info.version as string;
         }
 
-        return '^1.4.0';
+        return '^1.45.0';
     };
 
     // tslint:disable:promise-function-async
