@@ -5,21 +5,27 @@ import * as fuzzy from 'fuzzy';
 import * as inquirer from 'inquirer';
 
 import { FolderDetails } from '../misc';
-import { apiEndpointTemplate, appendNewSetting,
-    initialSettingTemplate, slashCommandTemplate } from '../templates/boilerplate';
+import {
+    apiEndpointTemplate,
+    appendNewSetting,
+    initialSettingTemplate,
+    slashCommandTemplate,
+} from '../templates/boilerplate';
 
 export default class Generate extends Command {
     public static description = 'Adds boilerplate code for various functions';
     public static flags = {
-        help: flags.help({char: 'h'}),
+        help: flags.help({ char: 'h' }),
         options: flags.string({
             char: 'o',
-            // tslint:disable-next-line:max-line-length
-            description: 'Choose the boilerplate needed a. Api Extension b. Slash Command Extension c. Settings Extension',
+            description:
+                'Choose boilerplate(s): a. Api Extension, b. Slash Command, c. Settings Extension',
             options: ['a', 'b', 'c'],
+            multiple: true, // Allow multiple values
         }),
     };
-    public async run() {
+
+    public async run(): Promise<void> {
         const { flags } = this.parse(Generate);
         const fd = new FolderDetails(this);
         try {
@@ -27,60 +33,55 @@ export default class Generate extends Command {
         } catch (e) {
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
-        let options = flags.options ? [flags.options] : [];
+
+        // Map flag options (a/b/c) to their full names
+        const optionMap: { [key: string]: string } = {
+            a: 'Api Extension',
+            b: 'Slash Command Extension',
+            c: 'Settings Extension',
+        };
+
+        let options = flags.options
+            ? flags.options.map((opt) => optionMap[opt])
+            : [];
+
         const categories = [
             'Api Extension',
             'Slash Command Extension',
             'Settings Extension',
         ];
+
         if (!options.length) {
-            inquirer.registerPrompt('checkbox-plus', require('inquirer-checkbox-plus-prompt'));
-            const result = await inquirer.prompt([{
-                type: 'checkbox-plus',
-                name: 'categories',
-                message: 'Choose the boilerplate needed',
-                pageSize: 10,
-                highlight: true,
-                searchable: true,
-                validate: (answer: Array<string>) => {
-                    if (answer.length === 0) {
-                        return chalk.bold.redBright('You must choose at least one option.');
-                    }
-
-                    return true;
+            inquirer.registerPrompt(
+                'checkbox-plus',
+                require('inquirer-checkbox-plus-prompt'),
+            );
+            const result = await inquirer.prompt([
+                {
+                    type: 'checkbox-plus',
+                    name: 'categories',
+                    message: 'Choose the boilerplate needed',
+                    pageSize: 10,
+                    highlight: true,
+                    searchable: true,
+                    validate: (answer: Array<string>) => {
+                        if (answer.length === 0) {
+                            return chalk.bold.redBright(
+                                'You must choose at least one option.',
+                            );
+                        }
+                        return true;
+                    },
+                    source: async (answersSoFar: object, input: string) => {
+                        const fuzzyResult = fuzzy.filter(input || '', categories);
+                        return fuzzyResult.map((el) => el.original);
+                    },
                 },
-                // tslint:disable:promise-function-async
-                source: (answersSoFar: object, input: string) => {
-                    input = input || '';
-
-                    return new Promise((resolve) => {
-                        const fuzzyResult = fuzzy.filter(input, categories);
-
-                        const data = fuzzyResult.map((element) => {
-                            return element.original;
-                        });
-
-                        resolve(data);
-                    });
-                },
-            }] as any);
+            ] as any);
             options = (result as any).categories;
         }
 
-        // switch (option) {
-        //     case 'Api Extension':
-        //         this.ApiExtensionBoilerplate(fd);
-        //         break;
-        //     case 'Slash Command Extension':
-        //         this.SlashCommandExtension(fd);
-        //         break;
-        //     case 'Settings Extension':
-        //         this.SettingExtension(fd);
-        //         break;
-        //     default:
-        //         break;
-        // }
-
+        // Process each selected option
         for (const option of options) {
             switch (option) {
                 case 'Api Extension':
@@ -96,18 +97,27 @@ export default class Generate extends Command {
                     break;
             }
         }
-
     }
 
-    private ApiExtensionBoilerplate = async (fd: FolderDetails): Promise<void> => {
-        const name = await cli.prompt(chalk.bold.greenBright('Name of endpoint class'));
-        const path = await cli.prompt(chalk.bold.greenBright('Path for endpoint'));
+    private ApiExtensionBoilerplate = async (
+        fd: FolderDetails,
+    ): Promise<void> => {
+        const name = await cli.prompt(
+            chalk.bold.greenBright('Name of API endpoint class'),
+        );
+        const path = await cli.prompt(
+            chalk.bold.greenBright('Path for API endpoint'),
+        );
         const toWrite = apiEndpointTemplate(name, path);
         fd.generateEndpointClass(name, toWrite);
     }
 
-    private SlashCommandExtension = async (fd: FolderDetails): Promise<void> => {
-        const  name = await cli.prompt(chalk.bold.greenBright('Name of command class'));
+    private SlashCommandExtension = async (
+        fd: FolderDetails,
+    ): Promise<void> => {
+        const name = await cli.prompt(
+            chalk.bold.greenBright('Name of slash command class'),
+        );
         const toWrite = slashCommandTemplate(name);
         fd.generateCommandClass(name, toWrite);
     }
