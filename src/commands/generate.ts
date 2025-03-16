@@ -27,13 +27,13 @@ export default class Generate extends Command {
         } catch (e) {
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
-        let option = flags.options;
+        let options = flags.options ? [flags.options] : [];
         const categories = [
             'Api Extension',
             'Slash Command Extension',
             'Settings Extension',
         ];
-        if (!option) {
+        if (!options.length) {
             inquirer.registerPrompt('checkbox-plus', require('inquirer-checkbox-plus-prompt'));
             const result = await inquirer.prompt([{
                 type: 'checkbox-plus',
@@ -64,20 +64,37 @@ export default class Generate extends Command {
                     });
                 },
             }] as any);
-            option = (result as any).categories[0];
+            options = (result as any).categories;
         }
-        switch (option) {
-            case 'Api Extension':
-                this.ApiExtensionBoilerplate(fd);
-                break;
-            case 'Slash Command Extension':
-                this.SlashCommandExtension(fd);
-                break;
-            case 'Settings Extension':
-                this.SettingExtension(fd);
-                break;
-            default:
-                break;
+
+        // switch (option) {
+        //     case 'Api Extension':
+        //         this.ApiExtensionBoilerplate(fd);
+        //         break;
+        //     case 'Slash Command Extension':
+        //         this.SlashCommandExtension(fd);
+        //         break;
+        //     case 'Settings Extension':
+        //         this.SettingExtension(fd);
+        //         break;
+        //     default:
+        //         break;
+        // }
+
+        for (const option of options) {
+            switch (option) {
+                case 'Api Extension':
+                    await this.ApiExtensionBoilerplate(fd);
+                    break;
+                case 'Slash Command Extension':
+                    await this.SlashCommandExtension(fd);
+                    break;
+                case 'Settings Extension':
+                    await this.SettingExtension(fd);
+                    break;
+                default:
+                    break;
+            }
         }
 
     }
