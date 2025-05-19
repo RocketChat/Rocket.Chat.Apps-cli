@@ -112,6 +112,11 @@ export class FolderDetails {
 
         const packageJson: Record<string, any> = require(path.join(this.folder, 'package.json'));
         const appsEngineEntry = packageJson.devDependencies['@rocket.chat/apps-engine'] as string;
+
+        if (!appsEngineEntry) {
+            throw new Error('Make sure @rocket.chat/apps-engine is saved in your dev dependencies');
+        }
+        
         const appsEngineVersion = appsEngineEntry.startsWith('file:') ?
             require(path.join(appsEngineEntry.replace(/^file:/, ''), 'package.json')).version :
             appsEngineEntry;
