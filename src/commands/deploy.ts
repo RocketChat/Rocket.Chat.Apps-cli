@@ -11,35 +11,41 @@ export default class Deploy extends Command {
     public static description = 'allows deploying an App to a server';
 
     public static flags = {
-        help: flags.help({ char: 'h' }),
-        url: flags.string({
+        'help': flags.help({ char: 'h' }),
+        'url': flags.string({
             description: 'where the app should be deployed to',
         }),
-        username: flags.string({
+        'username': flags.string({
             char: 'u',
             description: 'username to authenticate with',
         }),
-        password: flags.string({
+        'password': flags.string({
             char: 'p',
             description: 'password for the user',
         }),
-        token: flags.string({
+        'token': flags.string({
             char: 't',
             description: 'API token to use with UserID (instead of username & password)',
         }),
-        verbose: flags.boolean({
+        'verbose': flags.boolean({
             char: 'v',
             description: 'show additional details about the results of running the command',
         }),
-        userId: flags.string({
+        'userId': flags.string({
             char: 'i',
             description: 'UserID to use with API token (instead of username & password)',
         }),
         // flag with no value (-f, --force)
-        force: flags.boolean({ char: 'f', description: 'forcefully deploy the App, ignores lint & TypeScript errors' }),
-        update: flags.boolean({ description: 'updates the app, instead of creating' }),
-        code: flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
-        i2fa: flags.boolean({ description: 'interactively ask for 2FA code' }),
+        'experimental-native-compiler': flags.boolean({
+            description: '(experimental) use native TSC compiler',
+        }),
+        'force': flags.boolean({
+            char: 'f',
+            description: 'forcefully deploy the App, ignores lint & TypeScript errors',
+        }),
+        'update': flags.boolean({ description: 'updates the app, instead of creating' }),
+        'code': flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
+        'i2fa': flags.boolean({ description: 'interactively ask for 2FA code' }),
     };
 
     public async run() {
@@ -66,7 +72,7 @@ export default class Deploy extends Command {
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
             cli.action.start(chalk.bold.greenBright('   Packaging the app'));
-            const compiler = new AppCompiler(fd);
+            const compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
             const compilationResult = await compiler.compile();
 
             if (flags.verbose) {
