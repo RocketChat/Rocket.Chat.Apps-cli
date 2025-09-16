@@ -70,7 +70,7 @@ export class AppCreator {
     // tslint:disable:max-line-length
     private createdReadme(): void {
         const toWrite = readmeTemplate(this.fd.info.name, this.fd.info.description);
-        fs.writeFileSync('README.md', toWrite, 'utf8');
+        fs.writeFileSync(this.fd.mergeWithFolder('README.md'), toWrite, 'utf8');
     }
 
     private createTsConfig(): void {
