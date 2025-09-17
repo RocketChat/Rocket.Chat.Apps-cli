@@ -11,9 +11,11 @@ export default class Package extends Command {
 
     public static flags = {
         'help': flags.help({ char: 'h' }),
-        // flag with no value (-f, --force)
         'no-compile': flags.boolean({
             description: "don't compile the source, package as is (for older Rocket.Chat versions)",
+        }),
+        'experimental-native-compiler': flags.boolean({
+            description: '(experimental) use native TSC compiler',
         }),
         'force': flags.boolean({
             char: 'f',
@@ -39,11 +41,11 @@ export default class Package extends Command {
             return;
         }
 
-        const compiler = new AppCompiler(fd);
+        const { flags } = this.parse(Package);
+
+        const compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
 
         const compilationResult = await compiler.compile();
-
-        const { flags } = this.parse(Package);
 
         if (flags.verbose) {
             this.log(`${chalk.green('[info]')} using TypeScript v${ compilationResult.typeScriptVersion }`);

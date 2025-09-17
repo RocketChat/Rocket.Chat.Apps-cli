@@ -23,14 +23,15 @@ export function getTypescriptForApp(fd: FolderDetails): any {
 export class AppCompiler {
     private compiler: AppsCompiler;
 
-    constructor(private fd: FolderDetails) {
+    constructor(private fd: FolderDetails, useNativeCompiler = false) {
         this.compiler = new AppsCompiler({
             tool: packageInfo.name,
             version: packageInfo.version,
             when: new Date(),
         },
         this.fd.folder,
-        getTypescriptForApp(fd));
+        getTypescriptForApp(fd),
+        useNativeCompiler);
     }
 
     public async compile(): Promise<ICompilerResult> {
