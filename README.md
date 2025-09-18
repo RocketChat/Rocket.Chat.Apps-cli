@@ -1,7 +1,9 @@
 # Rocket.Chat Apps CLI
+
 The Rocket.Chat Apps CLI for interacting with Apps.
 
 ## Getting Started
+
 Extremely simple.
 
 ```
@@ -11,6 +13,7 @@ npm install -g @rocket.chat/apps-cli
 ## Rocket.Chat App Development
 
 ### Logging Inside an App
+
 Due to limitations of NodeJS's `vm` package we have had to implement a custom logger class.
 To make usage of this you can use `this.getLogger()` and then do the normal `console` style logging.
 
@@ -69,7 +72,8 @@ export class TodoListApp extends App {
 
 Currently the Rocket.Chat servers and Marketplace allow submission of zip files, these files can be created by running `rc-apps package` which packages your app and creates the zip file under `dist` folder.
 
-### Uploading the app 
+### Uploading the app
+
 For uploading the app you need add to the required parameters in the .rcappsconfig already created in the apps directory. It accepts two types of objects:-
 
 1. Upload using username, password
@@ -81,7 +85,8 @@ For uploading the app you need add to the required parameters in the .rcappsconf
     password: string;
 }
 ```
-2. Upload using personal access token and userId 
+
+2. Upload using personal access token and userId
 
 ```
 {

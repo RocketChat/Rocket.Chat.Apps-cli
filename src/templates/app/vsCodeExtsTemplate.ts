@@ -1,5 +1,5 @@
 export const vsCodeExtsTemplate = (): string => {
-    return ` {
+  return ` {
     "recommendations": [
         "EditorConfig.editorconfig",
         "eamodio.gitlens",
@@ -10,5 +10,5 @@ export const vsCodeExtsTemplate = (): string => {
         "rbbit.typescript-hero"
     ]
 }
-`;
-};
+`
+}

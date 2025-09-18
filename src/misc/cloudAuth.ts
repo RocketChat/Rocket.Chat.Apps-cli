@@ -1,247 +1,345 @@
-import { Request, Server } from '@hapi/hapi';
-import axios from 'axios';
-import chalk from 'chalk';
-import { cli } from 'cli-ux';
-import Conf = require('conf');
-import { createHash } from 'crypto';
-import open = require('open');
-import { stringify } from 'querystring';
-import { cpu, mem, osInfo, system } from 'systeminformation';
-import { v4 as uuidv4 } from 'uuid';
+import {Request, Server} from '@hapi/hapi'
+import axios, {isAxiosError} from 'axios'
+import chalk from 'chalk'
+import Conf from 'conf'
+import {createHash, randomUUID} from 'crypto'
+import open from 'open'
+import {cpu, mem, osInfo, system} from 'systeminformation'
 
-const cloudUrl = 'https://cloud.rocket.chat';
-const clientId = '5d8e59c5d48080ef5497e522';
-const scope = 'offline_access marketplace:app-submit';
+const cloudUrl = 'https://cloud.rocket.chat'
+const clientId = '5d8e59c5d48080ef5497e522'
+const scope = 'offline_access marketplace:app-submit'
 
 export interface ICloudToken {
-    access_token: string;
-    expires_in: number;
-    scope: string;
-    refresh_token: string;
-    token_type: string;
+  access_token: string
+  expires_in: number
+  scope: string
+  refresh_token: string
+  token_type: string
 }
 
 export interface ICloudAuthStorage {
-    token: ICloudToken;
-    expiresAt: Date;
+  token: ICloudToken
+  expiresAt: Date
+}
+
+type CloudConfig = {
+  rcc?: ICloudAuthStorage
+  'rcc.token.access_token'?: string
+  'rcc.token.expires_in'?: number
+  'rcc.token.scope'?: string
+  'rcc.token.token_type'?: string
+  'rcc.token.refresh_token'?: string
+  'rcc.expiresAt'?: Date
 }
 
 export class CloudAuth {
-    private config: Conf;
-    private codeVerifier: string;
-    private port = 3005;
-    private server: Server;
-    private redirectUri: string;
+  private config?: Conf<CloudConfig>
+  private codeVerifier: string
+  private readonly port = 3005
+  private server?: Server
+  private readonly redirectUri: string
 
-    constructor() {
-        this.redirectUri = `http://localhost:${ this.port }/callback`;
-        this.codeVerifier = uuidv4() + uuidv4();
-    }
+  constructor() {
+    this.redirectUri = `http://localhost:${this.port}/callback`
+    this.codeVerifier = randomUUID() + randomUUID()
+  }
 
-    public async executeAuthFlow(): Promise<string> {
-        await this.initialize();
+  public async executeAuthFlow(): Promise<string> {
+    await this.initialize()
 
-        return new Promise((resolve, reject) => {
+    return new Promise<string>((resolve, reject) => {
+      try {
+        this.server = new Server({host: 'localhost', port: this.port})
+        this.server.route({
+          method: 'GET',
+          path: '/callback',
+          handler: async (request: Request) => {
             try {
-                this.server = new Server({ host: 'localhost', port: this.port });
-                this.server.route({
-                    method: 'GET',
-                    path: '/callback',
-                    handler: async (request: Request) => {
-                        try {
-                            const code = request.query.code;
-                            const token = await this.fetchToken(code);
+              const {code} = request.query as {code?: string | string[]}
+              const token = await this.fetchToken(code)
 
-                            resolve(token.access_token);
-                            return 'Thank you. You can close this tab.';
-                        } catch (err) {
-                            reject(err);
-                        } finally {
-                            this.server.stop();
-                        }
-                    },
-                });
-
-                const codeChallenge = this.base64url(createHash('sha256').update(this.codeVerifier).digest('base64'));
-                const authorizeUrl = this.buildAuthorizeUrl(codeChallenge);
-                cli.log(chalk.green('*') + ' ' + chalk.white('...if your browser does not open, open this:')
-                    + ' ' + chalk.underline(chalk.blue(authorizeUrl)));
-
-                open(authorizeUrl);
-
-                this.server.start();
-            } catch (e) {
-                // tslint:disable-next-line:no-console
-                console.log('Error inside of the execute:', e);
+              resolve(token.access_token)
+              return 'Thank you. You can close this tab.'
+            } catch (err) {
+              reject(err)
+              return 'Error occurred. Please close this tab.'
+            } finally {
+              await this.server?.stop()
             }
-        });
+          },
+        })
+
+        const codeChallenge = this.base64url(createHash('sha256').update(this.codeVerifier).digest('base64'))
+        const authorizeUrl = this.buildAuthorizeUrl(codeChallenge)
+        this.logInfo(
+          `${chalk.green('*')} ${chalk.white('...if your browser does not open, open this:')} ${chalk.underline(chalk.blue(authorizeUrl))}`,
+        )
+
+        ;(async () => {
+          await open(authorizeUrl)
+          await this.server?.start()
+        })().catch(reject)
+      } catch (e) {
+        this.logError(`Error inside of the execute: ${this.formatError(e)}`)
+        reject(e)
+      }
+    })
+  }
+
+  public async hasToken(): Promise<boolean> {
+    await this.initialize()
+
+    return this.getConfig().has('rcc.token.access_token')
+  }
+
+  public async getToken(): Promise<string> {
+    await this.initialize()
+
+    const item = this.getConfig().get('rcc')
+    if (!item) {
+      // when there isn't an item, we will not return anything or error out
+      return ''
     }
 
-    public async hasToken(): Promise<boolean> {
-        await this.initialize();
-
-        return this.config.has('rcc.token.access_token');
+    if (new Date() < new Date(item.expiresAt)) {
+      return item.token.access_token
     }
 
-    public async getToken(): Promise<string> {
-        await this.initialize();
+    await this.refreshToken()
 
-        const item: ICloudAuthStorage = this.config.get('rcc');
-        if (!item) {
-            // when there isn't an item, we will not return anything or error out
-            return '';
+    const refreshedToken = this.getConfig().get('rcc.token.access_token')
+    return typeof refreshedToken === 'string' ? refreshedToken : ''
+  }
+
+  public async revokeToken(): Promise<void> {
+    await this.initialize()
+
+    const item = this.getConfig().get('rcc')
+    if (!item) {
+      throw new Error('invalid cloud auth storage item')
+    }
+
+    await this.revokeTheToken()
+  }
+
+  private async fetchToken(rawCode: string | string[] | undefined): Promise<ICloudToken> {
+    try {
+      const code = this.ensureCode(rawCode)
+      const request = {
+        grant_type: 'authorization_code',
+        redirect_uri: this.redirectUri,
+        client_id: clientId,
+        code,
+        code_verifier: this.codeVerifier,
+      }
+
+      const res = await axios.post<ICloudToken>(
+        `${cloudUrl}/api/oauth/token`,
+        new URLSearchParams(request).toString(),
+        {
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        },
+      )
+      const tokenInfo = res.data
+
+      const expiresAt = new Date()
+      expiresAt.setSeconds(expiresAt.getSeconds() + tokenInfo.expires_in)
+
+      const storageItem: ICloudAuthStorage = {
+        token: tokenInfo,
+        expiresAt,
+      }
+
+      this.getConfig().set('rcc', storageItem)
+
+      return tokenInfo
+    } catch (err) {
+      if (isAxiosError(err) && err.response) {
+        const {status, data} = err.response
+        const errorMessage = (data as {error?: string; requestId?: string}) || {}
+        this.logError(
+          `[${status}] error getting token: ${errorMessage.error ?? 'unknown'} (${errorMessage.requestId ?? 'n/a'})`,
+        )
+      } else {
+        this.logError(`Error getting token: ${this.formatError(err)}`)
+      }
+
+      throw err
+    }
+  }
+
+  private async refreshToken(): Promise<void> {
+    const refreshToken = this.getRefreshToken()
+
+    const request = {
+      client_id: clientId,
+      refresh_token: refreshToken,
+      scope,
+      grant_type: 'refresh_token',
+      redirect_uri: this.redirectUri,
+    }
+
+    try {
+      const res = await axios.post<ICloudToken>(
+        `${cloudUrl}/api/oauth/token`,
+        new URLSearchParams(request).toString(),
+        {
+          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        },
+      )
+      const tokenInfo = res.data
+
+      const expiresAt = new Date()
+      expiresAt.setSeconds(expiresAt.getSeconds() + tokenInfo.expires_in)
+
+      const config = this.getConfig()
+      config.set('rcc.token.access_token', tokenInfo.access_token)
+      config.set('rcc.token.expires_in', tokenInfo.expires_in)
+      config.set('rcc.token.scope', tokenInfo.scope)
+      config.set('rcc.token.token_type', tokenInfo.token_type)
+      config.set('rcc.expiresAt', expiresAt)
+    } catch (err) {
+      if (isAxiosError(err) && err.response) {
+        const {status, data} = err.response
+        const errorMessage = (data as {error?: string; requestId?: string}) || {}
+        this.logError(
+          `[${status}] error refreshing token: ${errorMessage.error ?? 'unknown'} (${errorMessage.requestId ?? 'n/a'})`,
+        )
+      } else {
+        this.logError(`Error refreshing token: ${this.formatError(err)}`)
+      }
+
+      throw err
+    }
+  }
+
+  private async revokeTheToken(): Promise<void> {
+    const refreshToken = this.getRefreshToken()
+
+    const request = {
+      client_id: clientId,
+      token: refreshToken,
+      token_type_hint: 'refresh_token',
+    }
+
+    try {
+      await axios.post(`${cloudUrl}/api/oauth/revoke`, new URLSearchParams(request).toString(), {
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      })
+      this.getConfig().delete('rcc')
+    } catch (err) {
+      if (isAxiosError(err) && err.response) {
+        const {status, data} = err.response
+        if (status === 401) {
+          this.getConfig().delete('rcc')
+          return
         }
 
-        if (new Date() < new Date(item.expiresAt)) {
-            return item.token.access_token;
-        }
+        const errorMessage = (data as {error?: string; requestId?: string}) || {}
+        this.logError(
+          `[${status}] error revoking the token: ${errorMessage.error ?? 'unknown'} (${errorMessage.requestId ?? 'n/a'})`,
+        )
+      } else {
+        this.logError(`Error revoking token: ${this.formatError(err)}`)
+      }
 
-        await this.refreshToken();
+      throw err
+    }
+  }
 
-        return this.config.get('rcc.token.access_token', '') as string;
+  private buildAuthorizeUrl(codeChallenge: string): string {
+    const data = {
+      client_id: clientId,
+      response_type: 'code',
+      scope,
+      redirect_uri: this.redirectUri,
+      state: randomUUID(),
+      code_challenge_method: 'S256',
+      code_challenge: codeChallenge,
     }
 
-    public async revokeToken(): Promise<void> {
-        await this.initialize();
+    const params = new URLSearchParams(data)
+    return `${cloudUrl}/authorize?${params.toString()}`
+  }
 
-        const item: ICloudAuthStorage = this.config.get('rcc');
-        if (!item) {
-            throw new Error('invalid cloud auth storage item');
-        }
-
-        await this.revokeTheToken();
+  private async initialize(): Promise<void> {
+    if (this.config) {
+      return
     }
 
-    private async fetchToken(code: string | Array<string>): Promise<ICloudToken> {
-        try {
-            const request = {
-                grant_type: 'authorization_code',
-                redirect_uri: this.redirectUri,
-                client_id: clientId,
-                code,
-                code_verifier: this.codeVerifier,
-            };
+    this.config = new Conf<CloudConfig>({
+      projectName: 'chat.rocket.apps-cli',
+      encryptionKey: await this.getEncryptionKey(),
+    })
+  }
 
-            const res = await axios.post(`${ cloudUrl }/api/oauth/token`, stringify(request));
-            const tokenInfo: ICloudToken = res.data;
+  private async getEncryptionKey(): Promise<string> {
+    const s = await system()
+    const c = await cpu()
+    const m = await mem()
+    const o = await osInfo()
 
-            const expiresAt = new Date();
-            expiresAt.setSeconds(expiresAt.getSeconds() + tokenInfo.expires_in);
+    return (
+      s.manufacturer +
+      ';' +
+      s.uuid +
+      ';' +
+      String(c.processors) +
+      ';' +
+      c.vendor +
+      ';' +
+      m.total +
+      ';' +
+      o.platform +
+      ';' +
+      o.release
+    )
+  }
 
-            const storageItem: ICloudAuthStorage = {
-                token: tokenInfo,
-                expiresAt,
-            };
+  // base64url - https://base64.guru/standards/base64url
+  private base64url(url: string): string {
+    return url.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  }
 
-            this.config.set('rcc', storageItem);
-
-            return tokenInfo;
-        } catch (err) {
-            const d = err.response.data;
-            // tslint:disable-next-line:no-console
-            console.log(`[${ err.response.status }] error getting token: ${ d.error } (${ d.requestId })`);
-
-            throw err;
-        }
+  private getConfig(): Conf<CloudConfig> {
+    if (!this.config) {
+      throw new Error('Cloud configuration not initialized')
     }
 
-    private async refreshToken(): Promise<void> {
-        const refreshToken = this.config.get('rcc.token.refresh_token', '');
+    return this.config
+  }
 
-        const request = {
-            client_id: clientId,
-            refresh_token: refreshToken,
-            scope,
-            grant_type: 'refresh_token',
-            redirect_uri: this.redirectUri,
-        };
+  private getRefreshToken(): string {
+    const refreshToken = this.getConfig().get('rcc.token.refresh_token')
+    return typeof refreshToken === 'string' ? refreshToken : ''
+  }
 
-        try {
-            const res = await axios.post(`${ cloudUrl }/api/oauth/token`, stringify(request));
-            const tokenInfo: ICloudToken = res.data;
-
-            const expiresAt = new Date();
-            expiresAt.setSeconds(expiresAt.getSeconds() + tokenInfo.expires_in);
-
-            this.config.set('rcc.token.access_token', tokenInfo.access_token);
-            this.config.set('rcc.token.expires_in', tokenInfo.expires_in);
-            this.config.set('rcc.token.scope', tokenInfo.scope);
-            this.config.set('rcc.token.token_type', tokenInfo.token_type);
-            this.config.set('rcc.expiresAt', expiresAt);
-        } catch (err) {
-            const d = err.response.data;
-            // tslint:disable-next-line:no-console
-            console.log(`[${ err.response.status }] error getting token refreshed: ${ d.error } (${ d.requestId })`);
-
-            throw err;
-        }
+  private ensureCode(code: string | string[] | undefined): string {
+    if (!code) {
+      throw new Error('Authorization code not provided')
     }
 
-    private async revokeTheToken(): Promise<void> {
-        const refreshToken = this.config.get('rcc.token.refresh_token', '');
+    return Array.isArray(code) ? code[0] : code
+  }
 
-        const request = {
-            client_id: clientId,
-            token: refreshToken,
-            token_type_hint: 'refresh_token',
-        };
+  private logInfo(message: string): void {
+    process.stdout.write(`${message}\n`)
+  }
 
-        try {
-            await axios.post(`${ cloudUrl }/api/oauth/revoke`, stringify(request));
-            this.config.delete('rcc');
-        } catch (err) {
-            if (err.response.status === 401) {
-                this.config.delete('rcc');
-                return;
-            }
+  private logError(message: string): void {
+    process.stderr.write(`${message}\n`)
+  }
 
-            const d = err.response.data;
-            // tslint:disable-next-line:no-console
-            console.log(`[${ err.response.status }] error revoking the token: ${ d.error } (${ d.requestId })`);
-
-            throw err;
-        }
+  private formatError(error: unknown): string {
+    if (error instanceof Error) {
+      return `${error.name}: ${error.message}`
     }
 
-    private buildAuthorizeUrl(codeChallenge: string) {
-        const data = {
-            client_id: clientId,
-            response_type: 'code',
-            scope,
-            redirect_uri: this.redirectUri,
-            state: uuidv4(),
-            code_challenge_method: 'S256',
-            code_challenge: codeChallenge,
-        };
-
-        const params = stringify(data);
-        const authorizeUrl = `${ cloudUrl }/authorize?${params}`;
-        return authorizeUrl;
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return String(error)
     }
-
-    private async initialize(): Promise<void> {
-        if (typeof this.config !== 'undefined') {
-            return;
-        }
-
-        this.config = new Conf({
-            projectName: 'chat.rocket.apps-cli',
-            encryptionKey: await this.getEncryptionKey(),
-        });
-    }
-
-    private async getEncryptionKey(): Promise<string> {
-        const s = await system();
-        const c = await cpu();
-        const m = await mem();
-        const o = await osInfo();
-
-        return s.manufacturer + ';' + s.uuid + ';' + String(c.processors) + ';'
-                + c.vendor + ';' + m.total + ';' + o.platform + ';' + o.release;
-    }
-
-    // base64url - https://base64.guru/standards/base64url
-    private base64url(url: string) {
-        return url.replace( /\+/g, '-' ).replace( /\//g, '_' ).replace( /=+$/, '' );
-    }
+  }
 }
