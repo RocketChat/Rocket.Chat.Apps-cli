@@ -1,5 +1,36 @@
 #!/usr/bin/env node
 
-require('@oclif/command').run()
-.then(require('@oclif/command/flush'))
-.catch(require('@oclif/errors/handle'))
+const oclif = require('@oclif/core')
+const { flush } = require('@oclif/core/flush')
+const { handle: defaultHandle } = require('@oclif/core/handle')
+const { settings } = require('@oclif/core/settings')
+
+const DEBUG_FLAGS = new Set(['--debug-errors', '--stacktrace', '--verbose-errors'])
+
+const argv = process.argv
+const prunedArgv = argv.slice(0, 2)
+let showDetailedErrors = Boolean(process.env.RC_APPS_DEBUG && /^(1|true|yes)$/i.test(process.env.RC_APPS_DEBUG))
+
+for (let i = 2; i < argv.length; i += 1) {
+  const arg = argv[i]
+  if (DEBUG_FLAGS.has(arg)) {
+    showDetailedErrors = true
+    continue
+  }
+
+  prunedArgv.push(arg)
+}
+
+if (prunedArgv.length !== argv.length) {
+  process.argv = prunedArgv
+}
+
+settings.debug = showDetailedErrors
+
+oclif
+  .run()
+  .then(() => flush())
+  .catch(async (error) => {
+    await flush()
+    return defaultHandle(error)
+  })

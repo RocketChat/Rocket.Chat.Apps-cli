@@ -1,7 +1,7 @@
 // tslint:disable: max-line-length
 export const readmeTemplate = (name: string, description: string): string => {
-    return `# ${ name }
-${ description }
+  return `# ${name}
+${description}
 
 ## Getting Started
 Now that you have generated a blank default Rocket.Chat App, what are you supposed to do next?
@@ -22,5 +22,5 @@ Here are some links to examples and documentation:
   - [App Guides](https://forums.rocket.chat/c/rocket-chat-apps/guides)
   - [Top View of Both Categories](https://forums.rocket.chat/c/rocket-chat-apps)
 - [#rocketchat-apps on Open.Rocket.Chat](https://open.rocket.chat/channel/rocketchat-apps)
-`;
-};
+`
+}

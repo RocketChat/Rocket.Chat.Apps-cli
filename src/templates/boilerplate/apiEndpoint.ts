@@ -1,7 +1,7 @@
-import pascalCase = require('pascal-case');
+import {pascalCase} from '../../misc/textTransforms'
 
 export const apiEndpointTemplate = (endpointClassName: string, path: string): string => {
-return `
+  return `
 import { IHttp, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
 import { ApiEndpoint, IApiEndpointInfo, IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/api';
 
@@ -39,5 +39,5 @@ export class ${pascalCase(endpointClassName)} extends ApiEndpoint {
     throw new Error('Method not implemented');
   }
 }
-`;
-};
+`
+}

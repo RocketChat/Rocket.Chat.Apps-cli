@@ -1,14 +1,13 @@
-
 export const initialSettingTemplate = (): string => {
-    return `
+  return `
 import { ISetting, SettingType } from '@rocket.chat/apps-engine/definition/settings';
 export const settings: Array<ISetting> = [
 ];
-`;
-};
+`
+}
 
 export const appendNewSetting = (data: string): string => {
-    const toWrite = `
+  const toWrite = `
 {
     id: '',
     type: SettingType.STRING,
@@ -18,7 +17,7 @@ export const appendNewSetting = (data: string): string => {
     i18nLabel: '',
     i18nDescription: '',
 },
-`;
-    const index = data.lastIndexOf('];');
-    return data.slice(0, index) + toWrite + data.slice(index);
-};
+`
+  const index = data.lastIndexOf('];')
+  return data.slice(0, index) + toWrite + data.slice(index)
+}

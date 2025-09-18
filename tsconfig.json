@@ -1,19 +1,29 @@
 {
   "compilerOptions": {
     "sourceMap": true,
-    "target": "es2017",
+    "target": "ES2022",
     "module": "commonjs",
+    "lib": ["ES2022", "DOM"],
     "declaration": true,
+    "strict": true,
     "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "importHelpers": true,
     "outDir": "./lib",
-    "rootDirs": [ "./src" ],
-    "typeRoots": [ "./node_modules/@types", "./src/typings" ]
+    "rootDirs": ["./src"],
+    "typeRoots": ["./node_modules/@types", "./src/typings"],
+    "paths": {
+      "zod": ["./src/vendor/zod/index"]
+    }
   },
-  "include": [
-    "./src/**/*"
-  ]
+  "include": ["./src/**/*"]
 }

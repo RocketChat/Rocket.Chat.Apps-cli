@@ -1,7 +1,7 @@
-import pascalCase = require('pascal-case');
+import {pascalCase} from '../../misc/textTransforms'
 
 export const slashCommandTemplate = (commandName: string): string => {
-    return `
+  return `
 import { IHttp, IModify, IPersistence, IRead } from '@rocket.chat/apps-engine/definition/accessors';
 import { ISlashCommand, ISlashCommandPreview,
         ISlashCommandPreviewItem, SlashCommandContext } from '@rocket.chat/apps-engine/definition/slashcommands';
@@ -28,5 +28,5 @@ export class ${pascalCase(commandName)} implements ISlashCommand {
       throw new Error('Method not implemented');
     }
 }
-`;
-};
+`
+}

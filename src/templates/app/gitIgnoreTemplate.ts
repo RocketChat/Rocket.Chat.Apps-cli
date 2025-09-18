@@ -1,5 +1,5 @@
 export const gitIgnoreTemplate = (): string => {
-    return `# ignore modules pulled in from npm
+  return `# ignore modules pulled in from npm
 node_modules/
 
 # rc-apps package output
@@ -27,5 +27,5 @@ out/
 Network Trash Folder
 Temporary Items
 .apdisk
-`;
-};
+`
+}

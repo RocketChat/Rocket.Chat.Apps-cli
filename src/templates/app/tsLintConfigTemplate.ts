@@ -1,5 +1,5 @@
 export const tsLintConfigTemplate = (): string => {
-return `{
+  return `{
     "extends": "tslint:recommended",
     "rules": {
       "array-type": [true, "generic"],
@@ -14,5 +14,5 @@ return `{
       }]
     }
 }
-`;
-};
+`
+}

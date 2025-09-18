@@ -1,5 +1,5 @@
 export const editorConfigTemplate = (): string => {
-    return `# EditorConfig is awesome: http://EditorConfig.org
+  return `# EditorConfig is awesome: http://EditorConfig.org
 
 # top-most EditorConfig file
 root = true
@@ -15,5 +15,5 @@ trim_trailing_whitespace = true
 
 [*.md]
 trim_trailing_whitespace = false
-`;
-};
+`
+}

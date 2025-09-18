@@ -1,5 +1,5 @@
 export const tsConfigTemplate = (): string => {
-    return `{
+  return `{
 "compilerOptions": {
     "target": "es2017",
     "module": "commonjs",
@@ -16,5 +16,5 @@ export const tsConfigTemplate = (): string => {
     "**/*.ts"
     ]
 }
-`;
-};
+`
+}
