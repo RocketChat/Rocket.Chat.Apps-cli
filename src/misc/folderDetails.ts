@@ -6,9 +6,7 @@ import {existsSync, mkdirSync, writeFileSync, readFileSync} from 'fs'
 import * as path from 'path'
 import * as process from 'process'
 import {coerce as coerceVersion, diff as diffVersion} from 'semver'
-import * as tv4 from 'tv4'
-
-import {appJsonSchema} from './appJsonSchema'
+import {validateAppJson, ValidationIssue} from './appJsonValidator'
 import {unicodeSymbols} from './unicodeSymbols'
 
 const getSymbol = (key: string, fallback: string): string => unicodeSymbols.get(key) ?? fallback
@@ -155,31 +153,20 @@ export class FolderDetails {
   }
 
   private validateAppDotJson(): void {
-    const result = tv4.validateMultiple(this.info, appJsonSchema)
+    const issues = validateAppJson(this.info)
 
-    // We only care if the result is invalid, as it should pass successfully
-    if (!this.isValidResult(result)) {
-      this.reportFailed(result.errors.length, result.missing.length)
-
-      result.errors.forEach((e: tv4.ValidationError) => this.reportError(e))
-      result.missing.forEach((v: string) => this.reportMissing(v))
+    if (issues.length > 0) {
+      this.reportFailed(issues.length)
+      issues.forEach((issue) => this.reportIssue(issue))
 
       throw new Error('Invalid "app.json" file, please ensure it matches the schema. (TODO: insert link here)')
     }
   }
 
-  private isValidResult(result: tv4.MultiResult): boolean {
-    return result.valid && result.missing.length === 0
-  }
-
-  private reportFailed(errorCount: number, missingCount: number): void {
+  private reportFailed(issueCount: number): void {
     const results = []
-    if (errorCount > 0) {
-      results.push(chalk.red(`${errorCount} validation error(s)`))
-    }
-
-    if (missingCount > 0) {
-      results.push(chalk.red(`${missingCount} missing schema(s)`))
+    if (issueCount > 0) {
+      results.push(chalk.red(`${issueCount} validation error(s)`))
     }
 
     this.command.log(
@@ -189,28 +176,12 @@ export class FolderDetails {
     )
   }
 
-  private reportError(error: tv4.ValidationError, indent = '  ') {
-    this.command.log(
-      indent,
-      chalk.red(`${getSymbol('pointer', '▶')} Error:`),
-      error.message || 'No error message provided by validation module',
-    )
+  private reportIssue(issue: ValidationIssue, indent = '  ') {
+    this.command.log(indent, chalk.red(`${getSymbol('pointer', '▶')} Error:`), issue.message)
 
-    this.command.log(
-      indent,
-      '  at',
-      chalk.blue(error.dataPath || '/'),
-      'against schema',
-      chalk.blue(error.schemaPath || '/'),
-    )
-
-    if (error.subErrors) {
-      error.subErrors.forEach((err) => this.reportError(err, `${indent}  `))
+    if (issue.path) {
+      this.command.log(indent, '  at', chalk.blue(issue.path))
     }
-  }
-
-  private reportMissing(uri: string, indent = '  ') {
-    this.command.log(indent, chalk.red(`${getSymbol('pointer', '▶')} Missing:`), uri)
   }
 
   private async updateInfoFileRequiredVersion(requiredApiVersion: string): Promise<void> {

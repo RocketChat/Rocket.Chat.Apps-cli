@@ -1,6 +1,5 @@
 import {AppCompiler} from './appCompiler'
 import {AppCreator} from './appCreator'
-import {appJsonSchema} from './appJsonSchema'
 import {AppPackager} from './appPackager'
 import {compilerOptions} from './compilerOptions'
 import {DiagnosticReport} from './diagnosticReport'
@@ -14,7 +13,6 @@ export {
   IAppCategory,
   INormalLoginInfo,
   IPersonalAccessTokenLoginInfo,
-  appJsonSchema,
   AppCreator,
   AppPackager,
   AppCompiler,

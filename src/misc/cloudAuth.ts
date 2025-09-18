@@ -1,8 +1,10 @@
 import {createServer} from 'http'
 import type {Server as HttpServer} from 'http'
 import chalk from 'chalk'
-import Conf from 'conf'
-import {createHash, randomUUID} from 'crypto'
+import {createCipheriv, createDecipheriv, createHash, randomBytes, randomUUID} from 'crypto'
+import {existsSync, mkdirSync, readFileSync, writeFileSync} from 'fs'
+import * as os from 'os'
+import * as path from 'path'
 import {cpu, mem, osInfo, system} from 'systeminformation'
 
 import {openExternal} from './openExternal'
@@ -24,16 +26,6 @@ export interface ICloudAuthStorage {
   expiresAt: Date
 }
 
-type CloudConfig = {
-  rcc?: ICloudAuthStorage
-  'rcc.token.access_token'?: string
-  'rcc.token.expires_in'?: number
-  'rcc.token.scope'?: string
-  'rcc.token.token_type'?: string
-  'rcc.token.refresh_token'?: string
-  'rcc.expiresAt'?: Date
-}
-
 class CloudAuthRequestError extends Error {
   constructor(
     public readonly status: number,
@@ -44,8 +36,120 @@ class CloudAuthRequestError extends Error {
   }
 }
 
+const resolveStorePath = (): string => {
+  if (process.env.RC_APPS_CONFIG_PATH) {
+    return process.env.RC_APPS_CONFIG_PATH
+  }
+
+  if (process.platform === 'win32') {
+    const base = process.env.APPDATA ?? path.join(os.homedir(), 'AppData', 'Roaming')
+    return path.join(base, 'rc-apps', 'cloud-auth.json')
+  }
+
+  const configHome = process.env.XDG_CONFIG_HOME ?? path.join(os.homedir(), '.config')
+  return path.join(configHome, 'rc-apps', 'cloud-auth.json')
+}
+
+class CloudConfigStore {
+  private cache: Record<string, unknown>
+
+  constructor(private filePath: string, private secret: Buffer) {
+    this.cache = this.readFromDisk()
+  }
+
+  public get<T>(key: string): T | undefined {
+    const value = this.cache[key]
+
+    if (key === 'rcc' && value && typeof value === 'object') {
+      const storage = {...(value as Record<string, unknown>)}
+      if (typeof storage.expiresAt === 'string') {
+        storage.expiresAt = new Date(storage.expiresAt)
+      }
+
+      return storage as T
+    }
+
+    if (key === 'rcc.expiresAt' && typeof value === 'string') {
+      return new Date(value) as T
+    }
+
+    return value as T | undefined
+  }
+
+  public has(key: string): boolean {
+    return Object.prototype.hasOwnProperty.call(this.cache, key)
+  }
+
+  public set(key: string, value: unknown): void {
+    if (value instanceof Date) {
+      this.cache[key] = value.toISOString()
+    } else if (key === 'rcc' && value && typeof value === 'object') {
+      const storage = {...(value as Record<string, unknown>)}
+      if (storage.expiresAt instanceof Date) {
+        storage.expiresAt = storage.expiresAt.toISOString()
+      }
+      this.cache[key] = storage
+    } else {
+      this.cache[key] = value
+    }
+
+    this.writeToDisk()
+  }
+
+  public delete(key: string): void {
+    if (this.has(key)) {
+      delete this.cache[key]
+      this.writeToDisk()
+    }
+  }
+
+  private readFromDisk(): Record<string, unknown> {
+    if (!existsSync(this.filePath)) {
+      return {}
+    }
+
+    try {
+      const raw = readFileSync(this.filePath, 'utf8')
+      if (!raw) {
+        return {}
+      }
+
+      const buffer = Buffer.from(raw, 'base64')
+      const iv = buffer.subarray(0, 12)
+      const authTag = buffer.subarray(12, 28)
+      const ciphertext = buffer.subarray(28)
+
+      const decipher = createDecipheriv('aes-256-gcm', this.secret, iv)
+      decipher.setAuthTag(authTag)
+      const decrypted = Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString('utf8')
+      return JSON.parse(decrypted) as Record<string, unknown>
+    } catch {
+      return {}
+    }
+  }
+
+  private writeToDisk(): void {
+    try {
+      const dir = path.dirname(this.filePath)
+      mkdirSync(dir, {recursive: true})
+
+      const plaintext = Buffer.from(JSON.stringify(this.cache), 'utf8')
+      const iv = randomBytes(12)
+      const cipher = createCipheriv('aes-256-gcm', this.secret, iv)
+      const ciphertext = Buffer.concat([cipher.update(plaintext), cipher.final()])
+      const authTag = cipher.getAuthTag()
+      const payload = Buffer.concat([iv, authTag, ciphertext]).toString('base64')
+
+      writeFileSync(this.filePath, payload, {mode: 0o600})
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to persist cloud auth configuration:', error)
+    }
+  }
+}
+
 export class CloudAuth {
-  private config?: Conf<CloudConfig>
+  private store?: CloudConfigStore
   private codeVerifier: string
   private readonly port = 3005
   private server?: HttpServer
@@ -137,13 +241,13 @@ export class CloudAuth {
   public async hasToken(): Promise<boolean> {
     await this.initialize()
 
-    return this.getConfig().has('rcc.token.access_token')
+    return this.getStore().has('rcc.token.access_token')
   }
 
   public async getToken(): Promise<string> {
     await this.initialize()
 
-    const item = this.getConfig().get('rcc')
+    const item = this.getStore().get<ICloudAuthStorage>('rcc')
     if (!item) {
       // when there isn't an item, we will not return anything or error out
       return ''
@@ -155,14 +259,14 @@ export class CloudAuth {
 
     await this.refreshToken()
 
-    const refreshedToken = this.getConfig().get('rcc.token.access_token')
+    const refreshedToken = this.getStore().get<string>('rcc.token.access_token')
     return typeof refreshedToken === 'string' ? refreshedToken : ''
   }
 
   public async revokeToken(): Promise<void> {
     await this.initialize()
 
-    const item = this.getConfig().get('rcc')
+    const item = this.getStore().get<ICloudAuthStorage>('rcc')
     if (!item) {
       throw new Error('invalid cloud auth storage item')
     }
@@ -191,7 +295,7 @@ export class CloudAuth {
         expiresAt,
       }
 
-      this.getConfig().set('rcc', storageItem)
+      this.getStore().set('rcc', storageItem)
 
       return tokenInfo
     } catch (err) {
@@ -222,12 +326,12 @@ export class CloudAuth {
       const expiresAt = new Date()
       expiresAt.setSeconds(expiresAt.getSeconds() + tokenInfo.expires_in)
 
-      const config = this.getConfig()
-      config.set('rcc.token.access_token', tokenInfo.access_token)
-      config.set('rcc.token.expires_in', tokenInfo.expires_in)
-      config.set('rcc.token.scope', tokenInfo.scope)
-      config.set('rcc.token.token_type', tokenInfo.token_type)
-      config.set('rcc.expiresAt', expiresAt)
+      const store = this.getStore()
+      store.set('rcc.token.access_token', tokenInfo.access_token)
+      store.set('rcc.token.expires_in', tokenInfo.expires_in)
+      store.set('rcc.token.scope', tokenInfo.scope)
+      store.set('rcc.token.token_type', tokenInfo.token_type)
+      store.set('rcc.expiresAt', expiresAt)
     } catch (err) {
       if (err instanceof CloudAuthRequestError) {
         this.logHttpError('error refreshing token', err)
@@ -250,11 +354,11 @@ export class CloudAuth {
 
     try {
       await this.postForm('/api/oauth/revoke', request)
-      this.getConfig().delete('rcc')
+      this.getStore().delete('rcc')
     } catch (err) {
       if (err instanceof CloudAuthRequestError) {
         if (err.status === 401) {
-          this.getConfig().delete('rcc')
+          this.getStore().delete('rcc')
           return
         }
 
@@ -283,14 +387,15 @@ export class CloudAuth {
   }
 
   private async initialize(): Promise<void> {
-    if (this.config) {
+    if (this.store) {
       return
     }
 
-    this.config = new Conf<CloudConfig>({
-      projectName: 'chat.rocket.apps-cli',
-      encryptionKey: await this.getEncryptionKey(),
-    })
+    const encryptionKey = await this.getEncryptionKey()
+    const keyMaterial = createHash('sha256').update(encryptionKey).digest()
+    const storePath = resolveStorePath()
+
+    this.store = new CloudConfigStore(storePath, keyMaterial)
   }
 
   private async getEncryptionKey(): Promise<string> {
@@ -393,16 +498,16 @@ export class CloudAuth {
     this.server = undefined
   }
 
-  private getConfig(): Conf<CloudConfig> {
-    if (!this.config) {
+  private getStore(): CloudConfigStore {
+    if (!this.store) {
       throw new Error('Cloud configuration not initialized')
     }
 
-    return this.config
+    return this.store
   }
 
   private getRefreshToken(): string {
-    const refreshToken = this.getConfig().get('rcc.token.refresh_token')
+    const refreshToken = this.getStore().get<string>('rcc.token.refresh_token')
     return typeof refreshToken === 'string' ? refreshToken : ''
   }
 

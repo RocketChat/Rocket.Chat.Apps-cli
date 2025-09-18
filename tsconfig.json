@@ -20,7 +20,10 @@
     "importHelpers": true,
     "outDir": "./lib",
     "rootDirs": ["./src"],
-    "typeRoots": ["./node_modules/@types", "./src/typings"]
+    "typeRoots": ["./node_modules/@types", "./src/typings"],
+    "paths": {
+      "zod": ["./src/vendor/zod/index"]
+    }
   },
   "include": ["./src/**/*"]
 }
