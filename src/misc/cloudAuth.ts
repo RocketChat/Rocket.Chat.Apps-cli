@@ -1,5 +1,4 @@
 import {Request, Server} from '@hapi/hapi'
-import axios, {isAxiosError} from 'axios'
 import chalk from 'chalk'
 import Conf from 'conf'
 import {createHash, randomUUID} from 'crypto'
@@ -31,6 +30,16 @@ type CloudConfig = {
   'rcc.token.token_type'?: string
   'rcc.token.refresh_token'?: string
   'rcc.expiresAt'?: Date
+}
+
+class CloudAuthRequestError extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly body: unknown,
+    message?: string,
+  ) {
+    super(message ?? `Request failed with status ${status}`)
+  }
 }
 
 export class CloudAuth {
@@ -134,14 +143,7 @@ export class CloudAuth {
         code_verifier: this.codeVerifier,
       }
 
-      const res = await axios.post<ICloudToken>(
-        `${cloudUrl}/api/oauth/token`,
-        new URLSearchParams(request).toString(),
-        {
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        },
-      )
-      const tokenInfo = res.data
+      const tokenInfo = await this.postForm<ICloudToken>('/api/oauth/token', request)
 
       const expiresAt = new Date()
       expiresAt.setSeconds(expiresAt.getSeconds() + tokenInfo.expires_in)
@@ -155,12 +157,8 @@ export class CloudAuth {
 
       return tokenInfo
     } catch (err) {
-      if (isAxiosError(err) && err.response) {
-        const {status, data} = err.response
-        const errorMessage = (data as {error?: string; requestId?: string}) || {}
-        this.logError(
-          `[${status}] error getting token: ${errorMessage.error ?? 'unknown'} (${errorMessage.requestId ?? 'n/a'})`,
-        )
+      if (err instanceof CloudAuthRequestError) {
+        this.logHttpError('error getting token', err)
       } else {
         this.logError(`Error getting token: ${this.formatError(err)}`)
       }
@@ -181,14 +179,7 @@ export class CloudAuth {
     }
 
     try {
-      const res = await axios.post<ICloudToken>(
-        `${cloudUrl}/api/oauth/token`,
-        new URLSearchParams(request).toString(),
-        {
-          headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-        },
-      )
-      const tokenInfo = res.data
+      const tokenInfo = await this.postForm<ICloudToken>('/api/oauth/token', request)
 
       const expiresAt = new Date()
       expiresAt.setSeconds(expiresAt.getSeconds() + tokenInfo.expires_in)
@@ -200,12 +191,8 @@ export class CloudAuth {
       config.set('rcc.token.token_type', tokenInfo.token_type)
       config.set('rcc.expiresAt', expiresAt)
     } catch (err) {
-      if (isAxiosError(err) && err.response) {
-        const {status, data} = err.response
-        const errorMessage = (data as {error?: string; requestId?: string}) || {}
-        this.logError(
-          `[${status}] error refreshing token: ${errorMessage.error ?? 'unknown'} (${errorMessage.requestId ?? 'n/a'})`,
-        )
+      if (err instanceof CloudAuthRequestError) {
+        this.logHttpError('error refreshing token', err)
       } else {
         this.logError(`Error refreshing token: ${this.formatError(err)}`)
       }
@@ -224,22 +211,16 @@ export class CloudAuth {
     }
 
     try {
-      await axios.post(`${cloudUrl}/api/oauth/revoke`, new URLSearchParams(request).toString(), {
-        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      })
+      await this.postForm('/api/oauth/revoke', request)
       this.getConfig().delete('rcc')
     } catch (err) {
-      if (isAxiosError(err) && err.response) {
-        const {status, data} = err.response
-        if (status === 401) {
+      if (err instanceof CloudAuthRequestError) {
+        if (err.status === 401) {
           this.getConfig().delete('rcc')
           return
         }
 
-        const errorMessage = (data as {error?: string; requestId?: string}) || {}
-        this.logError(
-          `[${status}] error revoking the token: ${errorMessage.error ?? 'unknown'} (${errorMessage.requestId ?? 'n/a'})`,
-        )
+        this.logHttpError('error revoking the token', err)
       } else {
         this.logError(`Error revoking token: ${this.formatError(err)}`)
       }
@@ -300,6 +281,60 @@ export class CloudAuth {
   // base64url - https://base64.guru/standards/base64url
   private base64url(url: string): string {
     return url.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+  }
+
+  private async postForm<T>(path: string, payload: Record<string, string>): Promise<T> {
+    const response = await fetch(`${cloudUrl}${path}`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: new URLSearchParams(payload).toString(),
+    })
+
+    const rawBody = await response.text()
+    let parsedBody: unknown = undefined
+
+    if (rawBody) {
+      try {
+        parsedBody = JSON.parse(rawBody)
+      } catch {
+        parsedBody = rawBody
+      }
+    }
+
+    if (!response.ok) {
+      throw new CloudAuthRequestError(response.status, parsedBody ?? rawBody)
+    }
+
+    return parsedBody as T
+  }
+
+  private logHttpError(prefix: string, err: CloudAuthRequestError): void {
+    const {error, requestId} = this.extractErrorDetails(err.body)
+    this.logError(`[${err.status}] ${prefix}: ${error ?? 'unknown'} (${requestId ?? 'n/a'})`)
+  }
+
+  private extractErrorDetails(body: unknown): {error?: string; requestId?: string} {
+    if (body && typeof body === 'object') {
+      const info = body as Record<string, unknown>
+      return {
+        error: typeof info.error === 'string' ? info.error : undefined,
+        requestId: typeof info.requestId === 'string' ? info.requestId : undefined,
+      }
+    }
+
+    if (typeof body === 'string') {
+      try {
+        const parsed = JSON.parse(body) as Record<string, unknown>
+        return {
+          error: typeof parsed.error === 'string' ? parsed.error : undefined,
+          requestId: typeof parsed.requestId === 'string' ? parsed.requestId : undefined,
+        }
+      } catch {
+        return {error: body}
+      }
+    }
+
+    return {}
   }
 
   private getConfig(): Conf<CloudConfig> {
