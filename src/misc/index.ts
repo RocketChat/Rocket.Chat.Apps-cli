@@ -8,6 +8,7 @@ import {FolderDetails} from './folderDetails'
 import {IAppCategory, INormalLoginInfo, IPersonalAccessTokenLoginInfo} from './interfaces'
 import {unicodeSymbols} from './unicodeSymbols'
 import {VariousUtils} from './variousUtils'
+import {pascalCase} from './textTransforms'
 
 export {
   IAppCategory,
@@ -22,4 +23,5 @@ export {
   FolderDetails,
   unicodeSymbols,
   VariousUtils,
+  pascalCase,
 }

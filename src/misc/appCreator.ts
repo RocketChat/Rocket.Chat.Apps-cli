@@ -1,7 +1,6 @@
 import {Command} from '@oclif/core'
 import {exec} from 'child_process'
 import * as fs from 'fs'
-import {pascalCase} from 'pascal-case'
 
 import {
   editorConfigTemplate,
@@ -14,6 +13,7 @@ import {
   vsCodeExtsTemplate,
 } from '../templates/app/index'
 import {FolderDetails} from './folderDetails'
+import {pascalCase} from './textTransforms'
 
 export class AppCreator {
   constructor(

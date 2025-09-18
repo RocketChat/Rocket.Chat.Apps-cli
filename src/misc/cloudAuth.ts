@@ -2,8 +2,9 @@ import {Request, Server} from '@hapi/hapi'
 import chalk from 'chalk'
 import Conf from 'conf'
 import {createHash, randomUUID} from 'crypto'
-import open from 'open'
 import {cpu, mem, osInfo, system} from 'systeminformation'
+
+import {openExternal} from './openExternal'
 
 const cloudUrl = 'https://cloud.rocket.chat'
 const clientId = '5d8e59c5d48080ef5497e522'
@@ -84,9 +85,8 @@ export class CloudAuth {
         this.logInfo(
           `${chalk.green('*')} ${chalk.white('...if your browser does not open, open this:')} ${chalk.underline(chalk.blue(authorizeUrl))}`,
         )
-
         ;(async () => {
-          await open(authorizeUrl)
+          await openExternal(authorizeUrl)
           await this.server?.start()
         })().catch(reject)
       } catch (e) {

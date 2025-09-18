@@ -1,6 +1,7 @@
 import {Command, Flags, ux} from '@oclif/core'
 import chalk from 'chalk'
 import * as chokidar from 'chokidar'
+import {password as promptPassword} from '@inquirer/prompts'
 
 import {ICompilerDiagnostic} from '@rocket.chat/apps-compiler/definition'
 import {AppCompiler, FolderDetails, unicodeSymbols} from '../misc'
@@ -59,15 +60,7 @@ export default class Watch extends Command {
     }
 
     if (flags.i2fa) {
-      const inquirer = await import('inquirer')
-      const response = await inquirer.default.prompt([
-        {
-          type: 'password',
-          name: 'code',
-          message: '2FA code',
-        },
-      ])
-      flags.code = response.code
+      flags.code = await promptPassword({message: '2FA code'})
     }
 
     let ignoredFiles: Array<string>

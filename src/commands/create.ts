@@ -2,12 +2,11 @@ import {Command, Flags} from '@oclif/core'
 import {IAppInfo} from '@rocket.chat/apps-engine/definition/metadata'
 import {input} from '@inquirer/prompts'
 import chalk from 'chalk'
-import {pascalCase} from 'pascal-case'
 import * as path from 'path'
 import * as semver from 'semver'
 import {randomUUID} from 'crypto'
 
-import {AppCreator, FolderDetails, VariousUtils} from '../misc'
+import {AppCreator, FolderDetails, VariousUtils, pascalCase} from '../misc'
 
 export default class Create extends Command {
   public static description = 'simplified way of creating an app'

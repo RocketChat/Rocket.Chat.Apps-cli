@@ -1,4 +1,4 @@
-import {pascalCase} from 'pascal-case'
+import {pascalCase} from '../../misc/textTransforms'
 
 export const apiEndpointTemplate = (endpointClassName: string, path: string): string => {
   return `

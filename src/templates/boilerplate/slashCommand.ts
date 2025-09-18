@@ -1,4 +1,4 @@
-import {pascalCase} from 'pascal-case'
+import {pascalCase} from '../../misc/textTransforms'
 
 export const slashCommandTemplate = (commandName: string): string => {
   return `

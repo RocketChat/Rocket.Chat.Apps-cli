@@ -1,7 +1,6 @@
 import {Command} from '@oclif/core'
 import {IAppInfo} from '@rocket.chat/apps-engine/definition/metadata'
 import chalk from 'chalk'
-import figures from 'figures'
 import * as fs from 'fs/promises'
 import {existsSync, mkdirSync, writeFileSync, readFileSync} from 'fs'
 import * as path from 'path'
@@ -10,6 +9,9 @@ import {coerce as coerceVersion, diff as diffVersion} from 'semver'
 import * as tv4 from 'tv4'
 
 import {appJsonSchema} from './appJsonSchema'
+import {unicodeSymbols} from './unicodeSymbols'
+
+const getSymbol = (key: string, fallback: string): string => unicodeSymbols.get(key) ?? fallback
 
 interface PackageJsonContent {
   devDependencies?: Record<string, string>
@@ -181,7 +183,7 @@ export class FolderDetails {
     }
 
     this.command.log(
-      chalk.red(figures.cross || '✕'),
+      chalk.red(getSymbol('cross', '✕')),
       chalk.cyan(this.infoFile),
       results.length > 0 ? `has ${results.join(' and ')}` : '',
     )
@@ -190,7 +192,7 @@ export class FolderDetails {
   private reportError(error: tv4.ValidationError, indent = '  ') {
     this.command.log(
       indent,
-      chalk.red(`${figures.pointer || '▶'} Error:`),
+      chalk.red(`${getSymbol('pointer', '▶')} Error:`),
       error.message || 'No error message provided by validation module',
     )
 
@@ -208,7 +210,7 @@ export class FolderDetails {
   }
 
   private reportMissing(uri: string, indent = '  ') {
-    this.command.log(indent, chalk.red(`${figures.pointer || '▶'} Missing:`), uri)
+    this.command.log(indent, chalk.red(`${getSymbol('pointer', '▶')} Missing:`), uri)
   }
 
   private async updateInfoFileRequiredVersion(requiredApiVersion: string): Promise<void> {
