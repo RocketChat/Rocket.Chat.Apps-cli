@@ -1,4 +1,3 @@
-import fetch from 'fetch-with-proxy'
 import * as fs from 'fs'
 
 import {IAppCategory} from './interfaces'

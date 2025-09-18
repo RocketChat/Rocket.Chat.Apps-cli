@@ -1,8 +1,6 @@
 import {Command, Flags, ux} from '@oclif/core'
 import chalk from 'chalk'
-import fetch from 'fetch-with-proxy'
-import FormData from 'form-data'
-import * as fs from 'fs'
+import {promises as fs} from 'fs'
 // import * as fuzzy from 'fuzzy';
 import {confirm, input} from '@inquirer/prompts'
 // import { Response } from 'fetch-with-proxy';
@@ -155,7 +153,10 @@ export default class Submit extends Command {
     ux.action.start(`${chalk.green('submitting')} your app`)
 
     const data = new FormData()
-    data.append('app', fs.createReadStream(fd.mergeWithFolder(zipName)))
+    const appFileBuffer = await fs.readFile(fd.mergeWithFolder(zipName))
+    const appBytes = new Uint8Array(appFileBuffer.byteLength)
+    appBytes.set(appFileBuffer)
+    data.append('app', new File([appBytes], zipName, {type: 'application/zip'}))
     data.append('categories', JSON.stringify(selectedCategories))
 
     if (changes) {

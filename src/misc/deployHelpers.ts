@@ -1,8 +1,6 @@
 import {Command} from '@oclif/core'
 import chalk from 'chalk'
-import fetch from 'fetch-with-proxy'
-import FormData from 'form-data'
-import * as fs from 'fs'
+import {promises as fs} from 'fs'
 
 import {AppPackager, FolderDetails} from '.'
 
@@ -38,7 +36,7 @@ export const getServerInfo = async (fd: FolderDetails, flags: DeployFlags): Prom
   let loginInfo: DeployFlags = {...flags}
   try {
     if (await fd.doesFileExist(fd.mergeWithFolder('.rcappsconfig'))) {
-      const rawConfig = await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8')
+      const rawConfig = await fs.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8')
       const parsedConfig = JSON.parse(rawConfig) as Partial<DeployFlags>
       loginInfo = {...parsedConfig, ...loginInfo}
     }
@@ -141,7 +139,10 @@ export const packageAndZip = async (command: Command, fd: FolderDetails): Promis
 
 export const uploadApp = async (flags: DeployFlags, fd: FolderDetails, zipname: string) => {
   const data = new FormData()
-  data.append('app', fs.createReadStream(fd.mergeWithFolder(zipname)))
+  const appFileBuffer = await fs.readFile(fd.mergeWithFolder(zipname))
+  const appBytes = new Uint8Array(appFileBuffer.byteLength)
+  appBytes.set(appFileBuffer)
+  data.append('app', new File([appBytes], zipname, {type: 'application/zip'}))
 
   if (fd.info.permissions) {
     data.append('permissions', JSON.stringify(fd.info.permissions))
@@ -312,7 +313,7 @@ export const normalizeUrl = (url: string, path: string): string => {
 export const getIgnoredFiles = async (fd: FolderDetails): Promise<Array<string>> => {
   try {
     if (await fd.doesFileExist(fd.mergeWithFolder('.rcappsconfig'))) {
-      const data = await fs.promises.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8')
+      const data = await fs.readFile(fd.mergeWithFolder('.rcappsconfig'), 'utf-8')
       const parsedData = JSON.parse(data) as {ignoredFiles?: Array<string>}
       return parsedData.ignoredFiles ?? ['**/dist/**']
     } else {

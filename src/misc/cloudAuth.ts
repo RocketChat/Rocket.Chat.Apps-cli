@@ -1,4 +1,5 @@
-import {Request, Server} from '@hapi/hapi'
+import {createServer} from 'http'
+import type {Server as HttpServer} from 'http'
 import chalk from 'chalk'
 import Conf from 'conf'
 import {createHash, randomUUID} from 'crypto'
@@ -47,7 +48,7 @@ export class CloudAuth {
   private config?: Conf<CloudConfig>
   private codeVerifier: string
   private readonly port = 3005
-  private server?: Server
+  private server?: HttpServer
   private readonly redirectUri: string
 
   constructor() {
@@ -59,39 +60,76 @@ export class CloudAuth {
     await this.initialize()
 
     return new Promise<string>((resolve, reject) => {
-      try {
-        this.server = new Server({host: 'localhost', port: this.port})
-        this.server.route({
-          method: 'GET',
-          path: '/callback',
-          handler: async (request: Request) => {
-            try {
-              const {code} = request.query as {code?: string | string[]}
-              const token = await this.fetchToken(code)
+      let settled = false
+      const safeResolve = (value: string) => {
+        if (!settled) {
+          settled = true
+          resolve(value)
+        }
+      }
+      const safeReject = (error: unknown) => {
+        if (!settled) {
+          settled = true
+          reject(error)
+        }
+      }
 
-              resolve(token.access_token)
-              return 'Thank you. You can close this tab.'
-            } catch (err) {
-              reject(err)
-              return 'Error occurred. Please close this tab.'
-            } finally {
-              await this.server?.stop()
-            }
-          },
+      try {
+        this.server = createServer(async (req, res) => {
+          if (!req.url) {
+            res.statusCode = 400
+            res.end('Invalid request')
+            return
+          }
+
+          const requestUrl = new URL(req.url, this.redirectUri)
+
+          if (requestUrl.pathname !== '/callback') {
+            res.statusCode = 404
+            res.end('Not Found')
+            return
+          }
+
+          try {
+            const code = requestUrl.searchParams.get('code')
+            const token = await this.fetchToken(code ?? undefined)
+
+            res.statusCode = 200
+            res.end('Thank you. You can close this tab.')
+            safeResolve(token.access_token)
+          } catch (err) {
+            res.statusCode = 500
+            res.end('Error occurred. Please close this tab.')
+            safeReject(err)
+          } finally {
+            await this.stopServer()
+          }
         })
 
-        const codeChallenge = this.base64url(createHash('sha256').update(this.codeVerifier).digest('base64'))
-        const authorizeUrl = this.buildAuthorizeUrl(codeChallenge)
-        this.logInfo(
-          `${chalk.green('*')} ${chalk.white('...if your browser does not open, open this:')} ${chalk.underline(chalk.blue(authorizeUrl))}`,
-        )
-        ;(async () => {
-          await openExternal(authorizeUrl)
-          await this.server?.start()
-        })().catch(reject)
+        this.server.on('error', (error) => {
+          this.logError(`Callback server error: ${this.formatError(error)}`)
+          safeReject(error)
+        })
+
+        this.server.listen(this.port, 'localhost', async () => {
+          try {
+            const codeChallenge = this.base64url(createHash('sha256').update(this.codeVerifier).digest('base64'))
+            const authorizeUrl = this.buildAuthorizeUrl(codeChallenge)
+            this.logInfo(
+              `${chalk.green('*')} ${chalk.white('...if your browser does not open, open this:')} ${chalk.underline(chalk.blue(authorizeUrl))}`,
+            )
+
+            await openExternal(authorizeUrl)
+          } catch (err) {
+            this.logError(`Error launching browser: ${this.formatError(err)}`)
+            await this.stopServer()
+            safeReject(err)
+          }
+        })
       } catch (e) {
         this.logError(`Error inside of the execute: ${this.formatError(e)}`)
-        reject(e)
+        void this.stopServer()
+        safeReject(e)
       }
     })
   }
@@ -335,6 +373,24 @@ export class CloudAuth {
     }
 
     return {}
+  }
+
+  private async stopServer(): Promise<void> {
+    if (!this.server) {
+      return
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      this.server?.close((err) => {
+        if (err) {
+          reject(err)
+        } else {
+          resolve()
+        }
+      })
+    }).catch((err) => this.logError(`Error stopping callback server: ${this.formatError(err)}`))
+
+    this.server = undefined
   }
 
   private getConfig(): Conf<CloudConfig> {
