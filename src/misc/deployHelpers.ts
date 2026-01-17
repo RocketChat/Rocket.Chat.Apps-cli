@@ -121,41 +121,15 @@ export const uploadApp = async (flags: { [key: string]: any }, fd: FolderDetails
 
 // tslint:disable-next-line:max-line-length
 export const checkUpload = async (flags: { [key: string]: any }, fd: FolderDetails): Promise<boolean> => {
+
     let authResult;
-    if (!flags.token) {
-        let credentials: { username: string, password: string, code?: string };
-        credentials = { username: flags.username, password: flags.password };
-        if (flags.code) {
-            credentials.code = flags.code;
-        }
-
-        authResult = await fetch(normalizeUrl(flags.url, '/api/v1/login'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(credentials),
-        }).then((res: Response) => res.json());
-
-        if (authResult.status === 'error' || !authResult.data) {
-            throw new Error('Invalid username and password or missing 2FA code (if active)');
-        }
-    } else {
-        const verificationResult = await fetch(normalizeUrl(flags.url, '/api/v1/me'), {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Auth-Token': flags.token,
-                'X-User-Id': flags.userId,
-            },
-        }).then((res: Response) => res.json());
-
-        if (!verificationResult.success) {
-            throw new Error('Invalid API token');
-        }
-
-        authResult = { data: { authToken: flags.token, userId: flags.userId } };
+    try {
+        const session = await retrieveSession(flags);
+        authResult = { data: { authToken: session.authToken, userId: session.userId } };
+    } catch (e) {
+        throw new Error(e.message || 'Authentication failed');
     }
+
     const endpoint = `/api/apps/${fd.info.id}`;
 
     const findApp = await fetch(normalizeUrl(flags.url, endpoint), {
@@ -170,44 +144,8 @@ export const checkUpload = async (flags: { [key: string]: any }, fd: FolderDetai
 
 export const asyncSubmitData = async (data: FormData, flags: { [key: string]: any },
                                       fd: FolderDetails): Promise<void> => {
-        let authResult;
-        if (!flags.url) {
-            throw new Error('Url not found');
-        }
-        if (!flags.token) {
-            let credentials: { username: string, password: string, code?: string };
-            credentials = { username: flags.username, password: flags.password };
-            if (flags.code) {
-                credentials.code = flags.code;
-            }
 
-            authResult = await fetch(normalizeUrl(flags.url, '/api/v1/login'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(credentials),
-            }).then((res: Response) => res.json());
-
-            if (authResult.status === 'error' || !authResult.data) {
-                throw new Error('Invalid username and password or missing 2FA code (if active)');
-            }
-        } else {
-            const verificationResult = await fetch(normalizeUrl(flags.url, '/api/v1/me'), {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Auth-Token': flags.token,
-                    'X-User-Id': flags.userId,
-                },
-            }).then((res: Response) => res.json());
-
-            if (!verificationResult.success) {
-                throw new Error('Invalid API token');
-            }
-
-            authResult = { data: { authToken: flags.token, userId: flags.userId } };
-        }
+        const session = await retrieveSession(flags);
 
         if (await checkUpload(flags, fd)) {
             cli.log(chalk.bold.greenBright('   App already exists - updating it.'));
@@ -222,8 +160,8 @@ export const asyncSubmitData = async (data: FormData, flags: { [key: string]: an
         const deployResult = await fetch(normalizeUrl(flags.url, endpoint), {
             method: 'POST',
             headers: {
-                'X-Auth-Token': authResult.data.authToken,
-                'X-User-Id': authResult.data.userId,
+                'X-Auth-Token': session.authToken,
+                'X-User-Id': session.userId,
             },
             body: data,
         }).then((res: Response) => res.json());
@@ -255,5 +193,49 @@ export const getIgnoredFiles = async (fd: FolderDetails): Promise<Array<string>>
         }
     } catch (e) {
         throw new Error(e && e.message ? e.message : e);
+    }
+};
+
+export const retrieveSession = async (flags: { [key: string]: any }):
+    Promise<{ authToken: string, userId: string }> => {
+    if (!flags.url) {
+        throw new Error('Url not found');
+    }
+
+    if (!flags.token) {
+        let credentials: { username: string, password: string, code?: string };
+        credentials = { username: flags.username, password: flags.password };
+        if (flags.code) {
+            credentials.code = flags.code;
+        }
+
+        const authResult = await fetch(normalizeUrl(flags.url, '/api/v1/login'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(credentials),
+        }).then((res: Response) => res.json());
+
+        if (authResult.status === 'error' || !authResult.data) {
+            throw new Error('Invalid username and password or missing 2FA code (if active)');
+        }
+
+        return { authToken: authResult.data.authToken, userId: authResult.data.userId };
+    } else {
+        const verificationResult = await fetch(normalizeUrl(flags.url, '/api/v1/me'), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Auth-Token': flags.token,
+                'X-User-Id': flags.userId,
+            },
+        }).then((res: Response) => res.json());
+
+        if (!verificationResult.success) {
+            throw new Error('Invalid API token');
+        }
+
+        return { authToken: flags.token, userId: flags.userId };
     }
 };

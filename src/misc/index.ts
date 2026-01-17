@@ -2,6 +2,7 @@ import { AppCompiler } from './appCompiler';
 import { AppCreator } from './appCreator';
 import { appJsonSchema } from './appJsonSchema';
 import { AppPackager } from './appPackager';
+import { AppWatcher } from './appWatcher';
 import { compilerOptions } from './compilerOptions';
 import { DiagnosticReport } from './diagnosticReport';
 import { FolderDetails } from './folderDetails';
@@ -17,6 +18,7 @@ export {
     AppCreator,
     AppPackager,
     AppCompiler,
+    AppWatcher,
     compilerOptions,
     DiagnosticReport,
     FolderDetails,

@@ -82,7 +82,7 @@ export class FolderDetails {
         }
 
         try {
-            this.info = require(this.infoFile);
+            this.info = await fs.readJson(this.infoFile);
         } catch (e) {
             throw new Error('The "app.json" file is invalid.');
         }
