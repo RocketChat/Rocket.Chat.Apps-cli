@@ -1,11 +1,11 @@
 import { Command, flags } from '@oclif/command';
 import chalk from 'chalk';
-import * as chokidar from 'chokidar';
 import cli from 'cli-ux';
+import * as helper from 'fs-extra';
 
 import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
-import { AppCompiler, FolderDetails, unicodeSymbols } from '../misc';
-import { checkUpload, getIgnoredFiles, getServerInfo, uploadApp } from '../misc/deployHelpers';
+import { AppCompiler, AppWatcher, FolderDetails, unicodeSymbols } from '../misc';
+import { checkUpload, getIgnoredFiles, getServerInfo, retrieveSession, uploadApp } from '../misc/deployHelpers';
 
 export default class Watch extends Command {
 
@@ -60,6 +60,8 @@ export default class Watch extends Command {
             this.error(chalk.bold.red(e && e.message ? e.message : e), {exit: 2});
         }
 
+        let compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
+
         if (flags.i2fa) {
             flags.code = await cli.prompt('2FA code', { type: 'hide' });
         }
@@ -71,35 +73,50 @@ export default class Watch extends Command {
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
 
-        chokidar.watch(fd.folder, {
-            ignored: ignoredFiles,
-            awaitWriteFinish: true,
-            persistent: true,
-            interval: 300,
-        }).on('change', async () => {
-            tasks(this, fd, flags)
-            .catch((e) => {
-                this.log(chalk.bold.redBright(
-                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
-            });
-        }).on('ready', async () => {
-            tasks(this, fd, flags)
-            .catch((e) => {
-                this.log(chalk.bold.redBright(
-                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
-            });
+        let needsReload = false;
+        const watcher = new AppWatcher(fd, ignoredFiles, async () => {
+            if (needsReload) {
+                try {
+                    await fd.readInfoFile();
+                    await fd.matchAppsEngineVersion();
+                    compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
+                    cachedServerInfo = undefined;
+                    this.log(chalk.bold.magenta('Configuration reloaded.'));
+                    needsReload = false;
+                } catch (e) {
+                    this.log(chalk.bold.red(`Error reading app.json: ${e.message}`));
+                    return;
+                }   }
+            await tasks(this, fd, flags, compiler);
+        }, async () => {
+            needsReload = true;
+        }, {
+            log: (msg) => this.log(msg),
+            error: (msg) => this.log(msg),
         });
+
+        process.on('SIGINT', async () => {
+            await watcher.stop();
+            process.exit();
+        });
+
+        await watcher.start();
     }
 }
 
 function reportDiagnostics(command: Command, diag: Array<ICompilerDiagnostic>): void {
-    diag.forEach((d) => command.error(d.message));
+    diag.forEach((d) => command.log(chalk.red(d.message)));
 }
 
-const tasks = async (command: Command, fd: FolderDetails, flags: Record<string, any>): Promise<void> => {
+let cachedServerInfo: any;
+
+const tasks = async (command: Command, fd: FolderDetails, flags: Record<string, any>, compiler: AppCompiler):
+    Promise<void> => {
     try {
+        process.stdout.write('\x1Bc');
+
+        const start = Date.now();
         cli.action.start(chalk.bold.greenBright('   Packaging the app'));
-        const compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
         const result = await compiler.compile();
 
         if (flags.verbose) {
@@ -108,30 +125,73 @@ const tasks = async (command: Command, fd: FolderDetails, flags: Record<string, 
 
         if (result.diagnostics.length && !flags.force) {
             reportDiagnostics(command, result.diagnostics);
-            command.error('TypeScript compiler error(s) occurred');
-            command.exit(1);
-            return;
+            throw new Error('TypeScript compiler error(s) occurred');
+        }
+
+        const bundlingResult = await compiler.bundle();
+
+        if (bundlingResult.diagnostics.length && !flags.force) {
+            reportDiagnostics(command, bundlingResult.diagnostics);
+            throw new Error('Bundler error(s) occurred');
         }
 
         const zipName = await compiler.outputZip();
         cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
-        cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
-        const serverInfo = await getServerInfo(fd, flags);
-        cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
-
-        const status = await checkUpload({...flags, ...serverInfo}, fd);
-        if (status) {
-            cli.action.start(chalk.bold.greenBright('   Updating App'));
-            await uploadApp({...serverInfo, update: true}, fd, zipName);
+        if (!cachedServerInfo) {
+            cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
+            const info = await getServerInfo(fd, flags);
+            const session = await retrieveSession(info);
+            cachedServerInfo = { ...info, token: session.authToken, userId: session.userId };
             cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
         } else {
-            cli.action.start(chalk.bold.greenBright('   Uploading App'));
-            await uploadApp(serverInfo, fd, zipName);
-            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
+             if (flags.verbose) {
+                 command.log(`${chalk.green('[info]')} using cached server info`);
+             }
         }
+
+        try {
+            await performAppUpload(command, fd, flags, cachedServerInfo, zipName);
+        } catch (e) {
+            const isAuthError = e.message.includes('Invalid API token') ||
+                e.message.includes('Invalid username and password');
+            if (isAuthError) {
+                cli.action.stop(chalk.bold.yellow('Session expired'));
+                cli.action.start(chalk.bold.greenBright('   Re-authenticating'));
+
+                try {
+                    const info = await getServerInfo(fd, flags);
+                    const session = await retrieveSession(info);
+                    cachedServerInfo = { ...info, token: session.authToken, userId: session.userId };
+
+                    await performAppUpload(command, fd, flags, cachedServerInfo, zipName);
+                    cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
+                } catch (retryError) {
+                    throw retryError;
+                }
+            } else {
+                throw e;
+            }
+        }
+
+        await helper.remove(zipName);
+        const duration = ((Date.now() - start) / 1000).toFixed(2);
+        command.log(chalk.gray(`   Finished in ${duration}s`));
     } catch (e) {
         cli.action.stop(chalk.red(unicodeSymbols.get('heavyMultiplicationX')));
         throw new Error(e);
+    }
+};
+
+const performAppUpload = async (command: Command, fd: FolderDetails, flags: any, serverInfo: any, zipName: string) => {
+    const status = await checkUpload({...flags, ...serverInfo}, fd);
+    if (status) {
+        cli.action.start(chalk.bold.greenBright('   Updating App'));
+        await uploadApp({...serverInfo, update: true}, fd, zipName);
+        cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
+    } else {
+        cli.action.start(chalk.bold.greenBright('   Uploading App'));
+        await uploadApp(serverInfo, fd, zipName);
+        cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
     }
 };
