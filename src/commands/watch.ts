@@ -128,6 +128,13 @@ const tasks = async (command: Command, fd: FolderDetails, flags: Record<string, 
             throw new Error('TypeScript compiler error(s) occurred');
         }
 
+        const bundlingResult = await compiler.bundle();
+
+        if (bundlingResult.diagnostics.length && !flags.force) {
+            reportDiagnostics(command, bundlingResult.diagnostics);
+            throw new Error('Bundler error(s) occurred');
+        }
+
         const zipName = await compiler.outputZip();
         cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
 
