@@ -25,6 +25,10 @@ npm install -g @rocket.chat/apps-cli
 rc-apps help
 ```
 
+```bash
+rc-apps env
+```
+
 ### Create App
 
 ```bash
@@ -76,6 +80,20 @@ You can store deployment defaults in `.rcappsconfig` inside the app folder:
 ```
 
 For security, server URL and auth credentials are accepted only via CLI flags.
+
+You can also provide credentials via environment variables:
+- `RC_APPS_URL`
+- `RC_APPS_USERNAME`
+- `RC_APPS_PASSWORD`
+- `RC_APPS_TOKEN`
+- `RC_APPS_USER_ID`
+- `RC_APPS_2FA_CODE`
+- `RC_APPS_ALLOW_HTTP`
+
+Precedence order is:
+1. CLI flags
+2. Environment variables
+3. `.rcappsconfig` (safe non-secret fields only)
 
 Security defaults:
 - For non-localhost targets, `deploy`/`watch` require HTTPS.

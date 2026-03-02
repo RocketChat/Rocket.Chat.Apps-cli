@@ -4,6 +4,7 @@ import path from 'path';
 
 import { buildAndPackage } from '../core/compiler';
 import { getServerInfo, loadIgnoredPatterns, uploadApp, validateDeployCredentials } from '../core/deploy';
+import { loadDeployConfigFromEnv } from '../core/env';
 import { CliError } from '../core/errors';
 import { loadConfigFile, loadProject, mergeDeployConfig } from '../core/project';
 import { Command, CommandContext, DeployConfig } from '../core/types';
@@ -38,6 +39,7 @@ export const watchCommand: Command = {
     const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
     const project = await loadProject(projectPath);
     const configFromFile = await loadConfigFile(project.rootPath);
+    const configFromEnv = loadDeployConfigFromEnv();
 
     const cliConfig: DeployConfig = {
       url: parsed.values.url,
@@ -50,7 +52,7 @@ export const watchCommand: Command = {
       update: parsed.values.update,
     };
 
-    const deployConfig = mergeDeployConfig(configFromFile, cliConfig);
+    const deployConfig = mergeDeployConfig(mergeDeployConfig(configFromFile, configFromEnv), cliConfig);
     const verboseMode = parsed.values.verbose;
     validateDeployCredentials(deployConfig);
 

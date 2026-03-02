@@ -3,6 +3,7 @@ export interface HelpCommand {
   aliases?: string[];
   description: string;
   usage: string;
+  details?: string[];
 }
 
 export function renderHelp(commands: HelpCommand[]): string {
@@ -29,5 +30,11 @@ export function renderHelp(commands: HelpCommand[]): string {
 }
 
 export function renderCommandHelp(command: HelpCommand): string {
-  return `${command.name}\n\n${command.description}\n\nUsage:\n  ${command.usage}`;
+  const lines = [`${command.name}`, '', command.description, '', 'Usage:', `  ${command.usage}`];
+
+  if (command.details && command.details.length > 0) {
+    lines.push('', ...command.details);
+  }
+
+  return lines.join('\n');
 }

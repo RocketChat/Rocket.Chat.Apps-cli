@@ -10,6 +10,7 @@ interface CommandEntry {
   aliases?: string[];
   description: string;
   usage: string;
+  details?: string[];
   load: () => Promise<Command>;
 }
 
@@ -26,7 +27,23 @@ const COMMANDS: CommandEntry[] = [
     description: 'Compile, package, and deploy an app to Rocket.Chat.',
     usage:
       'rc-apps deploy [--project <path>] --url <server> [--allow-http] [--username <u> --password <p> | --userId <id> --token <t>]',
+    details: [
+      'Auth/URL can come from environment variables.',
+      'Run `rc-apps env` to list all supported variables.',
+    ],
     load: async () => (await import('./commands/deploy')).deployCommand,
+  },
+  {
+    name: 'env',
+    aliases: ['config-env'],
+    description: 'Show supported deploy/watch environment variables.',
+    usage: 'rc-apps env',
+    details: [
+      'Environment variables:',
+      '  RC_APPS_URL, RC_APPS_USERNAME, RC_APPS_PASSWORD, RC_APPS_TOKEN, RC_APPS_USER_ID, RC_APPS_2FA_CODE, RC_APPS_ALLOW_HTTP',
+      'Precedence: CLI flags > environment variables > .rcappsconfig',
+    ],
+    load: async () => (await import('./commands/env')).envCommand,
   },
   {
     name: 'generate',
@@ -47,6 +64,10 @@ const COMMANDS: CommandEntry[] = [
     name: 'watch',
     description: 'Watch app files and deploy on changes.',
     usage: 'rc-apps watch [--project <path>] --url <server> [--allow-http] [auth options]',
+    details: [
+      'Auth/URL can come from environment variables.',
+      'Run `rc-apps env` to list all supported variables.',
+    ],
     load: async () => (await import('./commands/watch')).watchCommand,
   },
 ];
@@ -90,6 +111,11 @@ async function main(): Promise<void> {
 
   if (!command) {
     throw new CliError(`Unknown command: ${requestedCommand}. Run "rc-apps help".`, 2);
+  }
+
+  if (argv.includes('--help') || argv.includes('-h')) {
+    console.log(renderCommandHelp(command));
+    return;
   }
 
   const args = argv.slice(1);
