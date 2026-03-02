@@ -119,8 +119,8 @@ async function detectAppsEngineVersion(cwd: string): Promise<string> {
     const packageJsonRaw = await readFile(packageJsonPath, 'utf8');
     const pkg = JSON.parse(packageJsonRaw) as { dependencies?: Record<string, string> };
 
-    return pkg.dependencies?.['@rocket.chat/apps-engine'] ?? '^1.50.0';
+    return pkg.dependencies?.['@rocket.chat/apps-engine'] ?? '^1.59.0';
   } catch {
-    return '^1.50.0';
+    return '^1.59.0';
   }
 }

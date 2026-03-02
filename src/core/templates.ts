@@ -56,8 +56,12 @@ export function appPackageJsonTemplate(appName: string, appsEngineVersion: strin
   "scripts": {
     "build": "tsc"
   },
-  "devDependencies": {
+  "dependencies": {
     "@rocket.chat/apps-engine": "${appsEngineVersion}",
+    "@rocket.chat/icons": "^0.38.0",
+    "@rocket.chat/ui-kit": "^0.36.1"
+  },
+  "devDependencies": {
     "@types/node": "^20.17.0",
     "typescript": "^5.7.2"
   }
