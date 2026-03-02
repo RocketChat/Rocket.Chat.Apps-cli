@@ -3,6 +3,7 @@
 import { CliError } from './core/errors';
 import { Command } from './core/types';
 import { renderCommandHelp, renderHelp } from './commands/help';
+import { failure } from './utils/output';
 
 interface CommandEntry {
   name: string;
@@ -101,14 +102,14 @@ async function main(): Promise<void> {
 
 main().catch((error: unknown) => {
   if (error instanceof CliError) {
-    console.error(error.message);
+    failure(error.message);
     process.exit(error.exitCode);
   }
 
   if (error instanceof Error) {
-    console.error(error.message);
+    failure(error.message);
   } else {
-    console.error(String(error));
+    failure(String(error));
   }
 
   process.exit(1);

@@ -2,9 +2,10 @@ import { parseArgs } from 'util';
 import path from 'path';
 
 import { buildAndPackage } from '../core/compiler';
-import { getServerInfo, uploadApp } from '../core/deploy';
+import { getServerInfo, uploadApp, validateDeployCredentials } from '../core/deploy';
 import { loadConfigFile, loadProject, mergeDeployConfig } from '../core/project';
 import { Command, CommandContext, DeployConfig } from '../core/types';
+import { step, success, verbose } from '../utils/output';
 
 export const deployCommand: Command = {
   name: 'deploy',
@@ -44,25 +45,36 @@ export const deployCommand: Command = {
     };
 
     const deployConfig = mergeDeployConfig(configFromFile, cliConfig);
+    const verboseMode = parsed.values.verbose;
+    const compilerMode = parsed.values['experimental-native-compiler'] ? 'experimental-native' : 'default';
+    validateDeployCredentials(deployConfig);
 
-    console.log('Checking server...');
+    verbose(verboseMode, `Project: ${project.rootPath}`);
+    verbose(verboseMode, `Compiler mode: ${compilerMode}`);
+    verbose(
+      verboseMode,
+      deployConfig.token && deployConfig.userId ? 'Auth mode: token/userId' : 'Auth mode: username/password',
+    );
+
+    step('Checking server...');
     const serverInfo = await getServerInfo(deployConfig);
 
     if (serverInfo.version) {
-      console.log(`Server version: ${serverInfo.version}`);
+      success(`Server version: ${serverInfo.version}`);
     }
 
-    console.log('Packaging app...');
+    step('Packaging app...');
     const zipRelativePath = await buildAndPackage(project, {
       force: parsed.values.force,
-      verbose: parsed.values.verbose,
+      verbose: verboseMode,
       useNativeCompiler: parsed.values['experimental-native-compiler'],
     });
 
     const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);
+    verbose(verboseMode, `Package path: ${zipAbsolutePath}`);
 
-    console.log('Uploading app...');
+    step('Uploading app...');
     const result = await uploadApp(deployConfig, project, zipAbsolutePath);
-    console.log(`Deployment finished (${result.mode}).`);
+    success(`Deployment finished (${result.mode}).`);
   },
 };

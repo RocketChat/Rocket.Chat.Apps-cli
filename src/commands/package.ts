@@ -6,6 +6,7 @@ import { CliError } from '../core/errors';
 import { loadProject } from '../core/project';
 import { packageSource } from '../core/source-packager';
 import { Command, CommandContext } from '../core/types';
+import { step, success, verbose, warn } from '../utils/output';
 
 export const packageCommand: Command = {
   name: 'package',
@@ -28,14 +29,24 @@ export const packageCommand: Command = {
 
     const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
     const project = await loadProject(projectPath);
+    const verboseMode = parsed.values.verbose;
 
-    console.log('Packaging app...');
+    if (parsed.values['no-compile'] && parsed.values['experimental-native-compiler']) {
+      warn('Ignoring --experimental-native-compiler because --no-compile was provided.');
+    }
+
+    step('Packaging app...');
+    verbose(verboseMode, `Project: ${project.rootPath}`);
+    verbose(
+      verboseMode,
+      parsed.values['no-compile'] ? 'Packaging mode: source zip (--no-compile)' : 'Packaging mode: compiled bundle',
+    );
 
     const zipRelativePath = parsed.values['no-compile']
       ? await packageSource(project)
       : await buildAndPackage(project, {
           force: parsed.values.force,
-          verbose: parsed.values.verbose,
+          verbose: verboseMode,
           useNativeCompiler: parsed.values['experimental-native-compiler'],
         });
 
@@ -45,6 +56,6 @@ export const packageCommand: Command = {
       throw new CliError('Unexpected zip output path.', 1);
     }
 
-    console.log(`Package created: ${zipAbsolutePath}`);
+    success(`Package created: ${zipAbsolutePath}`);
   },
 };

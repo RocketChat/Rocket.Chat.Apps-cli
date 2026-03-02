@@ -3,11 +3,12 @@ import { parseArgs } from 'util';
 import path from 'path';
 
 import { buildAndPackage } from '../core/compiler';
-import { getServerInfo, loadIgnoredPatterns, uploadApp } from '../core/deploy';
+import { getServerInfo, loadIgnoredPatterns, uploadApp, validateDeployCredentials } from '../core/deploy';
 import { CliError } from '../core/errors';
 import { loadConfigFile, loadProject, mergeDeployConfig } from '../core/project';
 import { Command, CommandContext, DeployConfig } from '../core/types';
 import { buildGlobMatcher } from '../utils/glob';
+import { failure, step, success, verbose } from '../utils/output';
 
 export const watchCommand: Command = {
   name: 'watch',
@@ -48,13 +49,23 @@ export const watchCommand: Command = {
     };
 
     const deployConfig = mergeDeployConfig(configFromFile, cliConfig);
+    const verboseMode = parsed.values.verbose;
+    validateDeployCredentials(deployConfig);
 
-    console.log('Checking server...');
+    verbose(verboseMode, `Project: ${project.rootPath}`);
+    verbose(
+      verboseMode,
+      deployConfig.token && deployConfig.userId ? 'Auth mode: token/userId' : 'Auth mode: username/password',
+    );
+
+    step('Checking server...');
     await getServerInfo(deployConfig);
 
     const ignoredPatterns = await loadIgnoredPatterns(deployConfig);
     const isIgnored = buildGlobMatcher(ignoredPatterns);
     const debounceMs = Number(parsed.values.debounce ?? '800');
+    verbose(verboseMode, `Watch debounce: ${debounceMs}ms`);
+    verbose(verboseMode, `Ignored patterns: ${ignoredPatterns.length}`);
 
     if (Number.isNaN(debounceMs) || debounceMs < 0) {
       throw new CliError('Invalid --debounce value.', 2);
@@ -74,16 +85,17 @@ export const watchCommand: Command = {
       try {
         const zipRelativePath = await buildAndPackage(project, {
           force: parsed.values.force,
-          verbose: parsed.values.verbose,
+          verbose: verboseMode,
           useNativeCompiler: parsed.values['experimental-native-compiler'],
         });
 
         const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);
+        verbose(verboseMode, `Package path: ${zipAbsolutePath}`);
         const result = await uploadApp(deployConfig, project, zipAbsolutePath);
-        console.log(`Deployment finished (${result.mode}).`);
+        success(`Deployment finished (${result.mode}).`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        console.error(`Watch deployment failed: ${message}`);
+        failure(`Watch deployment failed: ${message}`);
       } finally {
         running = false;
 
@@ -118,7 +130,7 @@ export const watchCommand: Command = {
       }, debounceMs);
     });
 
-    console.log('Watching for changes. Press Ctrl+C to stop.');
+    step('Watching for changes. Press Ctrl+C to stop.');
 
     await new Promise<void>((resolve, reject) => {
       watcher.on('error', reject);

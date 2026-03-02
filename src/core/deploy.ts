@@ -14,6 +14,33 @@ interface ServerInfo {
   version?: string;
 }
 
+export function validateDeployCredentials(config: DeployConfig): void {
+  const hasUserPass = Boolean(config.username && config.password);
+  const hasTokenAuth = Boolean(config.token && config.userId);
+
+  if (hasUserPass || hasTokenAuth) {
+    return;
+  }
+
+  if (config.username && !config.password) {
+    throw new CliError('Missing --password for provided --username.', 2);
+  }
+
+  if (config.password && !config.username) {
+    throw new CliError('Missing --username for provided --password.', 2);
+  }
+
+  if (config.token && !config.userId) {
+    throw new CliError('Missing --userId for provided --token.', 2);
+  }
+
+  if (config.userId && !config.token) {
+    throw new CliError('Missing --token for provided --userId.', 2);
+  }
+
+  throw new CliError('Authentication is required. Provide --username/--password or --token/--userId.', 2);
+}
+
 export async function getServerInfo(config: DeployConfig): Promise<ServerInfo> {
   assertUrl(config.url);
 

@@ -39,6 +39,7 @@ rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--exper
 
 - `--no-compile`: package source files directly (no TypeScript compile/bundle). This is intended for manual marketplace review workflows.
 - `--experimental-native-compiler`: keep compile flow but use compiler native mode.
+- `--verbose`: print project path, compiler mode, and output zip path.
 
 ### Deploy App
 
