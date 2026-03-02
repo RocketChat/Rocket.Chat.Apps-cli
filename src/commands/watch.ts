@@ -9,7 +9,7 @@ import { CliError } from '../core/errors';
 import { loadConfigFile, loadProject, mergeDeployConfig } from '../core/project';
 import { Command, CommandContext, DeployConfig } from '../core/types';
 import { buildGlobMatcher } from '../utils/glob';
-import { failure, step, success, verbose } from '../utils/output';
+import { failure, step, success, verbose, warn } from '../utils/output';
 
 export const watchCommand: Command = {
   name: 'watch',
@@ -38,7 +38,8 @@ export const watchCommand: Command = {
 
     const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
     const project = await loadProject(projectPath);
-    const configFromFile = await loadConfigFile(project.rootPath);
+    const configLoadResult = await loadConfigFile(project.rootPath);
+    const configFromFile = configLoadResult.config;
     const configFromEnv = loadDeployConfigFromEnv();
 
     const cliConfig: DeployConfig = {
@@ -54,6 +55,15 @@ export const watchCommand: Command = {
 
     const deployConfig = mergeDeployConfig(mergeDeployConfig(configFromFile, configFromEnv), cliConfig);
     const verboseMode = parsed.values.verbose;
+
+    if (configLoadResult.legacyFields.length > 0) {
+      warn(
+        `Ignoring legacy .rcappsconfig field(s): ${configLoadResult.legacyFields.join(
+          ', ',
+        )}. Use CLI flags or RC_APPS_* environment variables.`,
+      );
+    }
+
     validateDeployCredentials(deployConfig);
 
     verbose(verboseMode, `Project: ${project.rootPath}`);

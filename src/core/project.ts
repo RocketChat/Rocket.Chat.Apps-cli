@@ -11,6 +11,11 @@ export interface ProjectContext {
   manifest: AppManifest;
 }
 
+export interface ConfigLoadResult {
+  config: DeployConfig;
+  legacyFields: string[];
+}
+
 const REQUIRED_FIELDS: Array<keyof AppManifest> = [
   'id',
   'name',
@@ -73,18 +78,28 @@ function validateManifest(manifest: AppManifest): void {
   }
 }
 
-export async function loadConfigFile(projectPath: string): Promise<DeployConfig> {
+const LEGACY_CONFIG_FIELDS = ['url', 'username', 'password', 'token', 'userId', 'code'] as const;
+
+export async function loadConfigFile(projectPath: string): Promise<ConfigLoadResult> {
   const configPath = path.join(projectPath, '.rcappsconfig');
 
   try {
     const raw = await readFile(configPath, 'utf8');
     const parsed = JSON.parse(raw) as Partial<DeployConfig>;
     return {
-      allowHttp: parsed.allowHttp,
-      ignoredFiles: Array.isArray(parsed.ignoredFiles) ? parsed.ignoredFiles : undefined,
+      config: {
+        allowHttp: parsed.allowHttp,
+        ignoredFiles: Array.isArray(parsed.ignoredFiles) ? parsed.ignoredFiles : undefined,
+      },
+      legacyFields: LEGACY_CONFIG_FIELDS.filter((field) =>
+        Object.prototype.hasOwnProperty.call(parsed, field) && typeof parsed[field] !== 'undefined'
+      ),
     };
   } catch {
-    return {};
+    return {
+      config: {},
+      legacyFields: [],
+    };
   }
 }
 

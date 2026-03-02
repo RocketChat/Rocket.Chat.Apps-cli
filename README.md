@@ -80,6 +80,7 @@ You can store deployment defaults in `.rcappsconfig` inside the app folder:
 ```
 
 For security, server URL and auth credentials are accepted only via CLI flags.
+If legacy credential fields are present in `.rcappsconfig`, the CLI shows a warning and ignores them.
 
 You can also provide credentials via environment variables:
 - `RC_APPS_URL`

@@ -6,7 +6,7 @@ import { getServerInfo, uploadApp, validateDeployCredentials } from '../core/dep
 import { loadDeployConfigFromEnv } from '../core/env';
 import { loadConfigFile, loadProject, mergeDeployConfig } from '../core/project';
 import { Command, CommandContext, DeployConfig } from '../core/types';
-import { step, success, verbose } from '../utils/output';
+import { step, success, verbose, warn } from '../utils/output';
 
 export const deployCommand: Command = {
   name: 'deploy',
@@ -35,7 +35,8 @@ export const deployCommand: Command = {
 
     const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
     const project = await loadProject(projectPath);
-    const configFromFile = await loadConfigFile(project.rootPath);
+    const configLoadResult = await loadConfigFile(project.rootPath);
+    const configFromFile = configLoadResult.config;
     const configFromEnv = loadDeployConfigFromEnv();
 
     const cliConfig: DeployConfig = {
@@ -52,6 +53,15 @@ export const deployCommand: Command = {
     const deployConfig = mergeDeployConfig(mergeDeployConfig(configFromFile, configFromEnv), cliConfig);
     const verboseMode = parsed.values.verbose;
     const compilerMode = parsed.values['experimental-native-compiler'] ? 'experimental-native' : 'default';
+
+    if (configLoadResult.legacyFields.length > 0) {
+      warn(
+        `Ignoring legacy .rcappsconfig field(s): ${configLoadResult.legacyFields.join(
+          ', ',
+        )}. Use CLI flags or RC_APPS_* environment variables.`,
+      );
+    }
+
     validateDeployCredentials(deployConfig);
 
     verbose(verboseMode, `Project: ${project.rootPath}`);
