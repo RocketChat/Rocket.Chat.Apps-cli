@@ -36,6 +36,7 @@ export interface DeployConfig {
   token?: string;
   userId?: string;
   code?: string;
+  allowHttp?: boolean;
   update?: boolean;
   ignoredFiles?: string[];
 }

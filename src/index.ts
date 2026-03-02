@@ -25,7 +25,7 @@ const COMMANDS: CommandEntry[] = [
     name: 'deploy',
     description: 'Compile, package, and deploy an app to Rocket.Chat.',
     usage:
-      'rc-apps deploy [--project <path>] --url <server> [--username <u> --password <p> | --userId <id> --token <t>]',
+      'rc-apps deploy [--project <path>] --url <server> [--allow-http] [--username <u> --password <p> | --userId <id> --token <t>]',
     load: async () => (await import('./commands/deploy')).deployCommand,
   },
   {
@@ -46,7 +46,7 @@ const COMMANDS: CommandEntry[] = [
   {
     name: 'watch',
     description: 'Watch app files and deploy on changes.',
-    usage: 'rc-apps watch [--project <path>] --url <server> [auth options]',
+    usage: 'rc-apps watch [--project <path>] --url <server> [--allow-http] [auth options]',
     load: async () => (await import('./commands/watch')).watchCommand,
   },
 ];

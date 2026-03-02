@@ -42,18 +42,18 @@ export function validateDeployCredentials(config: DeployConfig): void {
 }
 
 export async function getServerInfo(config: DeployConfig): Promise<ServerInfo> {
-  assertUrl(config.url);
+  const baseUrl = resolveServerBaseUrl(config);
 
-  const response = await fetch(normalizeUrl(config.url!, '/api/info'));
+  const response = await fetch(normalizeUrl(baseUrl, '/api/info'));
 
   if (!response.ok) {
-    throw new CliError(`Unable to connect to Rocket.Chat server at ${config.url}.`, 2);
+    throw new CliError(`Unable to connect to Rocket.Chat server at ${baseUrl}.`, 2);
   }
 
   return await parseJsonResponse<ServerInfo>(
     response,
     `Invalid response from ${normalizeUrl(
-      config.url!,
+      baseUrl,
       '/api/info',
     )}. Make sure --url points to a Rocket.Chat server root (for example: http://localhost:3000).`,
   );
@@ -64,16 +64,16 @@ export async function uploadApp(
   project: ProjectContext,
   zipAbsolutePath: string,
 ): Promise<{ mode: 'create' | 'update' }> {
-  assertUrl(config.url);
+  const baseUrl = resolveServerBaseUrl(config);
 
-  const auth = await authenticate(config);
-  const alreadyInstalled = await appAlreadyExists(config, auth, project.manifest.id);
+  const auth = await authenticate(config, baseUrl);
+  const alreadyInstalled = await appAlreadyExists(baseUrl, auth, project.manifest.id);
   const shouldUpdate = Boolean(config.update || alreadyInstalled);
 
   const endpoint = shouldUpdate ? `/api/apps/${project.manifest.id}` : '/api/apps';
   const formData = await createAppUploadForm(zipAbsolutePath, project.manifest.permissions);
 
-  const response = await fetch(normalizeUrl(config.url!, endpoint), {
+  const response = await fetch(normalizeUrl(baseUrl, endpoint), {
     method: 'POST',
     headers: {
       'X-Auth-Token': auth.authToken,
@@ -84,7 +84,7 @@ export async function uploadApp(
 
   const result = await parseJsonResponse<{ success?: boolean; status?: string; error?: string; messages?: unknown }>(
     response,
-    `Invalid response from ${normalizeUrl(config.url!, endpoint)}.`,
+    `Invalid response from ${normalizeUrl(baseUrl, endpoint)}.`,
   );
 
   if (!response.ok || result.status === 'error' || result.success === false) {
@@ -110,9 +110,9 @@ export async function loadIgnoredPatterns(config: DeployConfig): Promise<string[
   return Array.from(new Set([...defaults, ...config.ignoredFiles]));
 }
 
-async function authenticate(config: DeployConfig): Promise<AuthInfo> {
+async function authenticate(config: DeployConfig, baseUrl: string): Promise<AuthInfo> {
   if (config.token && config.userId) {
-    const verification = await fetch(normalizeUrl(config.url!, '/api/v1/me'), {
+    const verification = await fetch(normalizeUrl(baseUrl, '/api/v1/me'), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -123,7 +123,7 @@ async function authenticate(config: DeployConfig): Promise<AuthInfo> {
 
     const result = await parseJsonResponse<{ success?: boolean }>(
       verification,
-      `Invalid response from ${normalizeUrl(config.url!, '/api/v1/me')}.`,
+      `Invalid response from ${normalizeUrl(baseUrl, '/api/v1/me')}.`,
     );
 
     if (!verification.ok || !result.success) {
@@ -149,7 +149,7 @@ async function authenticate(config: DeployConfig): Promise<AuthInfo> {
     loginPayload.code = config.code;
   }
 
-  const response = await fetch(normalizeUrl(config.url!, '/api/v1/login'), {
+  const response = await fetch(normalizeUrl(baseUrl, '/api/v1/login'), {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ async function authenticate(config: DeployConfig): Promise<AuthInfo> {
   const result = await parseJsonResponse<{
     status?: string;
     data?: { authToken: string; userId: string };
-  }>(response, `Invalid response from ${normalizeUrl(config.url!, '/api/v1/login')}.`);
+  }>(response, `Invalid response from ${normalizeUrl(baseUrl, '/api/v1/login')}.`);
 
   if (!response.ok || result.status === 'error' || !result.data) {
     throw new CliError('Invalid username/password or missing 2FA code.', 2);
@@ -169,8 +169,8 @@ async function authenticate(config: DeployConfig): Promise<AuthInfo> {
   return result.data;
 }
 
-async function appAlreadyExists(config: DeployConfig, auth: AuthInfo, appId: string): Promise<boolean> {
-  const response = await fetch(normalizeUrl(config.url!, `/api/apps/${appId}`), {
+async function appAlreadyExists(baseUrl: string, auth: AuthInfo, appId: string): Promise<boolean> {
+  const response = await fetch(normalizeUrl(baseUrl, `/api/apps/${appId}`), {
     method: 'GET',
     headers: {
       'X-Auth-Token': auth.authToken,
@@ -184,7 +184,7 @@ async function appAlreadyExists(config: DeployConfig, auth: AuthInfo, appId: str
 
   const body = await parseJsonResponse<{ success?: boolean }>(
     response,
-    `Invalid response from ${normalizeUrl(config.url!, `/api/apps/${appId}`)}.`,
+    `Invalid response from ${normalizeUrl(baseUrl, `/api/apps/${appId}`)}.`,
   );
   return Boolean(body.success);
 }
@@ -207,6 +207,43 @@ function assertUrl(url: string | undefined): asserts url is string {
   if (!url) {
     throw new CliError('Missing server URL. Provide --url or set it in .rcappsconfig.', 2);
   }
+}
+
+function resolveServerBaseUrl(config: DeployConfig): string {
+  assertUrl(config.url);
+
+  let parsed: URL;
+  try {
+    parsed = new URL(config.url);
+  } catch {
+    throw new CliError(`Invalid URL: ${config.url}`, 2);
+  }
+
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new CliError('URL protocol must be http or https.', 2);
+  }
+
+  if (parsed.username || parsed.password) {
+    throw new CliError('Credentials in URL are not supported. Use --username/--password or --token/--userId.', 2);
+  }
+
+  if ((parsed.search && parsed.search.length > 0) || (parsed.hash && parsed.hash.length > 0)) {
+    throw new CliError('URL must not include query string or hash.', 2);
+  }
+
+  if (parsed.protocol === 'http:' && !isLoopbackHost(parsed.hostname) && !config.allowHttp) {
+    throw new CliError(
+      `Refusing insecure HTTP for non-localhost target (${parsed.hostname}). Use HTTPS or pass --allow-http.`,
+      2,
+    );
+  }
+
+  return parsed.toString().replace(/\/$/, '');
+}
+
+function isLoopbackHost(hostname: string): boolean {
+  const normalized = hostname.toLowerCase();
+  return normalized === 'localhost' || normalized === '127.0.0.1' || normalized === '::1';
 }
 
 function normalizeUrl(url: string, endpoint: string): string {

@@ -44,13 +44,13 @@ rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--exper
 ### Deploy App
 
 ```bash
-rc-apps deploy [--project <path>] --url <server> [--username <u> --password <p> | --userId <id> --token <t>]
+rc-apps deploy [--project <path>] --url <server> [--allow-http] [--username <u> --password <p> | --userId <id> --token <t>]
 ```
 
 ### Watch + Auto Deploy
 
 ```bash
-rc-apps watch [--project <path>] --url <server> [auth flags] [--debounce 800]
+rc-apps watch [--project <path>] --url <server> [--allow-http] [auth flags] [--debounce 800]
 ```
 
 ### Generate Boilerplate
@@ -78,6 +78,10 @@ You can store deployment defaults in `.rcappsconfig` inside the app folder:
 ```
 
 CLI flags override values from this file.
+
+Security defaults:
+- For non-localhost targets, `deploy`/`watch` require HTTPS.
+- To explicitly allow insecure HTTP on remote hosts, pass `--allow-http`.
 
 ## Development
 

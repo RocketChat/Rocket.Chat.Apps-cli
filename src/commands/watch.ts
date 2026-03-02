@@ -13,7 +13,7 @@ import { failure, step, success, verbose } from '../utils/output';
 export const watchCommand: Command = {
   name: 'watch',
   description: 'Watch app files and deploy on changes.',
-  usage: 'rc-apps watch [--project <path>] --url <server> [auth options]',
+  usage: 'rc-apps watch [--project <path>] --url <server> [--allow-http] [auth options]',
   async run(argv: string[], context: CommandContext): Promise<void> {
     const parsed = parseArgs({
       args: argv,
@@ -26,6 +26,7 @@ export const watchCommand: Command = {
         token: { type: 'string', short: 't' },
         userId: { type: 'string', short: 'i' },
         code: { type: 'string', short: 'c' },
+        'allow-http': { type: 'boolean', default: false },
         update: { type: 'boolean', default: false },
         force: { type: 'boolean', short: 'f', default: false },
         verbose: { type: 'boolean', short: 'v', default: false },
@@ -45,6 +46,7 @@ export const watchCommand: Command = {
       token: parsed.values.token,
       userId: parsed.values.userId,
       code: parsed.values.code,
+      allowHttp: parsed.values['allow-http'],
       update: parsed.values.update,
     };
 
@@ -53,6 +55,7 @@ export const watchCommand: Command = {
     validateDeployCredentials(deployConfig);
 
     verbose(verboseMode, `Project: ${project.rootPath}`);
+    verbose(verboseMode, `URL security: ${deployConfig.allowHttp ? 'allow-http override enabled' : 'https enforced'}`);
     verbose(
       verboseMode,
       deployConfig.token && deployConfig.userId ? 'Auth mode: token/userId' : 'Auth mode: username/password',
