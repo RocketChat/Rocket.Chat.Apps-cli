@@ -1,88 +1,50 @@
-import { Command, flags } from '@oclif/command';
-import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
-import chalk from 'chalk';
-import cli from 'cli-ux';
+import { parseArgs } from 'util';
+import path from 'path';
 
-import { AppCompiler, AppPackager, FolderDetails } from '../misc';
+import { buildAndPackage } from '../core/compiler';
+import { CliError } from '../core/errors';
+import { loadProject } from '../core/project';
+import { packageSource } from '../core/source-packager';
+import { Command, CommandContext } from '../core/types';
 
-export default class Package extends Command {
-    public static description = 'packages up your App in a distributable format';
-    public static aliases = ['p', 'pack'];
+export const packageCommand: Command = {
+  name: 'package',
+  aliases: ['p', 'pack'],
+  description: 'Package an app into a deployable zip file.',
+  usage:
+    'rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--experimental-native-compiler]',
+  async run(argv: string[], context: CommandContext): Promise<void> {
+    const parsed = parseArgs({
+      args: argv,
+      allowPositionals: false,
+      options: {
+        project: { type: 'string' },
+        force: { type: 'boolean', short: 'f', default: false },
+        verbose: { type: 'boolean', short: 'v', default: false },
+        'no-compile': { type: 'boolean', default: false },
+        'experimental-native-compiler': { type: 'boolean', default: false },
+      },
+    });
 
-    public static flags = {
-        'help': flags.help({ char: 'h' }),
-        'no-compile': flags.boolean({
-            description: "don't compile the source, package as is (for older Rocket.Chat versions)",
-        }),
-        'experimental-native-compiler': flags.boolean({
-            description: '(experimental) use native TSC compiler',
-        }),
-        'force': flags.boolean({
-            char: 'f',
-            description: 'forcefully package the App, ignores lint & TypeScript errors',
-        }),
-        'verbose': flags.boolean({
-            char: 'v',
-            description: 'show additional details about the results of running the command',
-        }),
-    };
+    const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
+    const project = await loadProject(projectPath);
 
-    public async run(): Promise<void> {
+    console.log('Packaging app...');
 
-        cli.action.start('packaging your app');
+    const zipRelativePath = parsed.values['no-compile']
+      ? await packageSource(project)
+      : await buildAndPackage(project, {
+          force: parsed.values.force,
+          verbose: parsed.values.verbose,
+          useNativeCompiler: parsed.values['experimental-native-compiler'],
+        });
 
-        const fd = new FolderDetails(this);
+    const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);
 
-        try {
-            await fd.readInfoFile();
-            await fd.matchAppsEngineVersion();
-        } catch (e) {
-            this.error(e && e.message ? e.message : e);
-            return;
-        }
-
-        const { flags } = this.parse(Package);
-
-        const compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
-
-        const compilationResult = await compiler.compile();
-
-        if (flags.verbose) {
-            this.log(`${chalk.green('[info]')} using TypeScript v${ compilationResult.typeScriptVersion }`);
-        }
-
-        if (compilationResult.diagnostics.length && !flags.force) {
-            this.reportDiagnostics(compilationResult.diagnostics);
-            this.error('TypeScript compiler error(s) occurred');
-            this.exit(1);
-            return;
-        }
-
-        const bundlingResult = await compiler.bundle();
-
-        if (bundlingResult.diagnostics.length && !flags.force) {
-            this.reportDiagnostics(bundlingResult.diagnostics);
-            this.error('Bundler error(s) occurred');
-            this.exit(1);
-            return;
-        }
-
-        let zipName: string;
-
-        if (flags['no-compile']) {
-            const packager = new AppPackager(this, fd);
-            zipName = await packager.zipItUp();
-        } else {
-            zipName = await compiler.outputZip();
-        }
-
-        cli.action.stop('finished!');
-
-        this.log(chalk.black(' '));
-        this.log(chalk.green('App packaged up at:'), fd.mergeWithFolder(zipName));
+    if (!zipAbsolutePath.startsWith(project.rootPath)) {
+      throw new CliError('Unexpected zip output path.', 1);
     }
 
-    private reportDiagnostics(diag: Array<ICompilerDiagnostic>): void {
-        diag.forEach((d) => this.error(d.message));
-    }
-}
+    console.log(`Package created: ${zipAbsolutePath}`);
+  },
+};

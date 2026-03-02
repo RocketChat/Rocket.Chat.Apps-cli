@@ -1,124 +1,50 @@
 {
   "name": "@rocket.chat/apps-cli",
-  "description": "The CLI tool for helping with Rocket.Chat Apps.",
-  "version": "1.13.0",
+  "description": "Modern CLI for packaging and deploying Rocket.Chat Apps.",
+  "version": "2.0.0",
   "author": "Rocket.Chat <support@rocket.chat>",
-  "preferGlobal": true,
-  "bin": {
-    "rc-apps": "./bin/run"
-  },
-  "bugs": {
-    "url": "https://github.com/RocketChat/Rocket.Chat.Apps-cli/issues"
-  },
-  "dependencies": {
-    "@hapi/hapi": "^20.0.0",
-    "@oclif/command": "^1.5.18",
-    "@oclif/config": "^1.13.2",
-    "@oclif/plugin-autocomplete": "^0.2.0",
-    "@oclif/plugin-help": "^2.2.0",
-    "@oclif/plugin-not-found": "^1.2.2",
-    "@rocket.chat/apps-compiler": "^0.5.1",
-    "@rocket.chat/apps-engine": "^1.50.0",
-    "axios": "^1.6.0",
-    "chalk": "^2.4.2",
-    "chokidar": "^3.3.1",
-    "cli-ux": "^5.3.1",
-    "conf": "^6.1.0",
-    "fetch-with-proxy": "^3.0.1",
-    "figures": "^3.0.0",
-    "form-data": "^2.5.0",
-    "fs-extra": "^8.1.0",
-    "fuzzy": "^0.1.3",
-    "glob": "^7.1.4",
-    "indent-string": "^4.0.0",
-    "inquirer": "^6.5.0",
-    "inquirer-checkbox-plus-prompt": "^1.0.1",
-    "open": "^6.4.0",
-    "pascal-case": "^2.0.1",
-    "pascalcase": "^0.1.1",
-    "querystring": "^0.2.0",
-    "semver": "^6.3.0",
-    "systeminformation": "^5.6.4",
-    "tslib": "^1.10.0",
-    "tv4": "^1.3.0",
-    "typescript": "^4.9.5",
-    "uuid": "^3.3.3",
-    "yazl": "^2.5.1"
-  },
-  "devDependencies": {
-    "@oclif/dev-cli": "^1.22.2",
-    "@oclif/test": "^1.2.4",
-    "@oclif/tslint": "^3.1.1",
-    "@types/chai": "^4.1.7",
-    "@types/fs-extra": "^8.0.0",
-    "@types/glob": "^7.1.1",
-    "@types/hapi__hapi": "^20.0.2",
-    "@types/inquirer": "6.0.3",
-    "@types/mocha": "^5.2.7",
-    "@types/node": "^12.6.8",
-    "@types/node-fetch": "^2.5.0",
-    "@types/semver": "^6.0.1",
-    "@types/tv4": "^1.2.29",
-    "@types/uuid": "^3.4.5",
-    "@types/yazl": "^2.4.1",
-    "chai": "^4.2.0",
-    "globby": "^10.0.1",
-    "http-server": "^14.1.1",
-    "mocha": "^10.2.0",
-    "nyc": "^14.1.1",
-    "pre-commit": "^1.2.2",
-    "ts-node": "^8.10.2",
-    "tslint": "^5.18.0"
-  },
-  "engines": {
-    "node": ">=8.0.0"
-  },
-  "files": [
-    "/bin",
-    "/lib",
-    "/oclif.manifest.json"
-  ],
-  "homepage": "https://github.com/RocketChat/Rocket.Chat.Apps-cli",
-  "keywords": [
-    "oclif",
-    "rocket.chat",
-    "apps"
-  ],
   "license": "MIT",
-  "main": "lib/index.js",
-  "oclif": {
-    "commands": "./lib/commands",
-    "bin": "rc-apps",
-    "plugins": [
-      "@oclif/plugin-help",
-      "@oclif/plugin-not-found",
-      "@oclif/plugin-autocomplete"
-    ]
-  },
-  "nyc": {
-    "reporter": [
-      "text",
-      "json",
-      "html"
-    ]
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/RocketChat/Rocket.Chat.Apps-cli.git"
   },
-  "scripts": {
-    "postpack": "rm -f oclif.manifest.json",
-    "posttest": "tsc -p test --noEmit && tslint -p test -t stylish",
-    "prepack": "rm -rf lib && tsc && oclif-dev manifest && oclif-dev readme",
-    "prepare": "rm -rf lib && tsc",
-    "test": "nyc mocha -r ts-node/register --forbid-only \"test/**/*.test.ts\"",
-    "version": "oclif-dev readme && git add README.md",
-    "lint": "tslint --project tsconfig.json",
-    "view-coverage": "npm run test && http-server coverage -p 9083 -c-1"
+  "bugs": {
+    "url": "https://github.com/RocketChat/Rocket.Chat.Apps-cli/issues"
   },
+  "homepage": "https://github.com/RocketChat/Rocket.Chat.Apps-cli",
+  "bin": {
+    "rc-apps": "./bin/rc-apps.js"
+  },
+  "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "pre-commit": [
-    "lint",
-    "test"
+  "files": [
+    "bin",
+    "lib",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@rocket.chat/apps-compiler": "^0.5.1",
+    "@rocket.chat/apps-engine": "^1.55.0",
+    "chalk": "^4.1.2",
+    "yazl": "^3.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "typescript": "^5.9.2"
+  },
+  "scripts": {
+    "clean": "node scripts/clean.mjs",
+    "build": "npm run clean && tsc -p tsconfig.json",
+    "prepare": "npm run build",
+    "test": "npm run build && node --test test/**/*.test.js"
+  },
+  "keywords": [
+    "rocket.chat",
+    "apps",
+    "cli"
   ]
 }

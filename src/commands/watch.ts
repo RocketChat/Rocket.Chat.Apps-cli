@@ -1,137 +1,131 @@
-import { Command, flags } from '@oclif/command';
-import chalk from 'chalk';
-import * as chokidar from 'chokidar';
-import cli from 'cli-ux';
+import { watch } from 'fs';
+import { parseArgs } from 'util';
+import path from 'path';
 
-import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
-import { AppCompiler, FolderDetails, unicodeSymbols } from '../misc';
-import { checkUpload, getIgnoredFiles, getServerInfo, uploadApp } from '../misc/deployHelpers';
+import { buildAndPackage } from '../core/compiler';
+import { getServerInfo, loadIgnoredPatterns, uploadApp } from '../core/deploy';
+import { CliError } from '../core/errors';
+import { loadConfigFile, loadProject, mergeDeployConfig } from '../core/project';
+import { Command, CommandContext, DeployConfig } from '../core/types';
+import { buildGlobMatcher } from '../utils/glob';
 
-export default class Watch extends Command {
+export const watchCommand: Command = {
+  name: 'watch',
+  description: 'Watch app files and deploy on changes.',
+  usage: 'rc-apps watch [--project <path>] --url <server> [auth options]',
+  async run(argv: string[], context: CommandContext): Promise<void> {
+    const parsed = parseArgs({
+      args: argv,
+      allowPositionals: false,
+      options: {
+        project: { type: 'string' },
+        url: { type: 'string' },
+        username: { type: 'string', short: 'u' },
+        password: { type: 'string', short: 'p' },
+        token: { type: 'string', short: 't' },
+        userId: { type: 'string', short: 'i' },
+        code: { type: 'string', short: 'c' },
+        update: { type: 'boolean', default: false },
+        force: { type: 'boolean', short: 'f', default: false },
+        verbose: { type: 'boolean', short: 'v', default: false },
+        debounce: { type: 'string' },
+        'experimental-native-compiler': { type: 'boolean', default: false },
+      },
+    });
 
-    public static description = 'watches for changes in the app and redeploys to the server';
+    const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
+    const project = await loadProject(projectPath);
+    const configFromFile = await loadConfigFile(project.rootPath);
 
-    public static flags = {
-        'help': flags.help({ char: 'h' }),
-        'url': flags.string({
-            description: 'where the app should be deployed to',
-        }),
-        'username': flags.string({
-            char: 'u',
-            description: 'username to authenticate with',
-        }),
-        'password': flags.string({
-            char: 'p',
-            description: 'password for the user',
-        }),
-        'token': flags.string({
-            char: 't',
-            description: 'API token to use with UserID (instead of username & password)',
-        }),
-        'userId': flags.string({
-            char: 'i',
-            description: 'UserID to use with API token (instead of username & password)',
-        }),
-        'verbose': flags.boolean({
-            char: 'v',
-            description: 'show additional details about the results of running the command',
-        }),
-        // flag with no value (-f, --force)
-        'experimental-native-compiler': flags.boolean({
-            description: '(experimental) use native TSC compiler',
-        }),
-        'force': flags.boolean({
-            char: 'f',
-            description: 'forcefully deploy the App, ignores lint & TypeScript errors',
-        }),
-        'code': flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
-        'i2fa': flags.boolean({ description: 'interactively ask for 2FA code' }),
+    const cliConfig: DeployConfig = {
+      url: parsed.values.url,
+      username: parsed.values.username,
+      password: parsed.values.password,
+      token: parsed.values.token,
+      userId: parsed.values.userId,
+      code: parsed.values.code,
+      update: parsed.values.update,
     };
 
-    public async run() {
-        const { flags } = this.parse(Watch);
+    const deployConfig = mergeDeployConfig(configFromFile, cliConfig);
 
-        const fd = new FolderDetails(this);
+    console.log('Checking server...');
+    await getServerInfo(deployConfig);
 
-        try {
-            await fd.readInfoFile();
-            await fd.matchAppsEngineVersion();
-        } catch (e) {
-            this.error(chalk.bold.red(e && e.message ? e.message : e), {exit: 2});
-        }
+    const ignoredPatterns = await loadIgnoredPatterns(deployConfig);
+    const isIgnored = buildGlobMatcher(ignoredPatterns);
+    const debounceMs = Number(parsed.values.debounce ?? '800');
 
-        if (flags.i2fa) {
-            flags.code = await cli.prompt('2FA code', { type: 'hide' });
-        }
+    if (Number.isNaN(debounceMs) || debounceMs < 0) {
+      throw new CliError('Invalid --debounce value.', 2);
+    }
 
-        let ignoredFiles: Array<string>;
-        try {
-            ignoredFiles = await getIgnoredFiles(fd);
-        } catch (e) {
-            this.error(chalk.bold.red(e && e.message ? e.message : e));
-        }
+    let running = false;
+    let queued = false;
 
-        chokidar.watch(fd.folder, {
-            ignored: ignoredFiles,
-            awaitWriteFinish: true,
-            persistent: true,
-            interval: 300,
-        }).on('change', async () => {
-            tasks(this, fd, flags)
-            .catch((e) => {
-                this.log(chalk.bold.redBright(
-                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
-            });
-        }).on('ready', async () => {
-            tasks(this, fd, flags)
-            .catch((e) => {
-                this.log(chalk.bold.redBright(
-                    `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
-            });
+    const runDeployment = async (): Promise<void> => {
+      if (running) {
+        queued = true;
+        return;
+      }
+
+      running = true;
+
+      try {
+        const zipRelativePath = await buildAndPackage(project, {
+          force: parsed.values.force,
+          verbose: parsed.values.verbose,
+          useNativeCompiler: parsed.values['experimental-native-compiler'],
         });
-    }
-}
 
-function reportDiagnostics(command: Command, diag: Array<ICompilerDiagnostic>): void {
-    diag.forEach((d) => command.error(d.message));
-}
+        const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);
+        const result = await uploadApp(deployConfig, project, zipAbsolutePath);
+        console.log(`Deployment finished (${result.mode}).`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`Watch deployment failed: ${message}`);
+      } finally {
+        running = false;
 
-const tasks = async (command: Command, fd: FolderDetails, flags: Record<string, any>): Promise<void> => {
-    try {
-        cli.action.start(chalk.bold.greenBright('   Packaging the app'));
-        const compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
-        const result = await compiler.compile();
-
-        if (flags.verbose) {
-            command.log(`${chalk.green('[info]')} using TypeScript v${ result.typeScriptVersion }`);
+        if (queued) {
+          queued = false;
+          await runDeployment();
         }
+      }
+    };
 
-        if (result.diagnostics.length && !flags.force) {
-            reportDiagnostics(command, result.diagnostics);
-            command.error('TypeScript compiler error(s) occurred');
-            command.exit(1);
-            return;
-        }
+    await runDeployment();
 
-        const zipName = await compiler.outputZip();
-        cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
+    let timer: NodeJS.Timeout | undefined;
 
-        cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
-        const serverInfo = await getServerInfo(fd, flags);
-        cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
+    const watcher = watch(project.rootPath, { recursive: true, encoding: 'utf8' }, (_eventType, fileName) => {
+      if (!fileName) {
+        return;
+      }
 
-        const status = await checkUpload({...flags, ...serverInfo}, fd);
-        if (status) {
-            cli.action.start(chalk.bold.greenBright('   Updating App'));
-            await uploadApp({...serverInfo, update: true}, fd, zipName);
-            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
-        } else {
-            cli.action.start(chalk.bold.greenBright('   Uploading App'));
-            await uploadApp(serverInfo, fd, zipName);
-            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
-        }
-    } catch (e) {
-        cli.action.stop(chalk.red(unicodeSymbols.get('heavyMultiplicationX')));
-        throw new Error(e);
-    }
+      const relativePath = fileName.replace(/\\/g, '/');
+
+      if (isIgnored(relativePath)) {
+        return;
+      }
+
+      if (timer) {
+        clearTimeout(timer);
+      }
+
+      timer = setTimeout(() => {
+        void runDeployment();
+      }, debounceMs);
+    });
+
+    console.log('Watching for changes. Press Ctrl+C to stop.');
+
+    await new Promise<void>((resolve, reject) => {
+      watcher.on('error', reject);
+      process.on('SIGINT', () => {
+        watcher.close();
+        resolve();
+      });
+    });
+  },
 };

@@ -1,122 +1,68 @@
-import { Command, flags } from '@oclif/command';
-import chalk from 'chalk';
-import cli from 'cli-ux';
-import * as semver from 'semver';
+import { parseArgs } from 'util';
+import path from 'path';
 
-import { ICompilerDiagnostic } from '@rocket.chat/apps-compiler/definition';
-import { AppCompiler, AppPackager, FolderDetails, unicodeSymbols } from '../misc';
-import { getServerInfo, uploadApp } from '../misc/deployHelpers';
+import { buildAndPackage } from '../core/compiler';
+import { getServerInfo, uploadApp } from '../core/deploy';
+import { loadConfigFile, loadProject, mergeDeployConfig } from '../core/project';
+import { Command, CommandContext, DeployConfig } from '../core/types';
 
-export default class Deploy extends Command {
-    public static description = 'allows deploying an App to a server';
+export const deployCommand: Command = {
+  name: 'deploy',
+  description: 'Compile, package, and deploy an app to Rocket.Chat.',
+  usage: 'rc-apps deploy [--project <path>] --url <server> [--username <u> --password <p> | --userId <id> --token <t>]',
+  async run(argv: string[], context: CommandContext): Promise<void> {
+    const parsed = parseArgs({
+      args: argv,
+      allowPositionals: false,
+      options: {
+        project: { type: 'string' },
+        url: { type: 'string' },
+        username: { type: 'string', short: 'u' },
+        password: { type: 'string', short: 'p' },
+        token: { type: 'string', short: 't' },
+        userId: { type: 'string', short: 'i' },
+        code: { type: 'string', short: 'c' },
+        update: { type: 'boolean', default: false },
+        force: { type: 'boolean', short: 'f', default: false },
+        verbose: { type: 'boolean', short: 'v', default: false },
+        'experimental-native-compiler': { type: 'boolean', default: false },
+      },
+    });
 
-    public static flags = {
-        'help': flags.help({ char: 'h' }),
-        'url': flags.string({
-            description: 'where the app should be deployed to',
-        }),
-        'username': flags.string({
-            char: 'u',
-            description: 'username to authenticate with',
-        }),
-        'password': flags.string({
-            char: 'p',
-            description: 'password for the user',
-        }),
-        'token': flags.string({
-            char: 't',
-            description: 'API token to use with UserID (instead of username & password)',
-        }),
-        'verbose': flags.boolean({
-            char: 'v',
-            description: 'show additional details about the results of running the command',
-        }),
-        'userId': flags.string({
-            char: 'i',
-            description: 'UserID to use with API token (instead of username & password)',
-        }),
-        // flag with no value (-f, --force)
-        'experimental-native-compiler': flags.boolean({
-            description: '(experimental) use native TSC compiler',
-        }),
-        'force': flags.boolean({
-            char: 'f',
-            description: 'forcefully deploy the App, ignores lint & TypeScript errors',
-        }),
-        'update': flags.boolean({ description: 'updates the app, instead of creating' }),
-        'code': flags.string({ char: 'c', dependsOn: ['username'], description: '2FA code of the user' }),
-        'i2fa': flags.boolean({ description: 'interactively ask for 2FA code' }),
+    const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
+    const project = await loadProject(projectPath);
+    const configFromFile = await loadConfigFile(project.rootPath);
+
+    const cliConfig: DeployConfig = {
+      url: parsed.values.url,
+      username: parsed.values.username,
+      password: parsed.values.password,
+      token: parsed.values.token,
+      userId: parsed.values.userId,
+      code: parsed.values.code,
+      update: parsed.values.update,
     };
 
-    public async run() {
-        const { flags } = this.parse(Deploy);
+    const deployConfig = mergeDeployConfig(configFromFile, cliConfig);
 
-        const fd = new FolderDetails(this);
+    console.log('Checking server...');
+    const serverInfo = await getServerInfo(deployConfig);
 
-        try {
-            await fd.readInfoFile();
-            await fd.matchAppsEngineVersion();
-        } catch (e) {
-            this.error(e && e.message ? e.message : e, {exit: 2});
-        }
-
-        if (flags.i2fa) {
-            flags.code = await cli.prompt('2FA code', { type: 'hide' });
-        }
-
-        cli.log(chalk.bold.greenBright('   Starting App Deployment to Server\n'));
-
-        try {
-            cli.action.start(chalk.bold.greenBright('   Getting Server Info'));
-            const serverInfo = await getServerInfo(fd, flags);
-            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
-
-            cli.action.start(chalk.bold.greenBright('   Packaging the app'));
-            const compiler = new AppCompiler(fd, flags['experimental-native-compiler']);
-            const compilationResult = await compiler.compile();
-
-            if (flags.verbose) {
-                this.log(`${chalk.green('[info]')} using TypeScript v${ compilationResult.typeScriptVersion }`);
-            }
-
-            if (compilationResult.diagnostics.length && !flags.force) {
-                this.reportDiagnostics(compilationResult.diagnostics);
-                this.error('TypeScript compiler error(s) occurred');
-                this.exit(1);
-                return;
-            }
-
-            const bundlingResult = await compiler.bundle();
-
-            if (bundlingResult.diagnostics.length && !flags.force) {
-                this.reportDiagnostics(bundlingResult.diagnostics);
-                this.error('Bundler error(s) occurred');
-                this.exit(1);
-                return;
-            }
-
-            let zipName: string;
-
-            if (semver.satisfies(semver.coerce(serverInfo.serverVersion), '>=3.8')) {
-                zipName = await compiler.outputZip();
-            } else {
-                const packager = new AppPackager(this, fd);
-                zipName = await packager.zipItUp();
-            }
-
-            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
-
-            cli.action.start(chalk.bold.greenBright('   Uploading App'));
-            await uploadApp(serverInfo, fd, zipName);
-            cli.action.stop(chalk.bold.greenBright(unicodeSymbols.get('checkMark')));
-        } catch (e) {
-            cli.action.stop(chalk.red(unicodeSymbols.get('heavyMultiplicationX')));
-            this.error(chalk.bold.redBright(
-            `   ${unicodeSymbols.get('longRightwardsSquiggleArrow')}  ${e && e.message ? e.message : e}`));
-        }
+    if (serverInfo.version) {
+      console.log(`Server version: ${serverInfo.version}`);
     }
 
-    private reportDiagnostics(diag: Array<ICompilerDiagnostic>): void {
-        diag.forEach((d) => this.error(d.message));
-    }
-}
+    console.log('Packaging app...');
+    const zipRelativePath = await buildAndPackage(project, {
+      force: parsed.values.force,
+      verbose: parsed.values.verbose,
+      useNativeCompiler: parsed.values['experimental-native-compiler'],
+    });
+
+    const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);
+
+    console.log('Uploading app...');
+    const result = await uploadApp(deployConfig, project, zipAbsolutePath);
+    console.log(`Deployment finished (${result.mode}).`);
+  },
+};
