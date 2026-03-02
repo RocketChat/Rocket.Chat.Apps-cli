@@ -67,9 +67,7 @@ You can store deployment defaults in `.rcappsconfig` inside the app folder:
 
 ```json
 {
-  "url": "http://localhost:3000",
-  "username": "admin",
-  "password": "pass",
+  "allowHttp": false,
   "ignoredFiles": [
     "**/dist/**",
     "**/node_modules/**"
@@ -77,7 +75,7 @@ You can store deployment defaults in `.rcappsconfig` inside the app folder:
 }
 ```
 
-CLI flags override values from this file.
+For security, server URL and auth credentials are accepted only via CLI flags.
 
 Security defaults:
 - For non-localhost targets, `deploy`/`watch` require HTTPS.

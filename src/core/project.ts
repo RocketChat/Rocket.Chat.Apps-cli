@@ -78,7 +78,11 @@ export async function loadConfigFile(projectPath: string): Promise<DeployConfig>
 
   try {
     const raw = await readFile(configPath, 'utf8');
-    return JSON.parse(raw) as DeployConfig;
+    const parsed = JSON.parse(raw) as Partial<DeployConfig>;
+    return {
+      allowHttp: parsed.allowHttp,
+      ignoredFiles: Array.isArray(parsed.ignoredFiles) ? parsed.ignoredFiles : undefined,
+    };
   } catch {
     return {};
   }

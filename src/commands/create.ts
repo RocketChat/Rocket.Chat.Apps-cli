@@ -91,7 +91,11 @@ export const createCommand: Command = {
     await writeFile(path.join(folderPath, 'src', `${className}.ts`), appClassTemplate(className), 'utf8');
     await writeFile(path.join(folderPath, 'tsconfig.json'), appTsConfigTemplate(), 'utf8');
     await writeFile(path.join(folderPath, '.gitignore'), 'dist\nnode_modules\n', 'utf8');
-    await writeFile(path.join(folderPath, '.rcappsconfig'), `${JSON.stringify({ url: 'http://localhost:3000' }, null, 2)}\n`, 'utf8');
+    await writeFile(
+      path.join(folderPath, '.rcappsconfig'),
+      `${JSON.stringify({ ignoredFiles: ['**/dist/**', '**/node_modules/**', '**/.git/**'] }, null, 2)}\n`,
+      'utf8',
+    );
     await writeFile(path.join(folderPath, 'package.json'), appPackageJsonTemplate(nameSlug, requiredApiVersion), 'utf8');
     await writeFile(path.join(folderPath, 'icon.png'), Buffer.from(ICON_1PX_BASE64, 'base64'));
 
