@@ -57,10 +57,91 @@ test('deploy command runs full deploy pipeline and shows warnings', async () => 
 
     assert.equal(validatedConfig?.token, 'env-token');
     assert.equal(validatedConfig?.userId, 'env-user');
+    assert.equal(validatedConfig?.allowHttp, true);
     assert.equal(uploadZipPath, '/project/dist/a_1.0.0.zip');
     assert.equal(calls.some(([type, message]) => type === 'warn' && message.includes('--experimental-native-compiler')), true);
     assert.equal(calls.some(([type, message]) => type === 'warn' && message.includes('Ignoring legacy .rcappsconfig field')), true);
     assert.equal(calls.some(([type, message]) => type === 'success' && message.includes('Deployment finished (update).')), true);
+  } finally {
+    restore();
+  }
+});
+
+test('deploy command preserves allow-http and update from config/env when flags are not provided', async () => {
+  let validatedConfig: Record<string, unknown> | undefined;
+
+  const restore = patchMany([
+    {
+      obj: projectCore,
+      key: 'loadProject',
+      value: async () => ({ rootPath: '/project', appJsonPath: '/project/app.json', manifest: { id: 'app.id', nameSlug: 'a', version: '1.0.0' } }),
+    },
+    { obj: projectCore, key: 'loadConfigFile', value: async () => ({ config: { allowHttp: true, update: true }, legacyFields: [] }) },
+    {
+      obj: envCore,
+      key: 'loadDeployConfigFromEnv',
+      value: () => ({ url: 'http://localhost:3000', username: 'user', password: 'pass' }),
+    },
+    {
+      obj: deployCore,
+      key: 'validateDeployCredentials',
+      value: (config: unknown) => {
+        validatedConfig = config as Record<string, unknown>;
+      },
+    },
+    { obj: deployCore, key: 'getServerInfo', value: async () => ({}) },
+    { obj: compiler, key: 'buildAndPackage', value: async () => 'dist/a_1.0.0.zip' },
+    { obj: deployCore, key: 'uploadApp', value: async () => ({ mode: 'create' }) },
+    { obj: output, key: 'warn', value: () => {} },
+    { obj: output, key: 'step', value: () => {} },
+    { obj: output, key: 'success', value: () => {} },
+    { obj: output, key: 'verbose', value: () => {} },
+  ]);
+
+  try {
+    await deployCommand.run([], { cwd: '/project' });
+    assert.equal(validatedConfig?.allowHttp, true);
+    assert.equal(validatedConfig?.update, true);
+  } finally {
+    restore();
+  }
+});
+
+test('deploy command applies allow-http and update when flags are provided', async () => {
+  let validatedConfig: Record<string, unknown> | undefined;
+
+  const restore = patchMany([
+    {
+      obj: projectCore,
+      key: 'loadProject',
+      value: async () => ({ rootPath: '/project', appJsonPath: '/project/app.json', manifest: { id: 'app.id', nameSlug: 'a', version: '1.0.0' } }),
+    },
+    { obj: projectCore, key: 'loadConfigFile', value: async () => ({ config: { allowHttp: false, update: false }, legacyFields: [] }) },
+    {
+      obj: envCore,
+      key: 'loadDeployConfigFromEnv',
+      value: () => ({ url: 'http://localhost:3000', username: 'user', password: 'pass' }),
+    },
+    {
+      obj: deployCore,
+      key: 'validateDeployCredentials',
+      value: (config: unknown) => {
+        validatedConfig = config as Record<string, unknown>;
+      },
+    },
+    { obj: deployCore, key: 'getServerInfo', value: async () => ({}) },
+    { obj: compiler, key: 'buildAndPackage', value: async () => 'dist/a_1.0.0.zip' },
+    { obj: deployCore, key: 'uploadApp', value: async () => ({ mode: 'update' }) },
+    { obj: output, key: 'warn', value: () => {} },
+    { obj: output, key: 'step', value: () => {} },
+    { obj: output, key: 'success', value: () => {} },
+    { obj: output, key: 'verbose', value: () => {} },
+  ]);
+
+  try {
+    await deployCommand.run(['--allow-http', '--update'], { cwd: '/project' });
+    assert.equal(validatedConfig?.allowHttp, true);
+    assert.equal(validatedConfig?.update, true);
   } finally {
     restore();
   }

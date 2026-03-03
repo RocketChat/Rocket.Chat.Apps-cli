@@ -39,6 +39,8 @@ export const deployCommand: Command = {
     const configLoadResult = await loadConfigFile(project.rootPath);
     const configFromFile = configLoadResult.config;
     const configFromEnv = loadDeployConfigFromEnv();
+    const allowHttpProvided = hasBooleanOption(argv, 'allow-http');
+    const updateProvided = hasBooleanOption(argv, 'update');
 
     const cliConfig: DeployConfig = {
       url: parsed.values.url,
@@ -47,8 +49,8 @@ export const deployCommand: Command = {
       token: parsed.values.token,
       userId: parsed.values.userId,
       code: parsed.values.code,
-      allowHttp: parsed.values['allow-http'],
-      update: parsed.values.update,
+      allowHttp: allowHttpProvided ? parsed.values['allow-http'] : undefined,
+      update: updateProvided ? parsed.values.update : undefined,
     };
 
     const deployConfig = mergeDeployConfig(mergeDeployConfig(configFromFile, configFromEnv), cliConfig);
@@ -100,3 +102,8 @@ export const deployCommand: Command = {
     success(`Deployment finished (${result.mode}).`);
   },
 };
+
+function hasBooleanOption(args: string[], option: string): boolean {
+  const optionPrefix = `--${option}`;
+  return args.some((arg) => arg === optionPrefix || arg.startsWith(`${optionPrefix}=`));
+}

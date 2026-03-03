@@ -1,4 +1,5 @@
-import { watch } from 'fs';
+import { FSWatcher, watch } from 'fs';
+import { readdir } from 'fs/promises';
 import { parseArgs } from 'util';
 import path from 'path';
 
@@ -27,9 +28,9 @@ export const watchCommand: Command = {
         token: { type: 'string', short: 't' },
         userId: { type: 'string', short: 'i' },
         code: { type: 'string', short: 'c' },
-        'allow-http': { type: 'boolean', default: false },
+        'allow-http': { type: 'boolean' },
         'legacy-compiler': { type: 'boolean', default: false },
-        update: { type: 'boolean', default: false },
+        update: { type: 'boolean' },
         force: { type: 'boolean', short: 'f', default: false },
         verbose: { type: 'boolean', short: 'v', default: false },
         debounce: { type: 'string' },
@@ -42,6 +43,8 @@ export const watchCommand: Command = {
     const configLoadResult = await loadConfigFile(project.rootPath);
     const configFromFile = configLoadResult.config;
     const configFromEnv = loadDeployConfigFromEnv();
+    const allowHttpProvided = hasBooleanOption(argv, 'allow-http');
+    const updateProvided = hasBooleanOption(argv, 'update');
 
     const cliConfig: DeployConfig = {
       url: parsed.values.url,
@@ -50,8 +53,8 @@ export const watchCommand: Command = {
       token: parsed.values.token,
       userId: parsed.values.userId,
       code: parsed.values.code,
-      allowHttp: parsed.values['allow-http'],
-      update: parsed.values.update,
+      allowHttp: allowHttpProvided ? parsed.values['allow-http'] : undefined,
+      update: updateProvided ? parsed.values.update : undefined,
     };
 
     const deployConfig = mergeDeployConfig(mergeDeployConfig(configFromFile, configFromEnv), cliConfig);
@@ -131,35 +134,153 @@ export const watchCommand: Command = {
     await runDeployment();
 
     let timer: NodeJS.Timeout | undefined;
+    const watchers = new Map<string, FSWatcher>();
+    let watcherErrorHandler: ((error: Error) => void) | undefined;
+    const recursiveWatchSupported = supportsRecursiveWatch();
 
-    const watcher = watch(project.rootPath, { recursive: true, encoding: 'utf8' }, (_eventType, fileName) => {
-      if (!fileName) {
-        return;
+    const removeWatcher = (watchPath: string): void => {
+      const watcher = watchers.get(watchPath);
+
+      if (watcher) {
+        if (watcherErrorHandler) {
+          watcher.off('error', watcherErrorHandler);
+        }
+
+        watcher.close();
+        watchers.delete(watchPath);
+      }
+    };
+
+    const addWatcher = (watchPath: string, recursive: boolean): void => {
+      const watcher = watch(watchPath, { recursive, encoding: 'utf8' }, (eventType, fileName) => {
+        if (!fileName) {
+          return;
+        }
+
+        if (!recursiveWatchSupported && eventType === 'rename') {
+          void syncWatchers();
+        }
+        const absolutePath = path.resolve(watchPath, fileName);
+        const relativePath = toRelativeRootPath(project.rootPath, absolutePath);
+
+        if (!relativePath || isIgnored(relativePath)) {
+          return;
+        }
+
+        if (timer) {
+          clearTimeout(timer);
+        }
+
+        timer = setTimeout(() => {
+          void runDeployment();
+        }, debounceMs);
+      });
+
+      if (watcherErrorHandler) {
+        watcher.on('error', watcherErrorHandler);
       }
 
-      const relativePath = fileName.replace(/\\/g, '/');
+      watchers.set(watchPath, watcher);
+    };
 
-      if (isIgnored(relativePath)) {
-        return;
+    const syncWatchers = async (): Promise<void> => {
+      const discoveredDirectories = await collectDirectories(project.rootPath);
+
+      for (const directoryPath of discoveredDirectories) {
+        if (!watchers.has(directoryPath)) {
+          addWatcher(directoryPath, false);
+        }
       }
+    };
 
-      if (timer) {
-        clearTimeout(timer);
-      }
-
-      timer = setTimeout(() => {
-        void runDeployment();
-      }, debounceMs);
-    });
+    if (recursiveWatchSupported) {
+      addWatcher(project.rootPath, true);
+    } else {
+      warn(
+        'Recursive fs.watch is not supported on this platform. Falling back to multi-directory watch mode.',
+      );
+      await syncWatchers();
+    }
 
     step('Watching for changes. Press Ctrl+C to stop.');
 
     await new Promise<void>((resolve, reject) => {
-      watcher.on('error', reject);
-      process.on('SIGINT', () => {
-        watcher.close();
+      let sigintHandler: (() => void) | undefined;
+
+      const cleanup = (): void => {
+        if (timer) {
+          clearTimeout(timer);
+          timer = undefined;
+        }
+
+        if (sigintHandler) {
+          process.off('SIGINT', sigintHandler);
+          sigintHandler = undefined;
+        }
+
+        for (const watcherPath of Array.from(watchers.keys())) {
+          removeWatcher(watcherPath);
+        }
+
+        watcherErrorHandler = undefined;
+      };
+
+      watcherErrorHandler = (error: Error) => {
+        cleanup();
+        reject(error);
+      };
+
+      for (const watcher of watchers.values()) {
+        watcher.on('error', watcherErrorHandler);
+      }
+
+      sigintHandler = () => {
+        cleanup();
         resolve();
-      });
+      };
+
+      process.once('SIGINT', sigintHandler);
     });
   },
 };
+
+function hasBooleanOption(args: string[], option: string): boolean {
+  const optionPrefix = `--${option}`;
+  return args.some((arg) => arg === optionPrefix || arg.startsWith(`${optionPrefix}=`));
+}
+
+function supportsRecursiveWatch(): boolean {
+  return process.platform === 'darwin' || process.platform === 'win32';
+}
+
+function toRelativeRootPath(rootPath: string, absolutePath: string): string | undefined {
+  const relativePath = path.relative(rootPath, absolutePath);
+
+  if (!relativePath || relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
+    return undefined;
+  }
+
+  return relativePath.replace(/\\/g, '/');
+}
+
+async function collectDirectories(rootPath: string): Promise<string[]> {
+  const directories: string[] = [rootPath];
+  const queue: string[] = [rootPath];
+
+  while (queue.length > 0) {
+    const directoryPath = queue.pop() as string;
+    const entries = await readdir(directoryPath, { withFileTypes: true, encoding: 'utf8' }).catch(() => []);
+
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+
+      const nestedDirectoryPath = path.join(directoryPath, entry.name);
+      directories.push(nestedDirectoryPath);
+      queue.push(nestedDirectoryPath);
+    }
+  }
+
+  return directories;
+}
