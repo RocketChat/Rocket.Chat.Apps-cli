@@ -38,23 +38,24 @@ rc-apps create [name] [--description <text>] [--author <name>] [--support <urlOr
 ### Package App
 
 ```bash
-rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--experimental-native-compiler]
+rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--legacy-compiler]
 ```
 
 - `--no-compile`: package source files directly (no TypeScript compile/bundle). This is intended for manual marketplace review workflows.
-- `--experimental-native-compiler`: keep compile flow but use compiler native mode.
+- v2 defaults to native compiler mode.
+- `--legacy-compiler`: opt into legacy compiler mode.
 - `--verbose`: print project path, compiler mode, and output zip path.
 
 ### Deploy App
 
 ```bash
-rc-apps deploy [--project <path>] --url <server> [--allow-http] [--username <u> --password <p> | --userId <id> --token <t>]
+rc-apps deploy [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [--username <u> --password <p> | --userId <id> --token <t>]
 ```
 
 ### Watch + Auto Deploy
 
 ```bash
-rc-apps watch [--project <path>] --url <server> [--allow-http] [auth flags] [--debounce 800]
+rc-apps watch [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [auth flags] [--debounce 800]
 ```
 
 ### Generate Boilerplate

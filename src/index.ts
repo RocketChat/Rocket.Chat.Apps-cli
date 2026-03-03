@@ -26,10 +26,11 @@ const COMMANDS: CommandEntry[] = [
     name: 'deploy',
     description: 'Compile, package, and deploy an app to Rocket.Chat.',
     usage:
-      'rc-apps deploy [--project <path>] --url <server> [--allow-http] [--username <u> --password <p> | --userId <id> --token <t>]',
+      'rc-apps deploy [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [--username <u> --password <p> | --userId <id> --token <t>]',
     details: [
       'Auth/URL can come from environment variables.',
       'Run `rc-apps env` to list all supported variables.',
+      'Compiler default is native in v2. Use `--legacy-compiler` to opt into legacy mode.',
     ],
     load: async () => (await import('./commands/deploy')).deployCommand,
   },
@@ -57,16 +58,18 @@ const COMMANDS: CommandEntry[] = [
     aliases: ['p', 'pack'],
     description: 'Package an app into a deployable zip file.',
     usage:
-      'rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--experimental-native-compiler]',
+      'rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--legacy-compiler]',
+    details: ['Compiler default is native in v2. Use `--legacy-compiler` to opt into legacy mode.'],
     load: async () => (await import('./commands/package')).packageCommand,
   },
   {
     name: 'watch',
     description: 'Watch app files and deploy on changes.',
-    usage: 'rc-apps watch [--project <path>] --url <server> [--allow-http] [auth options]',
+    usage: 'rc-apps watch [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [auth options]',
     details: [
       'Auth/URL can come from environment variables.',
       'Run `rc-apps env` to list all supported variables.',
+      'Compiler default is native in v2. Use `--legacy-compiler` to opt into legacy mode.',
     ],
     load: async () => (await import('./commands/watch')).watchCommand,
   },

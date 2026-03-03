@@ -12,7 +12,7 @@ export const deployCommand: Command = {
   name: 'deploy',
   description: 'Compile, package, and deploy an app to Rocket.Chat.',
   usage:
-    'rc-apps deploy [--project <path>] --url <server> [--allow-http] [--username <u> --password <p> | --userId <id> --token <t>]',
+    'rc-apps deploy [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [--username <u> --password <p> | --userId <id> --token <t>]',
   async run(argv: string[], context: CommandContext): Promise<void> {
     const parsed = parseArgs({
       args: argv,
@@ -26,6 +26,7 @@ export const deployCommand: Command = {
         userId: { type: 'string', short: 'i' },
         code: { type: 'string', short: 'c' },
         'allow-http': { type: 'boolean', default: false },
+        'legacy-compiler': { type: 'boolean', default: false },
         update: { type: 'boolean', default: false },
         force: { type: 'boolean', short: 'f', default: false },
         verbose: { type: 'boolean', short: 'v', default: false },
@@ -52,7 +53,12 @@ export const deployCommand: Command = {
 
     const deployConfig = mergeDeployConfig(mergeDeployConfig(configFromFile, configFromEnv), cliConfig);
     const verboseMode = parsed.values.verbose;
-    const compilerMode = parsed.values['experimental-native-compiler'] ? 'experimental-native' : 'default';
+    const useLegacyCompiler = parsed.values['legacy-compiler'];
+    const compilerMode = useLegacyCompiler ? 'legacy' : 'native-default';
+
+    if (parsed.values['experimental-native-compiler']) {
+      warn('`--experimental-native-compiler` is deprecated in v2 and now a no-op (native is default).');
+    }
 
     if (configLoadResult.legacyFields.length > 0) {
       warn(
@@ -83,7 +89,7 @@ export const deployCommand: Command = {
     const zipRelativePath = await buildAndPackage(project, {
       force: parsed.values.force,
       verbose: verboseMode,
-      useNativeCompiler: parsed.values['experimental-native-compiler'],
+      useNativeCompiler: !useLegacyCompiler,
     });
 
     const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);

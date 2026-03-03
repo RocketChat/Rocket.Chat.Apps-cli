@@ -13,7 +13,7 @@ export const packageCommand: Command = {
   aliases: ['p', 'pack'],
   description: 'Package an app into a deployable zip file.',
   usage:
-    'rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--experimental-native-compiler]',
+    'rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--legacy-compiler]',
   async run(argv: string[], context: CommandContext): Promise<void> {
     const parsed = parseArgs({
       args: argv,
@@ -23,6 +23,7 @@ export const packageCommand: Command = {
         force: { type: 'boolean', short: 'f', default: false },
         verbose: { type: 'boolean', short: 'v', default: false },
         'no-compile': { type: 'boolean', default: false },
+        'legacy-compiler': { type: 'boolean', default: false },
         'experimental-native-compiler': { type: 'boolean', default: false },
       },
     });
@@ -30,9 +31,15 @@ export const packageCommand: Command = {
     const projectPath = parsed.values.project ? path.resolve(parsed.values.project) : context.cwd;
     const project = await loadProject(projectPath);
     const verboseMode = parsed.values.verbose;
+    const useLegacyCompiler = parsed.values['legacy-compiler'];
+    const useDeprecatedNativeFlag = parsed.values['experimental-native-compiler'];
 
-    if (parsed.values['no-compile'] && parsed.values['experimental-native-compiler']) {
-      warn('Ignoring --experimental-native-compiler because --no-compile was provided.');
+    if (useDeprecatedNativeFlag) {
+      warn('`--experimental-native-compiler` is deprecated in v2 and now a no-op (native is default).');
+    }
+
+    if (parsed.values['no-compile'] && useLegacyCompiler) {
+      warn('Ignoring --legacy-compiler because --no-compile was provided.');
     }
 
     step('Packaging app...');
@@ -41,13 +48,16 @@ export const packageCommand: Command = {
       verboseMode,
       parsed.values['no-compile'] ? 'Packaging mode: source zip (--no-compile)' : 'Packaging mode: compiled bundle',
     );
+    if (!parsed.values['no-compile']) {
+      verbose(verboseMode, `Compiler mode: ${useLegacyCompiler ? 'legacy' : 'native-default'}`);
+    }
 
     const zipRelativePath = parsed.values['no-compile']
       ? await packageSource(project)
       : await buildAndPackage(project, {
           force: parsed.values.force,
           verbose: verboseMode,
-          useNativeCompiler: parsed.values['experimental-native-compiler'],
+          useNativeCompiler: !useLegacyCompiler,
         });
 
     const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);

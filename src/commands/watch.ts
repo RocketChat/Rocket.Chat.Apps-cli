@@ -14,7 +14,7 @@ import { failure, step, success, verbose, warn } from '../utils/output';
 export const watchCommand: Command = {
   name: 'watch',
   description: 'Watch app files and deploy on changes.',
-  usage: 'rc-apps watch [--project <path>] --url <server> [--allow-http] [auth options]',
+  usage: 'rc-apps watch [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [auth options]',
   async run(argv: string[], context: CommandContext): Promise<void> {
     const parsed = parseArgs({
       args: argv,
@@ -28,6 +28,7 @@ export const watchCommand: Command = {
         userId: { type: 'string', short: 'i' },
         code: { type: 'string', short: 'c' },
         'allow-http': { type: 'boolean', default: false },
+        'legacy-compiler': { type: 'boolean', default: false },
         update: { type: 'boolean', default: false },
         force: { type: 'boolean', short: 'f', default: false },
         verbose: { type: 'boolean', short: 'v', default: false },
@@ -55,6 +56,11 @@ export const watchCommand: Command = {
 
     const deployConfig = mergeDeployConfig(mergeDeployConfig(configFromFile, configFromEnv), cliConfig);
     const verboseMode = parsed.values.verbose;
+    const useLegacyCompiler = parsed.values['legacy-compiler'];
+
+    if (parsed.values['experimental-native-compiler']) {
+      warn('`--experimental-native-compiler` is deprecated in v2 and now a no-op (native is default).');
+    }
 
     if (configLoadResult.legacyFields.length > 0) {
       warn(
@@ -68,6 +74,7 @@ export const watchCommand: Command = {
 
     verbose(verboseMode, `Project: ${project.rootPath}`);
     verbose(verboseMode, `URL security: ${deployConfig.allowHttp ? 'allow-http override enabled' : 'https enforced'}`);
+    verbose(verboseMode, `Compiler mode: ${useLegacyCompiler ? 'legacy' : 'native-default'}`);
     verbose(
       verboseMode,
       deployConfig.token && deployConfig.userId ? 'Auth mode: token/userId' : 'Auth mode: username/password',
@@ -101,7 +108,7 @@ export const watchCommand: Command = {
         const zipRelativePath = await buildAndPackage(project, {
           force: parsed.values.force,
           verbose: verboseMode,
-          useNativeCompiler: parsed.values['experimental-native-compiler'],
+          useNativeCompiler: !useLegacyCompiler,
         });
 
         const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);
