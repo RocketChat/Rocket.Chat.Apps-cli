@@ -40,7 +40,10 @@
     "clean": "node scripts/clean.mjs",
     "build": "npm run clean && tsc -p tsconfig.json",
     "prepare": "npm run build",
-    "test": "npm run build && node --test test/**/*.test.js"
+    "test:typecheck": "tsc -p test/tsconfig.json --noEmit",
+    "test:unit": "node --experimental-strip-types --test \"test/**/*.test.ts\"",
+    "test:coverage": "node --experimental-strip-types --test --experimental-test-coverage --test-coverage-include=\"lib/**/*.js\" --test-coverage-lines=100 \"test/**/*.test.ts\"",
+    "test": "npm run build && npm run test:typecheck && npm run test:coverage"
   },
   "keywords": [
     "rocket.chat",

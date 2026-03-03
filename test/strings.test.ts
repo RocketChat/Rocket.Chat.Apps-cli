@@ -10,4 +10,5 @@ test('slugify normalizes names for app folders', () => {
 test('toPascalCase creates valid class names', () => {
   assert.equal(toPascalCase('my app plugin'), 'MyAppPlugin');
   assert.equal(toPascalCase('123 app'), 'App123App');
+  assert.equal(toPascalCase('!!!'), 'RocketChat');
 });

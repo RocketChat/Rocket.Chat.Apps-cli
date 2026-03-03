@@ -11,3 +11,9 @@ test('glob matcher handles nested patterns and Windows paths', () => {
   assert.equal(match('src/main.test.ts'), true);
   assert.equal(match('src/main.ts'), false);
 });
+
+test('glob matcher escapes regex characters in literals', () => {
+  const match = buildGlobMatcher(['src/file(+).ts']);
+  assert.equal(match('src/file(+).ts'), true);
+  assert.equal(match('src/fileaaa.ts'), false);
+});

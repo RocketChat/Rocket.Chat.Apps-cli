@@ -27,3 +27,8 @@ test('loadDeployConfigFromEnv handles falsey allow-http', () => {
   const config = loadDeployConfigFromEnv({ RC_APPS_ALLOW_HTTP: 'false' });
   assert.equal(config.allowHttp, false);
 });
+
+test('loadDeployConfigFromEnv keeps allow-http undefined when not set', () => {
+  const config = loadDeployConfigFromEnv({});
+  assert.equal(typeof config.allowHttp, 'undefined');
+});
