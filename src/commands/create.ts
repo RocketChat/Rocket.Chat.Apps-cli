@@ -1,5 +1,5 @@
 import { existsSync } from 'fs';
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { mkdir, readFile, readdir, rm, stat, writeFile } from 'fs/promises';
 import path from 'path';
 import { parseArgs } from 'util';
 import { randomUUID } from 'crypto';
@@ -71,11 +71,7 @@ export const createCommand: Command = {
     const className = classBaseName.endsWith('App') ? classBaseName : `${classBaseName}App`;
     const folderPath = path.resolve(context.cwd, folderSlug);
 
-    if (existsSync(folderPath) && !parsed.values.force) {
-      throw new CliError(`Directory already exists: ${folderPath}. Use --force to overwrite.`, 2);
-    }
-
-    await mkdir(folderPath, { recursive: true });
+    await prepareTargetDirectory(folderPath, parsed.values.force);
 
     const requiredApiVersion = await detectAppsEngineVersion(context.cwd);
 
@@ -130,10 +126,36 @@ async function detectAppsEngineVersion(cwd: string): Promise<string> {
   try {
     const packageJsonPath = path.join(cwd, 'package.json');
     const packageJsonRaw = await readFile(packageJsonPath, 'utf8');
-    const pkg = JSON.parse(packageJsonRaw) as { dependencies?: Record<string, string> };
+    const pkg = JSON.parse(packageJsonRaw) as {
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
 
-    return pkg.dependencies?.['@rocket.chat/apps-engine'] ?? '^1.59.0';
+    return pkg.dependencies?.['@rocket.chat/apps-engine'] ?? pkg.devDependencies?.['@rocket.chat/apps-engine'] ?? '^1.59.0';
   } catch {
     return '^1.59.0';
+  }
+}
+
+async function prepareTargetDirectory(folderPath: string, force: boolean): Promise<void> {
+  if (!existsSync(folderPath)) {
+    await mkdir(folderPath, { recursive: true });
+    return;
+  }
+
+  const targetInfo = await stat(folderPath);
+
+  if (!targetInfo.isDirectory()) {
+    throw new CliError(`Path exists and is not a directory: ${folderPath}`, 2);
+  }
+
+  if (!force) {
+    throw new CliError(`Directory already exists: ${folderPath}. Use --force to overwrite.`, 2);
+  }
+
+  const entries = await readdir(folderPath, { encoding: 'utf8' });
+
+  for (const entryName of entries) {
+    await rm(path.join(folderPath, entryName), { recursive: true, force: true });
   }
 }

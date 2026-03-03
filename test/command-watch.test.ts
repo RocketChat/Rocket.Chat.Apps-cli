@@ -151,7 +151,7 @@ test('watch command reports deployment errors and keeps running', async () => {
     },
     { obj: deployCore, key: 'validateDeployCredentials', value: () => {} },
     { obj: deployCore, key: 'getServerInfo', value: async () => ({}) },
-    { obj: deployCore, key: 'loadIgnoredPatterns', value: async () => [] },
+    { obj: deployCore, key: 'loadIgnoredPatterns', value: async () => ['**/dist/**', '**/node_modules/**', '**/.git/**'] },
     { obj: compiler, key: 'buildAndPackage', value: async () => { throw new Error('boom'); } },
     { obj: deployCore, key: 'uploadApp', value: async () => ({ mode: 'update' }) },
     { obj: output, key: 'warn', value: () => {} },
@@ -192,6 +192,9 @@ test('watch command reports deployment errors and keeps running', async () => {
 test('watch command preserves allow-http/update precedence and uses linux fallback watcher mode', async () => {
   const root = await createTempDir();
   await mkdir(path.join(root, 'nested', 'deep'), { recursive: true });
+  await mkdir(path.join(root, 'node_modules', 'dep'), { recursive: true });
+  await mkdir(path.join(root, 'dist', 'cache'), { recursive: true });
+  await mkdir(path.join(root, '.git', 'objects'), { recursive: true });
   await writeFile(path.join(root, 'file.txt'), 'x', 'utf8');
 
   const originalPlatform = process.platform;
@@ -204,6 +207,7 @@ test('watch command preserves allow-http/update precedence and uses linux fallba
     recursive: boolean;
     watcher: FakeWatcher;
     watchPath: string;
+    closeCount: number;
   }> = [];
 
   const restore = patchMany([
@@ -226,7 +230,7 @@ test('watch command preserves allow-http/update precedence and uses linux fallba
       },
     },
     { obj: deployCore, key: 'getServerInfo', value: async () => ({}) },
-    { obj: deployCore, key: 'loadIgnoredPatterns', value: async () => [] },
+    { obj: deployCore, key: 'loadIgnoredPatterns', value: async () => ['**/dist/**', '**/node_modules/**', '**/.git/**'] },
     { obj: compiler, key: 'buildAndPackage', value: async () => 'dist/a_1.0.0.zip' },
     { obj: deployCore, key: 'uploadApp', value: async () => ({ mode: 'update' }) },
     { obj: output, key: 'warn', value: (message: string) => { warnings.push(message); } },
@@ -239,13 +243,17 @@ test('watch command preserves allow-http/update precedence and uses linux fallba
       key: 'watch',
       value: (watchPath: unknown, options: unknown, callback: WatchEventHandler) => {
         const fakeWatcher = new EventEmitter() as FakeWatcher;
-        fakeWatcher.close = () => {};
-        watcherRecords.push({
+        const record = {
           callback,
           recursive: Boolean((options as { recursive?: boolean }).recursive),
           watcher: fakeWatcher,
           watchPath: String(watchPath),
-        });
+          closeCount: 0,
+        };
+        fakeWatcher.close = () => {
+          record.closeCount += 1;
+        };
+        watcherRecords.push(record);
         return fakeWatcher;
       },
     },
@@ -262,6 +270,9 @@ test('watch command preserves allow-http/update precedence and uses linux fallba
     assert.equal(warnings.some((message) => message.includes('Recursive fs.watch is not supported on this platform')), true);
     assert.equal(watcherRecords.length >= 3, true);
     assert.equal(watcherRecords.every((record) => record.recursive === false), true);
+    assert.equal(watcherRecords.some((record) => record.watchPath.includes(`${path.sep}node_modules${path.sep}`)), false);
+    assert.equal(watcherRecords.some((record) => record.watchPath.includes(`${path.sep}dist${path.sep}`)), false);
+    assert.equal(watcherRecords.some((record) => record.watchPath.includes(`${path.sep}.git${path.sep}`)), false);
 
     await rm(path.join(root, 'nested', 'deep'), { recursive: true, force: true });
     await mkdir(path.join(root, 'nested', 'added'), { recursive: true });
@@ -271,6 +282,10 @@ test('watch command preserves allow-http/update precedence and uses linux fallba
     }
     rootWatcher.callback('rename', 'nested');
     await new Promise((resolve) => setTimeout(resolve, 20));
+    const removedWatcher = watcherRecords.find((record) => record.watchPath === path.join(root, 'nested', 'deep'));
+    const addedWatcher = watcherRecords.find((record) => record.watchPath === path.join(root, 'nested', 'added'));
+    assert.equal(Boolean(removedWatcher && removedWatcher.closeCount > 0), true);
+    assert.equal(Boolean(addedWatcher), true);
 
     process.emit('SIGINT');
     await runPromise;

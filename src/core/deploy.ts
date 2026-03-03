@@ -205,7 +205,7 @@ async function createAppUploadForm(zipAbsolutePath: string, permissions?: unknow
 
 function assertUrl(url: string | undefined): asserts url is string {
   if (!url) {
-    throw new CliError('Missing server URL. Provide --url or set it in .rcappsconfig.', 2);
+    throw new CliError('Missing server URL. Provide --url or set RC_APPS_URL.', 2);
   }
 }
 

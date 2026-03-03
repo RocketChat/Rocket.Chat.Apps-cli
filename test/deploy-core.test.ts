@@ -39,7 +39,16 @@ test('validateDeployCredentials rejects incomplete auth combinations', () => {
 });
 
 test('getServerInfo validates URL constraints', async () => {
-  await assert.rejects(() => getServerInfo({}), /Missing server URL/);
+  await assert.rejects(
+    () => getServerInfo({}),
+    (error: unknown) => {
+      assert.equal(error instanceof Error, true);
+      assert.equal((error as Error).message.includes('Missing server URL'), true);
+      assert.equal((error as Error).message.includes('--url'), true);
+      assert.equal((error as Error).message.includes('RC_APPS_URL'), true);
+      return true;
+    },
+  );
   await assert.rejects(() => getServerInfo({ url: 'not-a-url' }), /Invalid URL/);
   await assert.rejects(() => getServerInfo({ url: 'ftp://example.com' }), /protocol must be http or https/);
   await assert.rejects(

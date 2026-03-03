@@ -53,6 +53,40 @@ test('create command scaffolds app with skip-install and detected apps-engine ve
   }
 });
 
+test('create command detects apps-engine version from devDependencies', async () => {
+  const root = await createTempDir();
+
+  try {
+    await writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify({ devDependencies: { '@rocket.chat/apps-engine': '^8.8.8' } }, null, 2),
+      'utf8',
+    );
+
+    const { createCommand } = requireFresh('../lib/commands/create.js');
+    await createCommand.run(
+      [
+        'temp-app',
+        '--skip-install',
+        '--description',
+        'desc',
+        '--author',
+        'author',
+        '--support',
+        'support@example.com',
+        '--homepage',
+        'https://example.com',
+      ],
+      { cwd: root },
+    );
+
+    const packageJson = await readFile(path.join(root, 'temp-app', 'package.json'), 'utf8');
+    assert.equal(packageJson.includes('"@rocket.chat/apps-engine": "^8.8.8"'), true);
+  } finally {
+    await removeTempDir(root);
+  }
+});
+
 test('create command keeps folder slug while enforcing schema-safe app.json nameSlug', async () => {
   const root = await createTempDir();
 
@@ -110,6 +144,73 @@ test('create command rejects existing target directory without --force', async (
         ),
       /Directory already exists/,
     );
+  } finally {
+    await removeTempDir(root);
+  }
+});
+
+test('create command rejects --force when target path exists as a file', async () => {
+  const root = await createTempDir();
+
+  try {
+    await writeFile(path.join(root, 'temp-app'), 'not-a-directory', 'utf8');
+    const { createCommand } = requireFresh('../lib/commands/create.js');
+
+    await assert.rejects(
+      () =>
+        createCommand.run(
+          [
+            'temp-app',
+            '--force',
+            '--skip-install',
+            '--description',
+            'desc',
+            '--author',
+            'author',
+            '--support',
+            'support@example.com',
+            '--homepage',
+            'https://example.com',
+          ],
+          { cwd: root },
+        ),
+      /Path exists and is not a directory/,
+    );
+  } finally {
+    await removeTempDir(root);
+  }
+});
+
+test('create command with --force clears existing directory contents before scaffolding', async () => {
+  const root = await createTempDir();
+
+  try {
+    const appDir = path.join(root, 'temp-app');
+    await mkdir(path.join(appDir, 'stale-dir'), { recursive: true });
+    await writeFile(path.join(appDir, 'stale.txt'), 'stale', 'utf8');
+    await writeFile(path.join(appDir, 'stale-dir', 'old.txt'), 'old', 'utf8');
+
+    const { createCommand } = requireFresh('../lib/commands/create.js');
+    await createCommand.run(
+      [
+        'temp-app',
+        '--force',
+        '--skip-install',
+        '--description',
+        'desc',
+        '--author',
+        'author',
+        '--support',
+        'support@example.com',
+        '--homepage',
+        'https://example.com',
+      ],
+      { cwd: root },
+    );
+
+    await access(path.join(appDir, 'app.json'));
+    await assert.rejects(() => access(path.join(appDir, 'stale.txt')));
+    await assert.rejects(() => access(path.join(appDir, 'stale-dir', 'old.txt')));
   } finally {
     await removeTempDir(root);
   }

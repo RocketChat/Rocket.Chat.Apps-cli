@@ -183,8 +183,24 @@ export const watchCommand: Command = {
       watchers.set(watchPath, watcher);
     };
 
+    const isIgnoredDirectory = (relativePath: string): boolean => {
+      const normalizedPath = relativePath.replace(/\\/g, '/');
+      return (
+        isIgnored(normalizedPath) ||
+        isIgnored(`${normalizedPath}/`) ||
+        isIgnored(`${normalizedPath}/__rc_apps_watch_probe__.txt`)
+      );
+    };
+
     const syncWatchers = async (): Promise<void> => {
-      const discoveredDirectories = await collectDirectories(project.rootPath);
+      const discoveredDirectories = await collectDirectories(project.rootPath, isIgnoredDirectory);
+      const discoveredDirectorySet = new Set(discoveredDirectories);
+
+      for (const watcherPath of Array.from(watchers.keys())) {
+        if (!discoveredDirectorySet.has(watcherPath)) {
+          removeWatcher(watcherPath);
+        }
+      }
 
       for (const directoryPath of discoveredDirectories) {
         if (!watchers.has(directoryPath)) {
@@ -263,7 +279,10 @@ function toRelativeRootPath(rootPath: string, absolutePath: string): string | un
   return relativePath.replace(/\\/g, '/');
 }
 
-async function collectDirectories(rootPath: string): Promise<string[]> {
+async function collectDirectories(
+  rootPath: string,
+  isIgnoredDirectory: (relativePath: string) => boolean,
+): Promise<string[]> {
   const directories: string[] = [rootPath];
   const queue: string[] = [rootPath];
 
@@ -277,6 +296,12 @@ async function collectDirectories(rootPath: string): Promise<string[]> {
       }
 
       const nestedDirectoryPath = path.join(directoryPath, entry.name);
+      const nestedRelativePath = toRelativeRootPath(rootPath, nestedDirectoryPath);
+
+      if (!nestedRelativePath || isIgnoredDirectory(nestedRelativePath)) {
+        continue;
+      }
+
       directories.push(nestedDirectoryPath);
       queue.push(nestedDirectoryPath);
     }
