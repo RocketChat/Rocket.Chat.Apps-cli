@@ -1,11 +1,12 @@
 {
-  "declaration": false,
-  "extends": "../tsconfig",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
-    "sourceMap": true
+    "noEmit": true,
+    "rootDir": "..",
+    "declaration": false,
+    "sourceMap": false,
+    "strict": true,
+    "moduleDetection": "force"
   },
-  "include": [
-    "./**/*",
-    "../src/**/*"
-  ]
+  "include": ["./**/*.ts"]
 }

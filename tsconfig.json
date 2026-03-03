@@ -1,19 +1,18 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
-    "target": "es2017",
-    "module": "commonjs",
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "declaration": true,
-    "noImplicitAny": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strict": true,
+    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "importHelpers": true,
+    "skipLibCheck": true,
     "outDir": "./lib",
-    "rootDirs": [ "./src" ],
-    "typeRoots": [ "./node_modules/@types", "./src/typings" ]
+    "rootDir": "./src",
+    "types": ["node"],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": [
-    "./src/**/*"
-  ]
+  "include": ["src/**/*.ts"]
 }

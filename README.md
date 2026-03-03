@@ -1,96 +1,120 @@
-# Rocket.Chat Apps CLI
-The Rocket.Chat Apps CLI for interacting with Apps.
+# Rocket.Chat Apps CLI (v2)
 
-## Getting Started
-Extremely simple.
+Modernized `rc-apps` CLI focused on local app development, packaging, deployment, and scaffolding.
 
-```
+## What Changed In v2
+
+- Legacy implementation is preserved under `legacy/` for reference.
+- Deprecated cloud/marketplace commands were removed from active CLI:
+  - `login`
+  - `logout`
+  - `submit`
+- Modern Node.js baseline (`>=22.0.0`).
+- Lower runtime dependency surface using native Node APIs (`fetch`, `FormData`, `fs/promises`, `util.parseArgs`).
+- Cross-platform path handling improvements (Windows-safe path normalization).
+
+## Install
+
+```bash
 npm install -g @rocket.chat/apps-cli
 ```
 
-## Rocket.Chat App Development
+## Commands
 
-### Logging Inside an App
-Due to limitations of NodeJS's `vm` package we have had to implement a custom logger class.
-To make usage of this you can use `this.getLogger()` and then do the normal `console` style logging.
-
-### `rc-apps create`
-
-The development tools provide a command to quickly scaffold a new Rocket.Chat App, simply run `rc-apps create` and a new folder will be created inside the current working directory with a basic App which does nothing but will compile and be packaged in the `dist` folder.
-
-### App description
-
-The app description file, named `app.json`, contains basic information about the app. You can check the [app-schema.json](https://github.com/RocketChat/Rocket.Chat.Apps-engine/blob/master/src/definition/app-schema.json) file for all the detailed information and fields allowed in the app description file, the basic structure is similar to this:
-
+```bash
+rc-apps help
 ```
+
+```bash
+rc-apps env
+```
+
+### Create App
+
+```bash
+rc-apps create [name] [--description <text>] [--author <name>] [--support <urlOrEmail>] [--homepage <url>] [--skip-install]
+```
+
+### Package App
+
+```bash
+rc-apps package [--project <path>] [--force] [--verbose] [--no-compile] [--legacy-compiler]
+```
+
+- `--no-compile`: package source files directly (no TypeScript compile/bundle). This is intended for manual marketplace review workflows.
+- v2 defaults to native compiler mode.
+- `--legacy-compiler`: opt into legacy compiler mode.
+- `--verbose`: print project path, compiler mode, and output zip path.
+
+### Deploy App
+
+```bash
+rc-apps deploy [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [--username <u> --password <p> | --userId <id> --token <t>]
+```
+
+### Watch + Auto Deploy
+
+```bash
+rc-apps watch [--project <path>] --url <server> [--allow-http] [--legacy-compiler] [auth flags] [--debounce 800]
+```
+
+### Generate Boilerplate
+
+```bash
+rc-apps generate endpoint <ClassName> [--path /route]
+rc-apps generate slash-command <ClassName>
+rc-apps generate setting <setting_id>
+```
+
+## Config File
+
+You can store deployment defaults in `.rcappsconfig` inside the app folder:
+
+```json
 {
-    "id": "5cb9a329-0613-4d39-b20f-cc2cc9175df5",
-    "name": "App Name",
-    "nameSlug": "app-name",
-    "version": "0.0.1",
-    "requiredApiVersion": "^1.4.0",
-    "description": "App which provides something very useful for Rocket.Chat users.",
-    "author": {
-        "name": "Author Name <author@email.com>",
-        "support": "Support Url or Email"
-    },
-    "classFile": "main.ts",
-    "iconFile": "beautiful-app-icon.jpg"
+  "allowHttp": false,
+  "ignoredFiles": [
+    "**/dist/**",
+    "**/node_modules/**"
+  ]
 }
 ```
 
-### Extending the App class
+For security, `.rcappsconfig` only supports non-secret deploy settings (`allowHttp`, `ignoredFiles`).
+If legacy credential fields are present in `.rcappsconfig`, the CLI shows a warning and ignores them.
 
-The basic creation of an App is based on extending the `App` class from the Rocket.Chat Apps _definition_ library. Your class also has to implement the constructor and optionally the `initialize` function, for more details on those check the [App definition documentation](https://rocketchat.github.io/Rocket.Chat.Apps-engine/classes/app.html).
+You can also provide credentials via environment variables:
+- `RC_APPS_URL`
+- `RC_APPS_USERNAME`
+- `RC_APPS_PASSWORD`
+- `RC_APPS_TOKEN`
+- `RC_APPS_USER_ID`
+- `RC_APPS_2FA_CODE`
+- `RC_APPS_ALLOW_HTTP`
 
-```
-import {
-    IAppAccessors,
-    IConfigurationExtend,
-    IEnvironmentRead,
-    ILogger,
-} from '@rocket.chat/apps-engine/definition/accessors';
-import { App } from '@rocket.chat/apps-engine/definition/App';
-import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
+Precedence order is:
+1. CLI flags
+2. Environment variables
+3. `.rcappsconfig` (safe non-secret fields only)
 
-export class TodoListApp extends App {
-    constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
-        super(info, logger, accessors);
-    }
+Security defaults:
+- For non-localhost targets, `deploy`/`watch` require HTTPS.
+- To explicitly allow insecure HTTP on remote hosts, pass `--allow-http`.
 
-    public async initialize(configurationExtend: IConfigurationExtend, environmentRead: IEnvironmentRead): Promise<void> {
-        await this.extendConfiguration(configurationExtend, environmentRead);
-        this.getLogger().log('Hello world from my app');
-    }
-}
-```
+## Development
 
-### Packaging the app
-
-Currently the Rocket.Chat servers and Marketplace allow submission of zip files, these files can be created by running `rc-apps package` which packages your app and creates the zip file under `dist` folder.
-
-### Uploading the app 
-For uploading the app you need add to the required parameters in the .rcappsconfig already created in the apps directory. It accepts two types of objects:-
-
-1. Upload using username, password
-
-```
-{
-    url: string;
-    username: string;
-    password: string;
-}
-```
-2. Upload using personal access token and userId 
-
-```
-{
-    url: string;
-    userId: string;
-    token: string;
-}
+```bash
+npm install
+npm run build
+npm test
 ```
 
-### Enabling autocomplete for commands
+## Testing Checklist
 
-To enable autocomplete for the apps cli use the command `rc-apps autocomplete <your-shell-type>` with the shell type as zsh or bash as the supported types. This would provide a step by step instruction to enable shell completion in your preferred shell.
+1. `npm run build` succeeds.
+2. `npm test` succeeds.
+3. On Windows, run `rc-apps package` inside a valid app and confirm zip generation in `dist/`.
+4. Verify `deploy` with both auth modes:
+   - username/password
+   - userId/token
+5. Verify `watch` redeploys after editing a `.ts` source file.
