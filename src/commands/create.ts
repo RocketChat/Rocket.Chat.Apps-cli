@@ -16,7 +16,7 @@ import {
 import { Command, CommandContext } from '../core/types';
 import { writeJsonFile } from '../utils/files';
 import { prompt } from '../utils/prompt';
-import { slugify, toPascalCase } from '../utils/strings';
+import { slugify, toManifestSlug, toPascalCase } from '../utils/strings';
 
 const execFileAsync = promisify(execFile);
 
@@ -56,17 +56,26 @@ export const createCommand: Command = {
     const support = parsed.values.support ?? (await prompt('Support URL or email', 'support@example.com'));
     const homepage = parsed.values.homepage ?? (await prompt('Homepage URL', 'https://example.com'));
 
-    const nameSlug = slugify(appName);
+    const folderSlug = slugify(appName);
+    const nameSlug = toManifestSlug(appName);
+
+    if (!folderSlug) {
+      throw new CliError('App name must include at least one letter or number.', 2);
+    }
+
+    if (!nameSlug) {
+      throw new CliError('App name must include at least one letter for app.json nameSlug.', 2);
+    }
+
     const classBaseName = toPascalCase(appName);
     const className = classBaseName.endsWith('App') ? classBaseName : `${classBaseName}App`;
-    const folderPath = path.resolve(context.cwd, nameSlug);
+    const folderPath = path.resolve(context.cwd, folderSlug);
 
     if (existsSync(folderPath) && !parsed.values.force) {
       throw new CliError(`Directory already exists: ${folderPath}. Use --force to overwrite.`, 2);
     }
 
     await mkdir(folderPath, { recursive: true });
-    await mkdir(path.join(folderPath, 'src'), { recursive: true });
 
     const requiredApiVersion = await detectAppsEngineVersion(context.cwd);
 
@@ -82,13 +91,13 @@ export const createCommand: Command = {
         support,
         homepage,
       },
-      classFile: `src/${className}.ts`,
+      classFile: `${className}.ts`,
       iconFile: 'icon.png',
     };
 
     await writeJsonFile(path.join(folderPath, 'app.json'), manifest);
     await writeFile(path.join(folderPath, 'README.md'), appReadmeTemplate(manifest), 'utf8');
-    await writeFile(path.join(folderPath, 'src', `${className}.ts`), appClassTemplate(className), 'utf8');
+    await writeFile(path.join(folderPath, `${className}.ts`), appClassTemplate(className), 'utf8');
     await writeFile(path.join(folderPath, 'tsconfig.json'), appTsConfigTemplate(), 'utf8');
     await writeFile(path.join(folderPath, '.gitignore'), 'dist\nnode_modules\n', 'utf8');
     await writeFile(
@@ -96,7 +105,7 @@ export const createCommand: Command = {
       `${JSON.stringify({ ignoredFiles: ['**/dist/**', '**/node_modules/**', '**/.git/**'] }, null, 2)}\n`,
       'utf8',
     );
-    await writeFile(path.join(folderPath, 'package.json'), appPackageJsonTemplate(nameSlug, requiredApiVersion), 'utf8');
+    await writeFile(path.join(folderPath, 'package.json'), appPackageJsonTemplate(folderSlug, requiredApiVersion), 'utf8');
     await writeFile(path.join(folderPath, 'icon.png'), Buffer.from(ICON_1PX_BASE64, 'base64'));
 
     if (!parsed.values['skip-install']) {

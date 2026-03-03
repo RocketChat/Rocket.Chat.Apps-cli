@@ -38,12 +38,47 @@ test('create command scaffolds app with skip-install and detected apps-engine ve
 
     const appDir = path.join(root, 'workspace', 'temp-app');
     await access(path.join(appDir, 'app.json'));
-    await access(path.join(appDir, 'src', 'TempApp.ts'));
+    await access(path.join(appDir, 'TempApp.ts'));
     await access(path.join(appDir, 'icon.png'));
 
+    const appClass = await readFile(path.join(appDir, 'TempApp.ts'), 'utf8');
     const packageJson = await readFile(path.join(appDir, 'package.json'), 'utf8');
+    assert.equal(appClass.includes('const endpoints: IApiEndpoint[] = ['), true);
+    assert.equal(appClass.includes('const slashCommands: ISlashCommand[] = ['), true);
+    assert.equal(appClass.includes('const appSettings: ISetting[] = ['), true);
     assert.equal(packageJson.includes('"@rocket.chat/apps-engine": "^9.9.9"'), true);
     assert.equal(packageJson.includes('"@rocket.chat/ui-kit"'), true);
+  } finally {
+    await removeTempDir(root);
+  }
+});
+
+test('create command keeps folder slug while enforcing schema-safe app.json nameSlug', async () => {
+  const root = await createTempDir();
+
+  try {
+    const { createCommand } = requireFresh('../lib/commands/create.js');
+    await createCommand.run(
+      [
+        'app 2',
+        '--skip-install',
+        '--description',
+        'desc',
+        '--author',
+        'author',
+        '--support',
+        'support@example.com',
+        '--homepage',
+        'https://example.com',
+      ],
+      { cwd: root },
+    );
+
+    const appDir = path.join(root, 'app-2');
+    const manifest = JSON.parse(await readFile(path.join(appDir, 'app.json'), 'utf8')) as { nameSlug: string };
+    const packageJson = JSON.parse(await readFile(path.join(appDir, 'package.json'), 'utf8')) as { name: string };
+    assert.equal(manifest.nameSlug, 'app');
+    assert.equal(packageJson.name, 'app-2');
   } finally {
     await removeTempDir(root);
   }
@@ -97,6 +132,64 @@ test('create command rejects empty app name from prompt', async () => {
     );
   } finally {
     restorePrompt();
+    await removeTempDir(root);
+  }
+});
+
+test('create command rejects names without letters for app.json nameSlug', async () => {
+  const root = await createTempDir();
+
+  try {
+    const { createCommand } = requireFresh('../lib/commands/create.js');
+    await assert.rejects(
+      () =>
+        createCommand.run(
+          [
+            '1234',
+            '--skip-install',
+            '--description',
+            'desc',
+            '--author',
+            'author',
+            '--support',
+            'support@example.com',
+            '--homepage',
+            'https://example.com',
+          ],
+          { cwd: root },
+        ),
+      /App name must include at least one letter for app.json nameSlug/,
+    );
+  } finally {
+    await removeTempDir(root);
+  }
+});
+
+test('create command rejects names without letters or numbers for folder slug', async () => {
+  const root = await createTempDir();
+
+  try {
+    const { createCommand } = requireFresh('../lib/commands/create.js');
+    await assert.rejects(
+      () =>
+        createCommand.run(
+          [
+            '!!!',
+            '--skip-install',
+            '--description',
+            'desc',
+            '--author',
+            'author',
+            '--support',
+            'support@example.com',
+            '--homepage',
+            'https://example.com',
+          ],
+          { cwd: root },
+        ),
+      /App name must include at least one letter or number/,
+    );
+  } finally {
     await removeTempDir(root);
   }
 });

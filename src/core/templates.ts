@@ -3,14 +3,52 @@ import { AppManifest } from './types';
 export function appClassTemplate(className: string): string {
   return `import {
   IAppAccessors,
+  IConfigurationExtend,
+  IEnvironmentRead,
   ILogger,
 } from '@rocket.chat/apps-engine/definition/accessors';
+import { ApiSecurity, ApiVisibility, IApiEndpoint } from '@rocket.chat/apps-engine/definition/api';
 import { App } from '@rocket.chat/apps-engine/definition/App';
 import { IAppInfo } from '@rocket.chat/apps-engine/definition/metadata';
+import { ISetting } from '@rocket.chat/apps-engine/definition/settings';
+import { ISlashCommand } from '@rocket.chat/apps-engine/definition/slashcommands';
 
 export class ${className} extends App {
   constructor(info: IAppInfo, logger: ILogger, accessors: IAppAccessors) {
     super(info, logger, accessors);
+  }
+
+  protected async extendConfiguration(
+    configuration: IConfigurationExtend,
+    _environmentRead: IEnvironmentRead,
+  ): Promise<void> {
+    const endpoints: IApiEndpoint[] = [
+      // rc-apps:api-endpoints
+    ];
+
+    if (endpoints.length > 0) {
+      await configuration.api.provideApi({
+        visibility: ApiVisibility.PUBLIC,
+        security: ApiSecurity.UNSECURE,
+        endpoints,
+      });
+    }
+
+    const slashCommands: ISlashCommand[] = [
+      // rc-apps:slash-commands
+    ];
+
+    for (const slashCommand of slashCommands) {
+      await configuration.slashCommands.provideSlashCommand(slashCommand);
+    }
+
+    const appSettings: ISetting[] = [
+      // rc-apps:settings
+    ];
+
+    for (const setting of appSettings) {
+      await configuration.settings.provideSetting(setting);
+    }
   }
 }
 `;
@@ -71,21 +109,24 @@ export function appPackageJsonTemplate(appName: string, appsEngineVersion: strin
 
 export function endpointTemplate(className: string, endpointPath: string): string {
   return `import {
-  ApiSecurity,
-  ApiVisibility,
-} from '@rocket.chat/apps-engine/definition/api';
-import {
-  IApiEndpoint,
-  IApiRequest,
-  IApiResponse,
-} from '@rocket.chat/apps-engine/definition/api/IApiEndpoint';
+  IHttp,
+  IModify,
+  IPersistence,
+  IRead,
+} from '@rocket.chat/apps-engine/definition/accessors';
+import { IApiEndpoint, IApiEndpointInfo, IApiRequest, IApiResponse } from '@rocket.chat/apps-engine/definition/api';
 
 export class ${className} implements IApiEndpoint {
   public path = '${endpointPath}';
-  public security = ApiSecurity.UNSECURE;
-  public visibility = ApiVisibility.PUBLIC;
 
-  public async get(_request: IApiRequest): Promise<IApiResponse> {
+  public async get(
+    _request: IApiRequest,
+    _endpoint: IApiEndpointInfo,
+    _read: IRead,
+    _modify: IModify,
+    _http: IHttp,
+    _persis: IPersistence,
+  ): Promise<IApiResponse> {
     return {
       status: 200,
       content: { ok: true },

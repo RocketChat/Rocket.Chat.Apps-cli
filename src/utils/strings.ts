@@ -8,13 +8,22 @@ export function slugify(value: string): string {
     .replace(/^-|-$/g, '');
 }
 
+export function toManifestSlug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export function toPascalCase(value: string): string {
   const cleaned = value
     .replace(/[^a-zA-Z0-9]+/g, ' ')
     .trim()
     .split(/\s+/)
     .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join('');
 
   if (!cleaned) {
