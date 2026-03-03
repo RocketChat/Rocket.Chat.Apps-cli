@@ -94,13 +94,13 @@ test('loadProject validates classFile path exists and is file', async () => {
   }
 });
 
-test('loadProject executes not-a-file branch before final classFile error', async () => {
+test('loadProject returns explicit not-a-file error for classFile path', async () => {
   const root = await createTempDir();
   const restoreStat = patch(fsPromises, 'stat', async () => ({ isFile: () => false }));
 
   try {
     await writeValidProject(root);
-    await assert.rejects(() => loadProject(root), /classFile does not exist/);
+    await assert.rejects(() => loadProject(root), /classFile path is not a file/);
   } finally {
     restoreStat();
     await removeTempDir(root);

@@ -3,6 +3,7 @@ import { mkdir, stat } from 'fs/promises';
 import path from 'path';
 
 import { ProjectContext } from './project';
+import { CLI_TOOL, CLI_VERSION } from './meta';
 import { walkFiles } from '../utils/files';
 import { buildGlobMatcher } from '../utils/glob';
 import { normalizePathForMatch } from '../utils/strings';
@@ -25,8 +26,8 @@ const SOURCE_IGNORE_PATTERNS = [
 ];
 
 const PACKAGER_INFO = {
-  tool: '@rocket.chat/apps-cli',
-  version: '2.0.0',
+  tool: CLI_TOOL,
+  version: CLI_VERSION,
 };
 
 export async function packageSource(project: ProjectContext): Promise<string> {

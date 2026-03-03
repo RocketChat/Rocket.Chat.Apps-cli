@@ -50,13 +50,16 @@ export async function loadProject(projectPath: string): Promise<ProjectContext> 
 
   const classFilePath = path.resolve(rootPath, manifest.classFile);
 
+  let fileInfo: Awaited<ReturnType<typeof stat>>;
+
   try {
-    const fileInfo = await stat(classFilePath);
-    if (!fileInfo.isFile()) {
-      throw new CliError(`The classFile path is not a file: ${classFilePath}`, 2);
-    }
+    fileInfo = await stat(classFilePath);
   } catch {
     throw new CliError(`The classFile does not exist: ${classFilePath}`, 2);
+  }
+
+  if (!fileInfo.isFile()) {
+    throw new CliError(`The classFile path is not a file: ${classFilePath}`, 2);
   }
 
   return {

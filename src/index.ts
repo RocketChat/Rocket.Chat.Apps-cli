@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { CliError } from './core/errors';
+import { CLI_VERSION } from './core/meta';
 import { Command } from './core/types';
 import { renderCommandHelp, renderHelp } from './commands/help';
 import { failure } from './utils/output';
@@ -106,7 +107,7 @@ async function main(): Promise<void> {
   }
 
   if (requestedCommand === '--version' || requestedCommand === '-v') {
-    console.log('2.0.0');
+    console.log(CLI_VERSION);
     return;
   }
 

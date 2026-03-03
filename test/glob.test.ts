@@ -6,6 +6,7 @@ const { buildGlobMatcher } = require('../lib/utils/glob.js');
 test('glob matcher handles nested patterns and Windows paths', () => {
   const match = buildGlobMatcher(['**/dist/**', '**/*.test.ts']);
 
+  assert.equal(match('dist/file.js'), true);
   assert.equal(match('src/dist/file.js'), true);
   assert.equal(match('src\\dist\\file.js'), true);
   assert.equal(match('src/main.test.ts'), true);

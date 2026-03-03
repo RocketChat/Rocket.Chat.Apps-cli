@@ -4,6 +4,7 @@ import path from 'path';
 import { AppsCompiler } from '@rocket.chat/apps-compiler';
 
 import { CliError } from './errors';
+import { CLI_TOOL, CLI_VERSION } from './meta';
 import { ProjectContext } from './project';
 
 const createRequire = Module.createRequire;
@@ -56,8 +57,8 @@ function createCompiler(projectPath: string, useNativeCompiler: boolean): AppsCo
 
   return new AppsCompiler(
     {
-      tool: '@rocket.chat/apps-cli',
-      version: '2.0.0',
+      tool: CLI_TOOL,
+      version: CLI_VERSION,
       when: new Date(),
     },
     projectPath,

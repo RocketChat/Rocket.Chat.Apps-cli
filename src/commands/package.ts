@@ -62,10 +62,15 @@ export const packageCommand: Command = {
 
     const zipAbsolutePath = path.resolve(project.rootPath, zipRelativePath);
 
-    if (!zipAbsolutePath.startsWith(project.rootPath)) {
+    if (!isPathWithinRoot(project.rootPath, zipAbsolutePath)) {
       throw new CliError('Unexpected zip output path.', 1);
     }
 
     success(`Package created: ${zipAbsolutePath}`);
   },
 };
+
+function isPathWithinRoot(rootPath: string, candidatePath: string): boolean {
+  const relative = path.relative(rootPath, candidatePath);
+  return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}

@@ -118,3 +118,32 @@ test('package command rejects zip paths outside project root', async () => {
     restore();
   }
 });
+
+test('package command rejects root-prefix sibling paths outside project root', async () => {
+  const restore = patchMany([
+    {
+      obj: project,
+      key: 'loadProject',
+      value: async () => ({ rootPath: '/project', appJsonPath: '/project/app.json', manifest: { nameSlug: 'a', version: '1.0.0' } }),
+    },
+    { obj: compiler, key: 'buildAndPackage', value: async () => '../../project-other/dist/a.zip' },
+    { obj: output, key: 'step', value: () => {} },
+    { obj: output, key: 'success', value: () => {} },
+    { obj: output, key: 'verbose', value: () => {} },
+    { obj: output, key: 'warn', value: () => {} },
+  ]);
+
+  try {
+    await assert.rejects(
+      () => packageCommand.run([], { cwd: '/project' }),
+      (error: unknown) => {
+        assert.equal(error instanceof Error, true);
+        assert.equal(error instanceof CliError, true);
+        assert.equal((error as Error).message, 'Unexpected zip output path.');
+        return true;
+      },
+    );
+  } finally {
+    restore();
+  }
+});

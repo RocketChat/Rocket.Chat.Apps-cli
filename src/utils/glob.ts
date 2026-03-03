@@ -15,8 +15,16 @@ export function globToRegex(pattern: string): RegExp {
       const nextChar = normalized[index + 1];
 
       if (nextChar === '*') {
-        regex += '.*';
-        index += 1;
+        const nextNextChar = normalized[index + 2];
+
+        if (nextNextChar === '/') {
+          // `**/` should match zero or more path segments.
+          regex += '(?:.*/)?';
+          index += 2;
+        } else {
+          regex += '.*';
+          index += 1;
+        }
       } else {
         regex += '[^/]*';
       }
