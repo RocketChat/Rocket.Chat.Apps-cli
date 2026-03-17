@@ -19,6 +19,7 @@ export class FolderDetails {
     public infoFile: string;
     public mainFile: string;
     public info: IAppInfo;
+    private boilerplate?: string;
 
     constructor(private command: Command) {
         this.setFolder(process.cwd());
@@ -44,6 +45,10 @@ export class FolderDetails {
         this.info = appInfo;
     }
 
+    public setBoilerplate(type?: string) {
+        this.boilerplate = type;
+    }
+
     public generateDirectory(dirName: string): void {
         const dirPath = path.join(this.folder, dirName);
         if (!fs.existsSync(dirPath)) {
@@ -63,6 +68,10 @@ export class FolderDetails {
         const dirPath = path.join(this.folder, dir);
         this.generateDirectory(dir);
         fs.writeFileSync(path.join(dirPath, `${name}.ts`), toWrite, 'utf8');
+    }
+
+    public getBoilerplate(): string | undefined {
+        return this.boilerplate;
     }
 
     public readSettingsFile(): string {
