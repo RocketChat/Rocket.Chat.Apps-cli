@@ -33,6 +33,14 @@ export default class Generate extends Command {
             'Slash Command Extension',
             'Settings Extension',
         ];
+
+        if (option) {
+            const index = ['a', 'b', 'c'].indexOf(option);
+            if (index !== -1) {
+                option = categories[index];
+            }
+        }
+
         if (!option) {
             inquirer.registerPrompt('checkbox-plus', require('inquirer-checkbox-plus-prompt'));
             const result = await inquirer.prompt([{
