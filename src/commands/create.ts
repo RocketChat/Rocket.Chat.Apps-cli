@@ -62,7 +62,13 @@ export default class Create extends Command {
         fd.setFolder(folder);
 
         const creator = new AppCreator(fd, this);
-        await creator.writeFiles();
+
+        try {
+            await creator.writeFiles();
+        } catch (e) {
+            this.error(e && e.message ? e.message : String(e));
+            return;
+        }
 
         try {
             await fd.readInfoFile();

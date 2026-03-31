@@ -104,14 +104,20 @@ export class AppCreator {
         fs.writeFileSync(this.fd.mergeWithFolder('.vscode/extensions.json'), toWrite, 'utf8');
     }
 
+    /**
+     * Runs `npm install` inside the newly created App directory.
+     * Rejects with a descriptive error including npm's stderr output so
+     * developers can immediately diagnose the root cause of the failure.
+     */
     // tslint:disable-next-line:promise-function-async
     private runNpmInstall(): Promise<void> {
         return new Promise((resolve, reject) => {
             exec('npm install', {
                 cwd: this.fd.folder,
-            }, (e) => {
+            }, (e, _stdout, stderr) => {
                 if (e) {
-                    reject();
+                    const detail = (stderr && stderr.trim()) ? stderr.trim() : e.message;
+                    reject(new Error(`npm install failed:\n${detail}`));
                     return;
                 }
 
