@@ -5,21 +5,26 @@ import { AppPackager } from './appPackager';
 import { compilerOptions } from './compilerOptions';
 import { DiagnosticReport } from './diagnosticReport';
 import { FolderDetails } from './folderDetails';
-import { IAppCategory, INormalLoginInfo, IPersonalAccessTokenLoginInfo} from './interfaces';
-import { unicodeSymbols } from './unicodeSymbols';
-import { VariousUtils } from './variousUtils';
-
-export {
+import {
     IAppCategory,
     INormalLoginInfo,
     IPersonalAccessTokenLoginInfo,
-    appJsonSchema,
-    AppCreator,
-    AppPackager,
+} from './interfaces';
+import { unicodeSymbols } from './unicodeSymbols';
+import { VariousUtils } from './variousUtils';
+
+export { BoilerplateCreator } from './BoilerplateCreator';
+export {
     AppCompiler,
+    AppCreator,
+    appJsonSchema,
+    AppPackager,
     compilerOptions,
     DiagnosticReport,
     FolderDetails,
+    IAppCategory,
+    INormalLoginInfo,
+    IPersonalAccessTokenLoginInfo,
     unicodeSymbols,
     VariousUtils,
 };

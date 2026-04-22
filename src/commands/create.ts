@@ -9,6 +9,7 @@ import * as uuid from 'uuid';
 
 import {
     AppCreator,
+    BoilerplateCreator,
     FolderDetails,
     VariousUtils,
 } from '../misc';
@@ -18,17 +19,32 @@ export default class Create extends Command {
 
     public static flags = {
         help: flags.help({ char: 'h' }),
-        name: flags.string({char: 'n', description: 'Name of the app'}),
-        description: flags.string({char: 'd', description: 'Description of the app'}),
-        author: flags.string({char: 'a', description: 'Author\'s name'}),
-        homepage: flags.string({char: 'H', description: 'Author\'s or app\'s home page'}),
-        support: flags.string({char: 's', description: 'URL or email address to get support for the app'}),
+        name: flags.string({ char: 'n', description: 'Name of the app' }),
+        description: flags.string({
+            char: 'd',
+            description: 'Description of the app',
+        }),
+        author: flags.string({ char: 'a', description: "Author's name" }),
+        homepage: flags.string({
+            char: 'H',
+            description: "Author's or app's home page",
+        }),
+        boilerplate: flags.string({
+            char: 'b',
+            description:
+                'Boilerplate templates (slash-command, api-endpoint, settings)',
+            multiple: true,
+            options: ['slash-command', 'api-endpoint', 'settings'],
+        }),
+        support: flags.string({
+            char: 's',
+            description: 'URL or email address to get support for the app',
+        }),
     };
 
     public async run() {
         if (!semver.satisfies(process.version, '>=4.2.0')) {
             this.error('NodeJS version needs to be at least 4.2.0 or higher.');
-            return;
         }
 
         const info: IAppInfo = {
@@ -39,23 +55,35 @@ export default class Create extends Command {
             author: {},
         } as IAppInfo;
 
-        this.log('Let\'s get started creating your app.');
+        this.log("Let's get started creating your app.");
         this.log('We need some information first:');
         this.log('');
 
         const { flags } = this.parse(Create);
-        info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
+        info.name = flags.name
+            ? flags.name
+            : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
-        info.classFile = `${ pascalCase(info.name) }App.ts`;
+        info.classFile = `${pascalCase(info.name)}App.ts`;
 
-        info.description = flags.description ? flags.description : await cli.prompt(chalk.bold('   App Description'));
-        info.author.name = flags.author ? flags.author : await cli.prompt(chalk.bold('   Author\'s Name'));
-        info.author.homepage = flags.homepage ? flags.homepage : await cli.prompt(chalk.bold('   Author\'s Home Page'));
-        info.author.support = flags.support ? flags.support : await cli.prompt(chalk.bold('   Author\'s Support Page'));
+        info.description = flags.description
+            ? flags.description
+            : await cli.prompt(chalk.bold('   App Description'));
+        info.author.name = flags.author
+            ? flags.author
+            : await cli.prompt(chalk.bold("   Author's Name"));
+        info.author.homepage = flags.homepage
+            ? flags.homepage
+            : await cli.prompt(chalk.bold("   Author's Home Page"));
+        info.author.support = flags.support
+            ? flags.support
+            : await cli.prompt(chalk.bold("   Author's Support Page"));
 
         const folder = path.join(process.cwd(), info.nameSlug);
 
-        cli.action.start(`Creating a Rocket.Chat App in ${ chalk.green(folder) }`);
+        cli.action.start(
+            `Creating a Rocket.Chat App in ${chalk.green(folder)}`,
+        );
 
         const fd = new FolderDetails(this);
         fd.setAppInfo(info);
@@ -68,9 +96,17 @@ export default class Create extends Command {
             await fd.readInfoFile();
         } catch (e) {
             this.error(e && e.message ? e.message : e);
-            return;
         }
 
         cli.action.stop(chalk.cyan('done!'));
+
+        const boilerplateFlags = flags.boilerplate || [];
+        if (boilerplateFlags.length > 0) {
+            this.log('');
+            this.log('Generating boilerplate files:');
+            const boilerplateCreator = new BoilerplateCreator(fd, this);
+            await boilerplateCreator.generate(boilerplateFlags);
+            this.log(chalk.cyan('Boilerplate done!'));
+        }
     }
 }

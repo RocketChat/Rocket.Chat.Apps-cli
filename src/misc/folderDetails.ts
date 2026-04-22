@@ -5,10 +5,7 @@ import * as figures from 'figures';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as process from 'process';
-import {
-    coerce as coerceVersion,
-    diff as diffVersion,
-} from 'semver';
+import { coerce as coerceVersion, diff as diffVersion } from 'semver';
 import * as tv4 from 'tv4';
 
 import { appJsonSchema } from './appJsonSchema';
@@ -27,7 +24,7 @@ export class FolderDetails {
     }
 
     public async doesFileExist(file: string): Promise<boolean> {
-        return await fs.pathExists(file) && fs.statSync(file).isFile();
+        return (await fs.pathExists(file)) && fs.statSync(file).isFile();
     }
 
     public mergeWithFolder(item: string): string {
@@ -70,7 +67,11 @@ export class FolderDetails {
     }
 
     public writeToSettingsFile(toWrite: string): void {
-        fs.writeFileSync(path.join(this.folder, 'settings.ts'), toWrite, 'utf-8');
+        fs.writeFileSync(
+            path.join(this.folder, 'settings.ts'),
+            toWrite,
+            'utf-8',
+        );
     }
     /**
      * Validates the "app.json" file, loads it, and then retrieves the classFile property from it.
@@ -78,7 +79,9 @@ export class FolderDetails {
      */
     public async readInfoFile(): Promise<void> {
         if (!(await this.doesFileExist(this.infoFile))) {
-            throw new Error('No App found to package. Missing an "app.json" file.');
+            throw new Error(
+                'No App found to package. Missing an "app.json" file.',
+            );
         }
 
         try {
@@ -91,13 +94,17 @@ export class FolderDetails {
         this.validateAppDotJson();
 
         if (!this.info.classFile) {
-            throw new Error('Invalid "app.json" file. The "classFile" is required.');
+            throw new Error(
+                'Invalid "app.json" file. The "classFile" is required.',
+            );
         }
 
         this.mainFile = path.join(this.folder, this.info.classFile);
 
         if (!(await this.doesFileExist(this.mainFile))) {
-            throw new Error(`The specified classFile (${ this.mainFile }) does not exist.`);
+            throw new Error(
+                `The specified classFile (${this.mainFile}) does not exist.`,
+            );
         }
     }
 
@@ -106,29 +113,42 @@ export class FolderDetails {
             throw new Error('App Manifest not loaded. Exiting...');
         }
 
-        if (!await this.doesFileExist('package.json')) {
+        if (!(await this.doesFileExist('package.json'))) {
             throw new Error('package.json not found. Exiting...');
         }
 
-        const packageJson: Record<string, any> = require(path.join(this.folder, 'package.json'));
-        const appsEngineEntry = packageJson.devDependencies['@rocket.chat/apps-engine'] as string;
-        const appsEngineVersion = appsEngineEntry.startsWith('file:') ?
-            require(path.join(appsEngineEntry.replace(/^file:/, ''), 'package.json')).version :
-            appsEngineEntry;
+        const packageJson: Record<string, any> = require(path.join(
+            this.folder,
+            'package.json',
+        ));
+        const appsEngineEntry = packageJson.devDependencies[
+            '@rocket.chat/apps-engine'
+        ] as string;
+        const appsEngineVersion = appsEngineEntry.startsWith('file:')
+            ? require(path.join(
+                  appsEngineEntry.replace(/^file:/, ''),
+                  'package.json',
+              )).version
+            : appsEngineEntry;
 
-        if (diffVersion(
-            coerceVersion(appsEngineVersion),
-            coerceVersion(this.info.requiredApiVersion))
-           ) {
-
+        if (
+            diffVersion(
+                coerceVersion(appsEngineVersion),
+                coerceVersion(this.info.requiredApiVersion),
+            )
+        ) {
             // tslint:disable-next-line:no-console
-            console.log(chalk.bgYellow('Warning:'),
-                        chalk.yellow('Different versions of the Apps Engine were found between app.json (',
-                        this.info.requiredApiVersion,
-                        ') and package.json (',
-                        appsEngineVersion,
-                        ').',
-                        '\nUpdating app.json to reflect the same version of Apps Engine from package.json'));
+            console.log(
+                chalk.bgYellow('Warning:'),
+                chalk.yellow(
+                    'Different versions of the Apps Engine were found between app.json (',
+                    this.info.requiredApiVersion,
+                    ') and package.json (',
+                    appsEngineVersion,
+                    ').',
+                    '\nUpdating app.json to reflect the same version of Apps Engine from package.json',
+                ),
+            );
 
             await this.updateInfoFileRequiredVersion(appsEngineVersion);
         }
@@ -141,10 +161,14 @@ export class FolderDetails {
         if (!this.isValidResult(result)) {
             this.reportFailed(result.errors.length, result.missing.length);
 
-            result.errors.forEach((e: tv4.ValidationError) => this.reportError(e));
+            result.errors.forEach((e: tv4.ValidationError) =>
+                this.reportError(e),
+            );
             result.missing.forEach((v: string) => this.reportMissing(v));
 
-            throw new Error('Invalid "app.json" file, please ensure it matches the schema. (TODO: insert link here)');
+            throw new Error(
+                'Invalid "app.json" file, please ensure it matches the schema. (TODO: insert link here)',
+            );
         }
     }
 
@@ -185,7 +209,9 @@ export class FolderDetails {
         );
 
         if (error.subErrors) {
-            error.subErrors.forEach((err) => this.reportError(err, `${indent}  `));
+            error.subErrors.forEach((err) =>
+                this.reportError(err, `${indent}  `),
+            );
         }
     }
 
@@ -197,13 +223,19 @@ export class FolderDetails {
         );
     }
 
-    private async updateInfoFileRequiredVersion(requiredApiVersion: string): Promise<void> {
+    private async updateInfoFileRequiredVersion(
+        requiredApiVersion: string,
+    ): Promise<void> {
         const info = {
             ...this.info,
             requiredApiVersion,
         };
 
-        await fs.writeFile(path.join(this.folder, 'app.json'), JSON.stringify(info), 'utf-8');
+        await fs.writeFile(
+            path.join(this.folder, 'app.json'),
+            JSON.stringify(info),
+            'utf-8',
+        );
         await this.readInfoFile();
     }
 }
