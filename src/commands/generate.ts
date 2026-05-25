@@ -8,6 +8,12 @@ import { FolderDetails } from '../misc';
 import { apiEndpointTemplate, appendNewSetting,
     initialSettingTemplate, slashCommandTemplate } from '../templates/boilerplate';
 
+const CATEGORY_MAP: Record<string, string> = {
+    a: 'Api Extension',
+    b: 'Slash Command Extension',
+    c: 'Settings Extension',
+};
+
 export default class Generate extends Command {
     public static description = 'Adds boilerplate code for various functions';
     public static flags = {
@@ -16,7 +22,7 @@ export default class Generate extends Command {
             char: 'o',
             // tslint:disable-next-line:max-line-length
             description: 'Choose the boilerplate needed a. Api Extension b. Slash Command Extension c. Settings Extension',
-            options: ['a', 'b', 'c'],
+            options: Object.keys(CATEGORY_MAP),
         }),
     };
     public async run() {
@@ -28,11 +34,12 @@ export default class Generate extends Command {
             this.error(chalk.bold.red(e && e.message ? e.message : e));
         }
         let option = flags.options;
-        const categories = [
-            'Api Extension',
-            'Slash Command Extension',
-            'Settings Extension',
-        ];
+        const categories = Object.values(CATEGORY_MAP);
+
+        if (option && option in CATEGORY_MAP) {
+            option = CATEGORY_MAP[option];
+        }
+
         if (!option) {
             inquirer.registerPrompt('checkbox-plus', require('inquirer-checkbox-plus-prompt'));
             const result = await inquirer.prompt([{
