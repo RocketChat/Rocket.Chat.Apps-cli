@@ -147,7 +147,7 @@ export default class Submit extends Command {
                 searchable: true,
                 validate: (answer: Array<string>) => {
                     if (answer.length === 0) {
-                        return 'You must choose at least one color.';
+                        return 'You must choose at least one category.';
                     }
 
                     return true;
