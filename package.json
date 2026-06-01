@@ -1,7 +1,7 @@
 {
   "name": "@rocket.chat/apps-cli",
   "description": "The CLI tool for helping with Rocket.Chat Apps.",
-  "version": "1.13.0",
+  "version": "1.14.0",
   "author": "Rocket.Chat <support@rocket.chat>",
   "preferGlobal": true,
   "bin": {
@@ -121,5 +121,8 @@
   "pre-commit": [
     "lint",
     "test"
-  ]
+  ],
+  "volta": {
+    "node": "20.20.2"
+  }
 }
