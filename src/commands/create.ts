@@ -43,6 +43,14 @@ export default class Create extends Command {
         this.log('We need some information first:');
         this.log('');
 
+        const appType = await cli.prompt(
+            chalk.bold('   App Type (chatbot/integration)'),
+            { default: 'chatbot' }
+        );
+
+        this.log(`Selected App Type: ${chalk.green(appType)}`);
+        this.log('');
+
         const { flags } = this.parse(Create);
         info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
@@ -52,6 +60,12 @@ export default class Create extends Command {
         info.author.name = flags.author ? flags.author : await cli.prompt(chalk.bold('   Author\'s Name'));
         info.author.homepage = flags.homepage ? flags.homepage : await cli.prompt(chalk.bold('   Author\'s Home Page'));
         info.author.support = flags.support ? flags.support : await cli.prompt(chalk.bold('   Author\'s Support Page'));
+
+
+        if (!/^[a-z0-9-]+$/i.test(info.name)) {
+            this.error('App name must contain only letters, numbers, and hyphens (no spaces or special characters)');
+            return;
+        }
 
         const folder = path.join(process.cwd(), info.nameSlug);
 
