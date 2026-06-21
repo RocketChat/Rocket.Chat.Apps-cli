@@ -43,6 +43,14 @@ export default class Create extends Command {
         this.log('We need some information first:');
         this.log('');
 
+        const appType = await cli.prompt(
+            chalk.bold('   App Type (chatbot/integration)'),
+            { default: 'chatbot' }
+        );
+
+        this.log(`Selected App Type: ${chalk.green(appType)}`);
+        this.log('');
+
         const { flags } = this.parse(Create);
         info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
@@ -59,6 +67,20 @@ export default class Create extends Command {
 
         const fd = new FolderDetails(this);
         fd.setAppInfo(info);
+        this.log('\n' + chalk.bold('Summary:'));
+        this.log(`Name: ${chalk.green(info.name)}`);
+        this.log(`Type: ${chalk.green(appType)}`);
+
+        const confirm = await cli.prompt(
+            chalk.bold('Proceed? (yes/no)'),
+            { default: 'yes' }
+        );
+
+        if (confirm.toLowerCase() !== 'yes') {
+            this.log(chalk.yellow('Operation cancelled.'));
+            return;
+        }
+
         fd.setFolder(folder);
 
         const creator = new AppCreator(fd, this);
