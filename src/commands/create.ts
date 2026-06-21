@@ -43,7 +43,16 @@ export default class Create extends Command {
         this.log('We need some information first:');
         this.log('');
 
+        const appType = await cli.prompt(
+            chalk.bold('   App Type (chatbot/integration)'),
+            { default: 'chatbot' }
+        );
+
+        this.log(`Selected App Type: ${chalk.green(appType)}`);
+        this.log('');
+
         const { flags } = this.parse(Create);
+        this.log(chalk.gray('(Use lowercase letters, numbers, and hyphens only, e.g., my-app)'));
         info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
         info.classFile = `${ pascalCase(info.name) }App.ts`;
