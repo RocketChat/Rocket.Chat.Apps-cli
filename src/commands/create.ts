@@ -43,6 +43,22 @@ export default class Create extends Command {
         this.log('We need some information first:');
         this.log('');
 
+        const appType = await cli.prompt(
+            chalk.bold('   App Type (chatbot/integration)'),
+            { default: 'chatbot' }
+        );
+
+        this.log(`Selected App Type: ${chalk.green(appType)}`);
+        this.log('');
+
+        const appCategory = await cli.prompt(
+            chalk.bold('   App Category (chatbot/integration/other)'),
+            { default: 'other' }
+        );
+
+        this.log(`Selected Category: ${chalk.green(appCategory)}`);
+        this.log('');
+
         const { flags } = this.parse(Create);
         info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
