@@ -23,6 +23,8 @@ export default class Create extends Command {
         author: flags.string({char: 'a', description: 'Author\'s name'}),
         homepage: flags.string({char: 'H', description: 'Author\'s or app\'s home page'}),
         support: flags.string({char: 's', description: 'URL or email address to get support for the app'}),
+        type: flags.string({char: 't', description: 'App type (chatbot/integration)'}),
+        category: flags.string({char: 'c', description: 'App category (chatbot/integration/other)'}),
     };
 
     public async run() {
@@ -43,7 +45,23 @@ export default class Create extends Command {
         this.log('We need some information first:');
         this.log('');
 
-        const { flags } = this.parse(Create);
+        const appType = await cli.prompt(
+            chalk.bold('   App Type (chatbot/integration)'),
+            { default: 'chatbot' }
+        ).then((input: string) => input.toLowerCase());
+
+        this.log(`Selected App Type: ${chalk.green(appType)}`);
+        this.log('');
+
+        const appCategory = flags.category ? flags.category.toLowerCase() : await cli.prompt(
+            chalk.bold('   App Category (chatbot/integration/other)'),
+            { default: 'other' }
+        ).then((input: string) => input.toLowerCase());
+
+        this.log(`Selected Category: ${chalk.green(appCategory)}`);
+        this.log('');
+
+        this.log(chalk.gray('(Use lowercase letters, numbers, and hyphens only, e.g., my-app)'));
         info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
         info.classFile = `${ pascalCase(info.name) }App.ts`;
