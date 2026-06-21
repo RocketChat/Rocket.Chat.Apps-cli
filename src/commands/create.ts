@@ -23,14 +23,17 @@ export default class Create extends Command {
         author: flags.string({char: 'a', description: 'Author\'s name'}),
         homepage: flags.string({char: 'H', description: 'Author\'s or app\'s home page'}),
         support: flags.string({char: 's', description: 'URL or email address to get support for the app'}),
+        boilerplate: flags.string({char: 'b',description: 'Example boilerplate to include (slash-command | api-endpoint | settings)'}),
     };
-
+    
+    
     public async run() {
+        
         if (!semver.satisfies(process.version, '>=4.2.0')) {
             this.error('NodeJS version needs to be at least 4.2.0 or higher.');
             return;
         }
-
+        
         const info: IAppInfo = {
             id: uuid.v4(),
             version: '0.0.1',
@@ -38,28 +41,39 @@ export default class Create extends Command {
             iconFile: 'icon.png',
             author: {},
         } as IAppInfo;
-
+        
         this.log('Let\'s get started creating your app.');
         this.log('We need some information first:');
         this.log('');
-
+        
         const { flags } = this.parse(Create);
+
+        const boilerplate = flags.boilerplate;
+
+        const allowed = ['slash-command', 'api-endpoint', 'settings'];
+
+        if (boilerplate && !allowed.includes(boilerplate)) {
+            this.error('Invalid boilerplate. Allowed values: slash-command, api-endpoint, settings');
+        }
+
         info.name = flags.name ? flags.name : await cli.prompt(chalk.bold('   App Name'));
         info.nameSlug = VariousUtils.slugify(info.name);
         info.classFile = `${ pascalCase(info.name) }App.ts`;
-
+        
         info.description = flags.description ? flags.description : await cli.prompt(chalk.bold('   App Description'));
         info.author.name = flags.author ? flags.author : await cli.prompt(chalk.bold('   Author\'s Name'));
         info.author.homepage = flags.homepage ? flags.homepage : await cli.prompt(chalk.bold('   Author\'s Home Page'));
         info.author.support = flags.support ? flags.support : await cli.prompt(chalk.bold('   Author\'s Support Page'));
-
+        
         const folder = path.join(process.cwd(), info.nameSlug);
-
+        
         cli.action.start(`Creating a Rocket.Chat App in ${ chalk.green(folder) }`);
-
+        
         const fd = new FolderDetails(this);
+        
         fd.setAppInfo(info);
         fd.setFolder(folder);
+        fd.setBoilerplate(boilerplate);
 
         const creator = new AppCreator(fd, this);
 
